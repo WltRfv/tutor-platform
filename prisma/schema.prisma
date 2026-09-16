@@ -1,0 +1,110 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  STUDENT
+  TEACHER
+}
+
+enum ApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum Subject {
+  MATH_5_6
+  ALGEBRA_7_9
+  GEOMETRY_7_9
+  OGE_PREP
+  VPR_PREP
+  INFORMATICS
+}
+
+model User {
+  id        String            @id @default(cuid())
+  email     String            @unique
+  name      String
+  password  String
+  role      Role              @default(STUDENT)
+  status    ApplicationStatus @default(PENDING)
+  grade     Int?
+  phone     String?
+  messengerLink String?
+  subjects  Subject[]
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  activities  Activity[]
+  submissions Submission[]
+  notes       Note[]       @relation("TeacherNotes")
+  codeRuns    CodeRun[]      // ← добавили
+}
+
+model Note {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  subject   Subject
+  topic     String?
+  published Boolean  @default(false)
+  authorId  String
+  author    User     @relation("TeacherNotes", fields: [authorId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model Test {
+  id          String       @id @default(cuid())
+  title       String
+  subject     Subject
+  questions   Json
+  timeLimit   Int?
+  published   Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  submissions Submission[]
+}
+
+model Submission {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  testId    String?
+  test      Test?    @relation(fields: [testId], references: [id])
+  code      String?
+  language  String?
+  answer    Json?
+  score     Int?
+  status    String   @default("PENDING")
+  createdAt DateTime @default(now())
+}
+
+model Activity {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  eventType String
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model CodeRun {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  language  String
+  code      String
+  output    String?
+  stderr    String?
+  status    String   @default("SUCCESS")
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
