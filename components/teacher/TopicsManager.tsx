@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { sortByNumber } from '@/lib/sortByNumber';
 
 type Subject = { id: string; name: string; code: string };
 
@@ -419,7 +420,7 @@ export function TopicsManager({
                             </p>
                           ) : (
                             <div className="space-y-1.5">
-                              {t.notes.map((n) => (
+                              {sortByNumber(t.notes).map((n) => (
                                 <Link
                                   key={n.id}
                                   href={`/teacher/content/notes/${n.id}`}
@@ -451,7 +452,7 @@ export function TopicsManager({
                             </p>
                           ) : (
                             <div className="space-y-1.5">
-                              {t.tests.map((te) => (
+                              {sortByNumber(t.tests).map((te) => (
                                 <Link
                                   key={te.id}
                                   href={`/teacher/content/tests/${te.id}`}
@@ -481,7 +482,7 @@ export function TopicsManager({
                             <p className="text-xs text-slate-500">нет ДЗ</p>
                           ) : (
                             <div className="space-y-1.5">
-                              {t.homeworks.map((h) => (
+                              {sortByNumber(t.homeworks).map((h) => (
                                 <Link
                                   key={h.id}
                                   href={`/teacher/homework/${h.id}`}
