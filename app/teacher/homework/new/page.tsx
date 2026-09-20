@@ -15,6 +15,8 @@ import {
   Plus,
   Trash2,
   ListChecks,
+  FileText,
+  Code2,
 } from 'lucide-react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -31,13 +33,37 @@ type Student = {
   subjects: { id: string; name: string }[];
 };
 
+type TaskType = 'TEXT' | 'CODE';
+
 type Task = {
+  taskType: TaskType;
   text: string;
   imageUrl: string;
   correctAnswer: string;
   answerType: 'TEXT' | 'NUMBER' | 'EXACT';
   points: number;
+  language: string;
+  starterCode: string;
 };
+
+const LANGUAGES = [
+  { value: 'python', label: 'Python 3' },
+  { value: 'pascal', label: 'Pascal' },
+  { value: 'javascript', label: 'JavaScript' },
+  { value: 'c++', label: 'C++' },
+  { value: 'java', label: 'Java' },
+];
+
+const emptyTask = (): Task => ({
+  taskType: 'TEXT',
+  text: '',
+  imageUrl: '',
+  correctAnswer: '',
+  answerType: 'TEXT',
+  points: 1,
+  language: 'python',
+  starterCode: '',
+});
 
 export default function NewHomeworkPage() {
   const router = useRouter();
@@ -57,15 +83,7 @@ export default function NewHomeworkPage() {
     targetUserId: '',
   });
 
-  const [tasks, setTasks] = useState<Task[]>([
-    {
-      text: '',
-      imageUrl: '',
-      correctAnswer: '',
-      answerType: 'TEXT',
-      points: 1,
-    },
-  ]);
+  const [tasks, setTasks] = useState<Task[]>([emptyTask()]);
 
   useEffect(() => {
     Promise.all([
@@ -89,18 +107,7 @@ export default function NewHomeworkPage() {
     s.subjects?.some((sub) => sub.id === form.subjectId)
   );
 
-  const addTask = () => {
-    setTasks([
-      ...tasks,
-      {
-        text: '',
-        imageUrl: '',
-        correctAnswer: '',
-        answerType: 'TEXT',
-        points: 1,
-      },
-    ]);
-  };
+  const addTask = () => setTasks([...tasks, emptyTask()]);
 
   const removeTask = (i: number) => {
     if (tasks.length === 1) return toast.error('Нужна хотя бы 1 задача');
@@ -143,9 +150,13 @@ export default function NewHomeworkPage() {
           tasks: tasks.map((t) => ({
             text: t.text,
             imageUrl: t.imageUrl || null,
-            correctAnswer: t.correctAnswer || null,
+            correctAnswer:
+              t.taskType === 'TEXT' ? t.correctAnswer || null : null,
             answerType: t.answerType,
             points: t.points,
+            language: t.taskType === 'CODE' ? t.language : null,
+            starterCode:
+              t.taskType === 'CODE' && t.starterCode ? t.starterCode : null,
           })),
         }),
       });
@@ -177,7 +188,7 @@ export default function NewHomeworkPage() {
         <div>
           <h1 className="text-3xl font-bold text-white">Новое задание</h1>
           <p className="text-slate-400 text-sm">
-            Добавь несколько задач в одно ДЗ
+            Обычные задачи или задачи с кодом
           </p>
         </div>
       </div>
@@ -207,7 +218,7 @@ export default function NewHomeworkPage() {
                   targetUserId: '',
                 })
               }
-              className="mt-2 w-full bg-slate-900 border border-white/10 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:border-purple-500/50"
+              className="mt-2 w-full bg-slate-900 border border-white/10 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none"
               required
             >
               <option value="">— Выбери предмет —</option>
@@ -223,7 +234,7 @@ export default function NewHomeworkPage() {
             <select
               value={form.topicId}
               onChange={(e) => setForm({ ...form, topicId: e.target.value })}
-              className="mt-2 w-full bg-slate-900 border border-white/10 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:border-purple-500/50"
+              className="mt-2 w-full bg-slate-900 border border-white/10 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none"
             >
               <option value="">— Без темы —</option>
               {availableTopics.map((t) => (
@@ -282,7 +293,7 @@ export default function NewHomeworkPage() {
                 onChange={(e) =>
                   setForm({ ...form, targetUserId: e.target.value })
                 }
-                className="mt-2 w-full bg-slate-900 border border-white/10 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:border-purple-500/50"
+                className="mt-2 w-full bg-slate-900 border border-white/10 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none"
                 required
               >
                 <option value="">— Выбери ученика —</option>
@@ -297,7 +308,7 @@ export default function NewHomeworkPage() {
         )}
 
         <div>
-          <Label className="text-slate-300">Общее описание (необязательно)</Label>
+          <Label className="text-slate-300">Общее описание</Label>
           <textarea
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
@@ -305,10 +316,6 @@ export default function NewHomeworkPage() {
             rows={3}
             className="mt-2 w-full bg-white/5 border border-white/10 text-white rounded-xl p-4 text-sm resize-y focus:outline-none focus:border-purple-500/50"
           />
-          <p className="text-xs text-slate-500 mt-1">
-            💡 Формулы через KaTeX: <code className="text-purple-300">$x^2$</code>{' '}
-            (инлайн), <code className="text-purple-300">$$...$$</code> (блок)
-          </p>
         </div>
 
         {/* КОНСТРУКТОР ЗАДАЧ */}
@@ -320,9 +327,6 @@ export default function NewHomeworkPage() {
                 Задачи ({tasks.length})
               </span>
             </div>
-            <p className="text-xs text-slate-500">
-              У каждой задачи может быть автопроверка
-            </p>
           </div>
 
           <div className="space-y-3">
@@ -348,11 +352,41 @@ export default function NewHomeworkPage() {
                     </button>
                   </div>
 
+                  {/* Тип задачи */}
+                  <div className="grid grid-cols-2 gap-2 mb-3">
+                    <button
+                      type="button"
+                      onClick={() => updateTask(i, { taskType: 'TEXT' })}
+                      className={cn(
+                        'flex items-center justify-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition',
+                        t.taskType === 'TEXT'
+                          ? 'bg-purple-500/20 border-purple-500/50 text-white'
+                          : 'bg-white/5 border-white/10 text-slate-400 hover:text-white'
+                      )}
+                    >
+                      <FileText className="h-3.5 w-3.5" />
+                      Текстовая задача
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => updateTask(i, { taskType: 'CODE' })}
+                      className={cn(
+                        'flex items-center justify-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition',
+                        t.taskType === 'CODE'
+                          ? 'bg-emerald-500/20 border-emerald-500/50 text-white'
+                          : 'bg-white/5 border-white/10 text-slate-400 hover:text-white'
+                      )}
+                    >
+                      <Code2 className="h-3.5 w-3.5" />
+                      Программирование
+                    </button>
+                  </div>
+
                   <textarea
                     value={t.text}
                     onChange={(e) => updateTask(i, { text: e.target.value })}
                     placeholder="Условие задачи... (можно $x^2$)"
-                    rows={2}
+                    rows={3}
                     className="w-full bg-white/5 border border-white/10 text-white rounded-lg p-3 text-sm resize-y focus:outline-none focus:border-purple-500/50 mb-3"
                   />
 
@@ -364,49 +398,120 @@ export default function NewHomeworkPage() {
                     />
                   </div>
 
-                  <div className="grid md:grid-cols-3 gap-2">
-                    <div className="md:col-span-1">
-                      <Label className="text-[11px] text-slate-400">
-                        Правильный ответ
-                      </Label>
-                      <Input
-                        value={t.correctAnswer}
-                        onChange={(e) =>
-                          updateTask(i, { correctAnswer: e.target.value })
-                        }
-                        placeholder="Опционально"
-                        className="mt-1 h-9 bg-white/5 border-white/10 text-white text-sm"
-                      />
+                  {/* Поля для текстовой задачи */}
+                  {t.taskType === 'TEXT' && (
+                    <div className="grid md:grid-cols-3 gap-2 p-3 rounded-lg bg-purple-500/5 border border-purple-500/20">
+                      <div className="md:col-span-1">
+                        <Label className="text-[11px] text-slate-400">
+                          Правильный ответ
+                        </Label>
+                        <Input
+                          value={t.correctAnswer}
+                          onChange={(e) =>
+                            updateTask(i, { correctAnswer: e.target.value })
+                          }
+                          placeholder="Опционально"
+                          className="mt-1 h-9 bg-white/5 border-white/10 text-white text-sm"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-[11px] text-slate-400">
+                          Тип
+                        </Label>
+                        <select
+                          value={t.answerType}
+                          onChange={(e) =>
+                            updateTask(i, {
+                              answerType: e.target.value as any,
+                            })
+                          }
+                          className="mt-1 w-full h-9 bg-slate-900 border border-white/10 text-white text-sm rounded-lg px-2 focus:outline-none"
+                        >
+                          <option value="TEXT">Текст</option>
+                          <option value="NUMBER">Число</option>
+                          <option value="EXACT">Точное</option>
+                        </select>
+                      </div>
+                      <div>
+                        <Label className="text-[11px] text-slate-400">
+                          Баллы
+                        </Label>
+                        <Input
+                          type="number"
+                          min={1}
+                          value={t.points}
+                          onChange={(e) =>
+                            updateTask(i, { points: Number(e.target.value) })
+                          }
+                          className="mt-1 h-9 bg-white/5 border-white/10 text-white text-sm"
+                        />
+                      </div>
                     </div>
-                    <div>
-                      <Label className="text-[11px] text-slate-400">Тип</Label>
-                      <select
-                        value={t.answerType}
-                        onChange={(e) =>
-                          updateTask(i, {
-                            answerType: e.target.value as any,
-                          })
-                        }
-                        className="mt-1 w-full h-9 bg-slate-900 border border-white/10 text-white text-sm rounded-lg px-2 focus:outline-none"
-                      >
-                        <option value="TEXT">Текст</option>
-                        <option value="NUMBER">Число</option>
-                        <option value="EXACT">Точное</option>
-                      </select>
+                  )}
+
+                  {/* Поля для задачи с кодом */}
+                  {t.taskType === 'CODE' && (
+                    <div className="space-y-3 p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
+                      <div className="grid md:grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-[11px] text-slate-400">
+                            Язык программирования
+                          </Label>
+                          <select
+                            value={t.language}
+                            onChange={(e) =>
+                              updateTask(i, { language: e.target.value })
+                            }
+                            className="mt-1 w-full h-9 bg-slate-900 border border-white/10 text-white text-sm rounded-lg px-2 focus:outline-none"
+                          >
+                            {LANGUAGES.map((l) => (
+                              <option key={l.value} value={l.value}>
+                                {l.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <Label className="text-[11px] text-slate-400">
+                            Баллы
+                          </Label>
+                          <Input
+                            type="number"
+                            min={1}
+                            value={t.points}
+                            onChange={(e) =>
+                              updateTask(i, {
+                                points: Number(e.target.value),
+                              })
+                            }
+                            className="mt-1 h-9 bg-white/5 border-white/10 text-white text-sm"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label className="text-[11px] text-slate-400">
+                          Начальный код (шаблон для ученика, необязательно)
+                        </Label>
+                        <textarea
+                          value={t.starterCode}
+                          onChange={(e) =>
+                            updateTask(i, { starterCode: e.target.value })
+                          }
+                          placeholder={
+                            t.language === 'python'
+                              ? '# Начальный код\nprint("Привет!")\n'
+                              : t.language === 'pascal'
+                              ? 'program Task;\nbegin\n  writeln(\'Привет!\');\nend.\n'
+                              : '// Начальный код\n'
+                          }
+                          rows={5}
+                          spellCheck={false}
+                          className="mt-1 w-full bg-slate-950/80 border border-white/10 text-slate-100 rounded-lg p-3 text-xs font-mono resize-y focus:outline-none focus:border-emerald-500/50"
+                        />
+                      </div>
                     </div>
-                    <div>
-                      <Label className="text-[11px] text-slate-400">Баллы</Label>
-                      <Input
-                        type="number"
-                        min={1}
-                        value={t.points}
-                        onChange={(e) =>
-                          updateTask(i, { points: Number(e.target.value) })
-                        }
-                        className="mt-1 h-9 bg-white/5 border-white/10 text-white text-sm"
-                      />
-                    </div>
-                  </div>
+                  )}
                 </motion.div>
               ))}
             </AnimatePresence>

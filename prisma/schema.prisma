@@ -339,8 +339,12 @@ model HomeworkTask {
   imageUrl String?
 
   correctAnswer String?
-  answerType    String  @default("TEXT") // TEXT | NUMBER | EXACT
+  answerType    String  @default("TEXT")
   points        Int     @default(1)
+
+  // Для задач по программированию
+  language    String?
+  starterCode String?
 
   createdAt DateTime @default(now())
 
@@ -380,6 +384,7 @@ model HomeworkSubmission {
   aiReview       String?
   aiReviewScore  Int?
   aiReviewedAt   DateTime?
+  taskCodes Json?
 
   @@index([homeworkId, userId, version])
   @@index([homeworkId, createdAt])

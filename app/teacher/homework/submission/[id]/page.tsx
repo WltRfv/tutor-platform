@@ -66,6 +66,7 @@ export default async function SubmissionPage({
           textAnswer: submission.textAnswer,
           previewUrl: submission.previewUrl,
           boardData: submission.boardData,
+          taskCodes: submission.taskCodes as any,
           files: submission.files,
           taskAnswers: submission.taskAnswers as any,
           autoScore: submission.autoScore,

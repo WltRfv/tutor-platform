@@ -45,9 +45,11 @@ export default async function StudentHomeworkDetailPage({
           order: t.order,
           text: t.text,
           imageUrl: t.imageUrl,
-          hasAutoCheck: !!t.correctAnswer,
+          hasAutoCheck: !!t.correctAnswer && !t.language,
           answerType: t.answerType,
           points: t.points,
+          language: t.language,
+          starterCode: t.starterCode,
         })),
       }}
       lastSubmission={
@@ -62,6 +64,7 @@ export default async function StudentHomeworkDetailPage({
               files: homework.submissions[0].files as any,
               previewUrl: homework.submissions[0].previewUrl,
               taskAnswers: homework.submissions[0].taskAnswers as any,
+              taskCodes: homework.submissions[0].taskCodes as any,
               autoScore: homework.submissions[0].autoScore,
               autoTotal: homework.submissions[0].autoTotal,
             }

@@ -23,6 +23,7 @@ import {
 import { cn } from '@/lib/utils';
 import { MathText } from '@/components/shared/MathText';
 import { Sparkles, RefreshCw } from 'lucide-react';
+import { Code2 } from 'lucide-react';
 
 type FileItem = {
   url: string;
@@ -73,6 +74,7 @@ type Submission = {
   aiReview: string | null;
   aiReviewScore: number | null;
   aiReviewedAt: string | null;
+  taskCodes: Record<string, string> | null;
 };
 
 type Version = {
@@ -388,39 +390,46 @@ export function SubmissionViewer({
                       </div>
 
                       <div className="pl-11">
-                        <div className="text-xs text-slate-500 mb-1">
-                          Ответ ученика:
-                        </div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span
-                            className={cn(
-                              'font-mono text-sm px-3 py-1.5 rounded-lg',
-                              passed === true
-                                ? 'bg-emerald-500/20 text-emerald-200'
-                                : passed === false
-                                ? 'bg-red-500/20 text-red-200'
-                                : 'bg-white/5 text-slate-300'
-                            )}
-                          >
-                            {answer || '— не отвечено —'}
-                          </span>
-
-                          {passed === true && (
-                            <span className="text-xs text-emerald-400 flex items-center gap-1">
-                              <CheckCircle2 className="h-3.5 w-3.5" /> Верно
-                            </span>
-                          )}
-                          {passed === false && (
-                            <span className="text-xs text-red-400 flex items-center gap-1">
-                              <X className="h-3.5 w-3.5" /> {message}
-                            </span>
-                          )}
-                          {passed === null && info && (
-                            <span className="text-xs text-slate-500">
-                              Ручная проверка
-                            </span>
-                          )}
-                        </div>
+                        {submission.taskCodes?.[task.id] ? (
+                          <div>
+                            <div className="text-xs text-slate-500 mb-1 flex items-center gap-1">
+                              <Code2 className="h-3 w-3" /> Код ученика:
+                            </div>
+                            <pre className="bg-slate-950/80 border border-emerald-500/30 rounded-lg p-3 text-xs font-mono text-emerald-100 overflow-x-auto max-h-96 overflow-y-auto">
+                              {submission.taskCodes[task.id]}
+                            </pre>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="text-xs text-slate-500 mb-1">
+                              Ответ ученика:
+                            </div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span
+                                className={cn(
+                                  'font-mono text-sm px-3 py-1.5 rounded-lg',
+                                  passed === true
+                                    ? 'bg-emerald-500/20 text-emerald-200'
+                                    : passed === false
+                                    ? 'bg-red-500/20 text-red-200'
+                                    : 'bg-white/5 text-slate-300'
+                                )}
+                              >
+                                {answer || '— не отвечено —'}
+                              </span>
+                              {passed === true && (
+                                <span className="text-xs text-emerald-400 flex items-center gap-1">
+                                  <CheckCircle2 className="h-3.5 w-3.5" /> Верно
+                                </span>
+                              )}
+                              {passed === false && (
+                                <span className="text-xs text-red-400 flex items-center gap-1">
+                                  <X className="h-3.5 w-3.5" /> {message}
+                                </span>
+                              )}
+                            </div>
+                          </>
+                        )}
                       </div>
                     </div>
                   );

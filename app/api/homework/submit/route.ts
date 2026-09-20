@@ -49,6 +49,7 @@ export async function POST(req: Request) {
     files,
     textAnswer,
     taskAnswers,
+    taskCodes,
   } = await req.json();
 
   if (!homeworkId) {
@@ -66,7 +67,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Задание не найдено' }, { status: 404 });
   }
 
-  // Проверяем каждую задачу
   const checks: Record<
     string,
     { answer: string; passed: boolean | null; message: string | null }
@@ -75,9 +75,12 @@ export async function POST(req: Request) {
   let total = 0;
 
   for (const task of homework.tasks) {
-    const userAnswer = ((taskAnswers?.[task.id] as string) || '').trim();
+    const isCodeTask = !!task.language;
+    const userAnswer = isCodeTask
+      ? ((taskCodes?.[task.id] as string) || '').trim()
+      : ((taskAnswers?.[task.id] as string) || '').trim();
 
-    if (task.correctAnswer) {
+    if (task.correctAnswer && !isCodeTask) {
       total++;
       if (userAnswer) {
         const result = checkAnswer(
@@ -102,7 +105,7 @@ export async function POST(req: Request) {
       checks[task.id] = {
         answer: userAnswer,
         passed: null,
-        message: null,
+        message: isCodeTask && userAnswer ? 'Код отправлен на проверку' : null,
       };
     }
   }
@@ -141,6 +144,7 @@ export async function POST(req: Request) {
       files: files || null,
       textAnswer: textAnswer || null,
       taskAnswers: checks,
+      taskCodes: taskCodes || null,
       autoCheckPassed,
       autoCheckMessage,
       autoScore: total > 0 ? score : null,

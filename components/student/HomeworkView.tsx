@@ -7,6 +7,8 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { HomeworkBoard } from '@/components/shared/HomeworkBoard';
+import { TaskCodeEditor } from './TaskCodeEditor';
+import { MathText } from '@/components/shared/MathText';
 import {
   ArrowLeft,
   ClipboardList,
@@ -24,10 +26,9 @@ import {
   Download,
   Check,
   Hash,
-  Type as TypeIcon,
+  Code2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { MathText } from '@/components/shared/MathText';
 
 type Task = {
   id: string;
@@ -37,6 +38,8 @@ type Task = {
   hasAutoCheck: boolean;
   answerType: string;
   points: number;
+  language: string | null;
+  starterCode: string | null;
 };
 
 type Homework = {
@@ -75,6 +78,7 @@ type LastSubmission = {
   files: FileItem[] | null;
   previewUrl: string | null;
   taskAnswers: Record<string, TaskAnswerInfo> | null;
+  taskCodes: Record<string, string> | null;
   autoScore: number | null;
   autoTotal: number | null;
 } | null;
@@ -94,6 +98,16 @@ export function HomeworkView({
   const [tab, setTab] = useState<Tab>('tasks');
 
   const [taskAnswers, setTaskAnswers] = useState<Record<string, string>>({});
+  const [taskCodes, setTaskCodes] = useState<Record<string, string>>(() => {
+    const init: Record<string, string> = {};
+    homework.tasks.forEach((t) => {
+      if (t.language) {
+        init[t.id] = t.starterCode || '';
+      }
+    });
+    return init;
+  });
+
   const [boardData, setBoardData] = useState<any>(null);
   const [boardPreview, setBoardPreview] = useState<string>('');
   const [files, setFiles] = useState<FileItem[]>([]);
@@ -140,14 +154,13 @@ export function HomeworkView({
     setFiles((prev) => prev.filter((_, idx) => idx !== i));
   };
 
-  const setTaskAnswer = (taskId: string, val: string) => {
-    setTaskAnswers((prev) => ({ ...prev, [taskId]: val }));
-  };
-
   const submit = async () => {
     const answeredCount = Object.values(taskAnswers).filter((a) => a.trim()).length;
+    const codeCount = Object.values(taskCodes).filter((c) => c.trim()).length;
+
     const hasContent =
       answeredCount > 0 ||
+      codeCount > 0 ||
       (boardData && boardPreview) ||
       files.length > 0 ||
       textAnswer.trim();
@@ -170,6 +183,9 @@ export function HomeworkView({
           taskAnswers: Object.fromEntries(
             Object.entries(taskAnswers).map(([k, v]) => [k, v.trim()])
           ),
+          taskCodes: Object.fromEntries(
+            Object.entries(taskCodes).map(([k, v]) => [k, v.trim()])
+          ),
         }),
       });
       const data = await res.json();
@@ -188,14 +204,21 @@ export function HomeworkView({
   const canEdit = !isReviewed;
 
   const answeredCount = Object.values(taskAnswers).filter((a) => a.trim()).length;
+  const codeCount = Object.values(taskCodes).filter((c) => c.trim()).length;
   const totalTasks = homework.tasks.length;
+
+  const filledCount =
+    (boardPreview ? 1 : 0) +
+    (files.length > 0 ? 1 : 0) +
+    (textAnswer.trim() ? 1 : 0) +
+    (answeredCount + codeCount > 0 ? 1 : 0);
 
   const tabs: { id: Tab; label: string; icon: any; filled: boolean; badge?: number }[] = [
     {
       id: 'tasks',
       label: 'Задачи',
       icon: ClipboardList,
-      filled: answeredCount > 0,
+      filled: answeredCount + codeCount > 0,
       badge: totalTasks,
     },
     { id: 'board', label: 'Доска', icon: Palette, filled: !!boardPreview },
@@ -248,7 +271,7 @@ export function HomeworkView({
         {homework.description && (
           <div className="mt-4 pt-4 border-t border-white/10">
             <MathText className="text-slate-200 leading-relaxed">
-                {homework.description}
+              {homework.description}
             </MathText>
           </div>
         )}
@@ -261,7 +284,7 @@ export function HomeworkView({
         )}
       </div>
 
-      {/* Статус проверки */}
+      {/* Статус */}
       {lastSubmission && (
         <div
           className={cn(
@@ -351,12 +374,12 @@ export function HomeworkView({
               <span
                 className={cn(
                   'font-semibold',
-                  answeredCount === totalTasks
+                  answeredCount + codeCount === totalTasks
                     ? 'text-emerald-400'
                     : 'text-amber-400'
                 )}
               >
-                {answeredCount} из {totalTasks}
+                {answeredCount + codeCount} из {totalTasks}
               </span>
             </div>
           </div>
@@ -400,19 +423,35 @@ export function HomeworkView({
               {tab === 'tasks' && (
                 <div className="space-y-3">
                   {homework.tasks.map((task, i) => {
+                    const isCodeTask = !!task.language;
                     const answer = taskAnswers[task.id] || '';
+                    const code = taskCodes[task.id] || '';
+
                     return (
                       <div
                         key={task.id}
                         className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-5"
                       >
                         <div className="flex items-start gap-3 mb-3">
-                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                          <div
+                            className={cn(
+                              'w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-bold flex-shrink-0',
+                              isCodeTask
+                                ? 'bg-gradient-to-br from-emerald-500 to-teal-500'
+                                : 'bg-gradient-to-br from-purple-500 to-blue-500'
+                            )}
+                          >
                             {i + 1}
                           </div>
                           <div className="flex-1 min-w-0">
+                            {isCodeTask && (
+                              <div className="flex items-center gap-1.5 text-xs text-emerald-300 mb-2">
+                                <Code2 className="h-3 w-3" />
+                                Задача по программированию
+                              </div>
+                            )}
                             <MathText className="text-slate-100 leading-relaxed">
-                                {task.text}
+                              {task.text}
                             </MathText>
                             {task.imageUrl && (
                               <div className="mt-3 rounded-lg overflow-hidden border border-white/10">
@@ -427,31 +466,57 @@ export function HomeworkView({
                           </div>
                         </div>
 
-                        {task.hasAutoCheck && (
-                          <div className="flex items-center gap-2 mb-2 text-xs text-purple-300">
-                            {task.answerType === 'NUMBER' ? (
-                              <Hash className="h-3 w-3" />
-                            ) : (
-                              <TypeIcon className="h-3 w-3" />
+                        {/* Текстовая задача */}
+                        {!isCodeTask && (
+                          <>
+                            {task.hasAutoCheck && (
+                              <div className="flex items-center gap-2 mb-2 text-xs text-purple-300">
+                                {task.answerType === 'NUMBER' ? (
+                                  <Hash className="h-3 w-3" />
+                                ) : (
+                                  <Type className="h-3 w-3" />
+                                )}
+                                Автопроверка:{' '}
+                                {task.answerType === 'NUMBER'
+                                  ? 'введи число'
+                                  : 'введи ответ'}
+                              </div>
                             )}
-                            Автопроверка: введи {task.answerType === 'NUMBER' ? 'число' : 'ответ'}
-                          </div>
+
+                            <Input
+                              value={answer}
+                              onChange={(e) =>
+                                setTaskAnswers((prev) => ({
+                                  ...prev,
+                                  [task.id]: e.target.value,
+                                }))
+                              }
+                              placeholder={
+                                task.hasAutoCheck
+                                  ? task.answerType === 'NUMBER'
+                                    ? 'Число...'
+                                    : 'Ответ...'
+                                  : 'Твой ответ (опционально)...'
+                              }
+                              className="bg-slate-950/50 border-white/10 text-white"
+                            />
+                          </>
                         )}
 
-                        <Input
-                          value={answer}
-                          onChange={(e) =>
-                            setTaskAnswer(task.id, e.target.value)
-                          }
-                          placeholder={
-                            task.hasAutoCheck
-                              ? task.answerType === 'NUMBER'
-                                ? 'Число...'
-                                : 'Ответ...'
-                              : 'Твой ответ (опционально)...'
-                          }
-                          className="bg-slate-950/50 border-white/10 text-white"
-                        />
+                        {/* Задача с кодом */}
+                        {isCodeTask && (
+                          <TaskCodeEditor
+                            language={task.language!}
+                            starterCode={task.starterCode}
+                            value={code}
+                            onChange={(val) =>
+                              setTaskCodes((prev) => ({
+                                ...prev,
+                                [task.id]: val,
+                              }))
+                            }
+                          />
+                        )}
                       </div>
                     );
                   })}
@@ -536,10 +601,7 @@ export function HomeworkView({
           </AnimatePresence>
 
           {/* К отправке */}
-          {(answeredCount > 0 ||
-            boardPreview ||
-            files.length > 0 ||
-            textAnswer.trim()) && (
+          {filledCount > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -554,8 +616,11 @@ export function HomeworkView({
                     К отправке
                   </div>
                   <div className="text-xs text-slate-500">
-                    {answeredCount > 0 && `Задач: ${answeredCount}/${totalTasks}`}
-                    {answeredCount > 0 && (boardPreview || files.length > 0) && ' · '}
+                    {answeredCount + codeCount > 0 &&
+                      `Задач: ${answeredCount + codeCount}/${totalTasks}`}
+                    {answeredCount + codeCount > 0 &&
+                      (boardPreview || files.length > 0) &&
+                      ' · '}
                     {boardPreview && 'Доска'}
                     {boardPreview && files.length > 0 && ' · '}
                     {files.length > 0 && `${files.length} файл(ов)`}
@@ -586,69 +651,82 @@ export function HomeworkView({
         </>
       )}
 
-      {/* Разбор сдачи */}
+      {/* Разбор предыдущей сдачи */}
       {lastSubmission && (
         <div className="mt-6 space-y-3">
           <h3 className="text-sm font-semibold text-white">
             Результаты v{lastSubmission.version}
           </h3>
 
-          {lastSubmission.taskAnswers &&
-            homework.tasks.map((task, i) => {
-              const info = lastSubmission.taskAnswers?.[task.id];
-              if (!info) return null;
-              return (
-                <div
-                  key={task.id}
-                  className={cn(
-                    'backdrop-blur-xl border rounded-2xl p-4',
-                    info.passed === true
-                      ? 'bg-emerald-500/5 border-emerald-500/30'
-                      : info.passed === false
-                      ? 'bg-red-500/5 border-red-500/30'
-                      : 'bg-white/5 border-white/10'
-                  )}
-                >
-                  <div className="flex items-start gap-3">
-                    <div
-                      className={cn(
-                        'w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-bold flex-shrink-0',
-                        info.passed === true
-                          ? 'bg-emerald-500/30'
-                          : info.passed === false
-                          ? 'bg-red-500/30'
-                          : 'bg-slate-500/30'
-                      )}
-                    >
-                      {i + 1}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <MathText className="text-sm text-slate-300 mb-2">
-                        {task.text}
-                      </MathText>
+          {homework.tasks.map((task, i) => {
+            const info = lastSubmission.taskAnswers?.[task.id];
+            const code = lastSubmission.taskCodes?.[task.id];
+            if (!info && !code) return null;
+
+            return (
+              <div
+                key={task.id}
+                className={cn(
+                  'backdrop-blur-xl border rounded-2xl p-4',
+                  info?.passed === true
+                    ? 'bg-emerald-500/5 border-emerald-500/30'
+                    : info?.passed === false
+                    ? 'bg-red-500/5 border-red-500/30'
+                    : 'bg-white/5 border-white/10'
+                )}
+              >
+                <div className="flex items-start gap-3">
+                  <div
+                    className={cn(
+                      'w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-bold flex-shrink-0',
+                      info?.passed === true
+                        ? 'bg-emerald-500/30'
+                        : info?.passed === false
+                        ? 'bg-red-500/30'
+                        : 'bg-slate-500/30'
+                    )}
+                  >
+                    {i + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <MathText className="text-sm text-slate-300 mb-2">
+                      {task.text}
+                    </MathText>
+
+                    {code ? (
+                      <div className="mt-2">
+                        <div className="text-xs text-slate-500 mb-1">
+                          Твой код:
+                        </div>
+                        <pre className="bg-slate-950/80 border border-white/10 rounded-lg p-3 text-xs font-mono text-slate-200 overflow-x-auto max-h-60 overflow-y-auto">
+                          {code}
+                        </pre>
+                      </div>
+                    ) : (
                       <div className="flex items-center gap-3 flex-wrap">
                         <span className="text-xs text-slate-500">
                           Твой ответ:
                         </span>
                         <span className="text-sm text-white font-mono">
-                          {info.answer || '—'}
+                          {info?.answer || '—'}
                         </span>
-                        {info.passed === true && (
+                        {info?.passed === true && (
                           <span className="text-xs text-emerald-400 flex items-center gap-1">
                             <CheckCircle2 className="h-3 w-3" /> Верно
                           </span>
                         )}
-                        {info.passed === false && (
+                        {info?.passed === false && (
                           <span className="text-xs text-red-400 flex items-center gap-1">
                             <X className="h-3 w-3" /> {info.message}
                           </span>
                         )}
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
-              );
-            })}
+              </div>
+            );
+          })}
 
           {lastSubmission.previewUrl && (
             <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-5">
@@ -660,7 +738,7 @@ export function HomeworkView({
                 src={lastSubmission.previewUrl}
                 alt="Твоя работа"
                 className="rounded-xl border border-white/10 w-full h-auto max-h-[600px] object-contain"
-              /> 
+              />
               <a
                 href={lastSubmission.previewUrl}
                 download={`homework-v${lastSubmission.version}.png`}
@@ -677,47 +755,21 @@ export function HomeworkView({
                 Файлы ({lastSubmission.files.length})
               </div>
               <div className="space-y-2">
-                {lastSubmission.files.map((f, i) => {
-                const isImage = f.type?.startsWith('image/');
-                const isPdf = f.type === 'application/pdf';
-                return (
-                    <div
+                {lastSubmission.files.map((f, i) => (
+                  <a
                     key={i}
-                    className="rounded-xl bg-white/5 border border-white/5 overflow-hidden"
-                    >
-                    {isImage && (
-                        <div>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                            src={f.url}
-                            alt={f.name}
-                            className="w-full h-auto max-h-[500px] object-contain"
-                        />
-                        </div>
-                    )}
-                    {isPdf && (
-                        <iframe
-                        src={f.url}
-                        title={f.name}
-                        className="w-full"
-                        style={{ height: '500px', background: '#1e293b' }}
-                        />
-                    )}
-                    <div className="flex items-center gap-3 p-3">
-                        <FileText className="h-4 w-4 text-blue-400" />
-                        <span className="text-sm text-white truncate flex-1">{f.name}</span>
-                        <a
-                        href={f.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-purple-400 hover:text-purple-300"
-                        >
-                        Открыть
-                        </a>
-                    </div>
-                    </div>
-                );
-                })}
+                    href={f.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition"
+                  >
+                    <FileText className="h-4 w-4 text-blue-400" />
+                    <span className="text-sm text-white truncate flex-1">
+                      {f.name}
+                    </span>
+                    <Download className="h-4 w-4 text-slate-500" />
+                  </a>
+                ))}
               </div>
             </div>
           )}

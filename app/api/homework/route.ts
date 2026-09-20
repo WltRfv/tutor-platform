@@ -64,6 +64,8 @@ export async function POST(req: Request) {
           correctAnswer: t.correctAnswer?.trim() || null,
           answerType: t.answerType || 'TEXT',
           points: t.points || 1,
+          language: t.language || null,
+          starterCode: t.starterCode || null,
         })),
       },
     },
