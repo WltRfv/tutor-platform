@@ -1,47 +1,66 @@
 const DEEPSEEK_URL = 'https://api.deepseek.com/v1/chat/completions';
 
 export type AICheckResult = {
-  score: number;         // 0-100
-  verdict: string;       // краткий вердикт
-  mistakes: string[];    // список ошибок
-  correctAnswer: string; // правильное решение (если ИИ может дать)
-  explanation: string;   // объяснение
-  raw: string;           // полный ответ ИИ
+  score: number;
+  verdict: string;
+  mistakes: string[];
+  correctAnswer: string;
+  explanation: string;
+  raw: string;
 };
 
-export async function aiCheckHomework(params: {
+export type AICheckParams = {
   taskTitle: string;
   taskDescription: string;
   correctAnswer?: string | null;
   studentAnswer: string;
   subjectName: string;
-}): Promise<AICheckResult | null> {
+  codeBlocks?: { language: string; task: string; code: string }[];
+};
+
+export async function aiCheckHomework(
+  params: AICheckParams
+): Promise<AICheckResult | null> {
   const apiKey = process.env.DEEPSEEK_API_KEY;
   if (!apiKey) {
     console.error('[ai-checker] DEEPSEEK_API_KEY не настроен');
     return null;
   }
 
-  const systemPrompt = `Ты — опытный репетитор по математике и информатике. Проверь ответ ученика на задание.
+  let codeSection = '';
+  if (params.codeBlocks && params.codeBlocks.length > 0) {
+    codeSection =
+      '\n\n=== ЗАДАЧИ ПО ПРОГРАММИРОВАНИЮ ===\n' +
+      params.codeBlocks
+        .map(
+          (b, i) =>
+            `\nЗадача ${i + 1} (${b.language}):\n${b.task}\n\nКод ученика:\n\`\`\`${b.language}\n${b.code}\n\`\`\``
+        )
+        .join('\n');
+  }
+
+  const systemPrompt = `Ты — опытный репетитор по математике и информатике. Проверь работу ученика.
 
 Предмет: ${params.subjectName}
 Задание: ${params.taskTitle}
 Условие: ${params.taskDescription}
-${params.correctAnswer ? `Правильный ответ от учителя: ${params.correctAnswer}` : ''}
+${params.correctAnswer ? `Правильные ответы от учителя: ${params.correctAnswer}` : ''}
 
-Ответ ученика: ${params.studentAnswer}
+=== ОТВЕТЫ УЧЕНИКА (текстовые) ===
+${params.studentAnswer || '(нет текстовых ответов)'}
+${codeSection}
 
-Проверь ответ по трём критериям:
-1. Правильный ли итоговый ответ?
-2. Правильный ли ход решения?
-3. Есть ли опечатки или вычислительные ошибки?
+Оцени:
+1. Правильность итоговых ответов.
+2. Правильность хода решения.
+3. Для кода: работает ли, есть ли ошибки логики/синтаксиса, можно ли улучшить.
 
-Отвечай СТРОГО в JSON-формате без markdown-обёртки:
+Отвечай СТРОГО валидным JSON без markdown:
 {
-  "score": <число 0-100>,
+  "score": <0-100>,
   "verdict": "<краткий вердикт 1 предложение>",
   "mistakes": ["<ошибка 1>", "<ошибка 2>"],
-  "correctAnswer": "<правильный ответ, если можешь вычислить>",
+  "correctAnswer": "<правильный ответ / эталонное решение, если можешь>",
   "explanation": "<подробное объяснение для ученика 2-4 предложения>"
 }`;
 
@@ -76,12 +95,10 @@ ${params.correctAnswer ? `Правильный ответ от учителя: $
     const data = await res.json();
     const content = data.choices?.[0]?.message?.content || '';
 
-    // Пытаемся распарсить JSON
     let parsed: any = null;
     try {
       parsed = JSON.parse(content);
     } catch {
-      // Иногда ИИ добавляет ```json ... ``` — попробуем вырезать
       const match = content.match(/\{[\s\S]*\}/);
       if (match) {
         try {

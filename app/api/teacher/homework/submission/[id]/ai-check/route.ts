@@ -35,45 +35,59 @@ export async function POST(
   }
 
   const taskAnswers = (submission.taskAnswers as any) || {};
+  const taskCodes = (submission.taskCodes as any) || {};
 
-  // Собираем ответы ученика в один текст
   const answerParts: string[] = [];
+  const codeBlocks: { language: string; task: string; code: string }[] = [];
+  const correctParts: string[] = [];
+
   for (const task of submission.homework.tasks) {
+    const isCode = !!task.language;
     const info = taskAnswers[task.id];
-    if (info?.answer) {
-      answerParts.push(
-        `Задача ${task.order + 1}: ${task.text}\nОтвет: ${info.answer}`
+
+    if (isCode) {
+      const code = taskCodes[task.id];
+      if (code && code.trim()) {
+        codeBlocks.push({
+          language: task.language!,
+          task: task.text,
+          code: code.trim(),
+        });
+      }
+    } else {
+      if (info?.answer) {
+        answerParts.push(
+          `Задача ${task.order + 1}: ${task.text}\nОтвет: ${info.answer}`
+        );
+      }
+    }
+
+    if (task.correctAnswer) {
+      correctParts.push(
+        `Задача ${task.order + 1}: ${task.correctAnswer}`
       );
     }
   }
 
   if (submission.textAnswer) {
-    answerParts.push(`Текстовый ответ: ${submission.textAnswer}`);
+    answerParts.push(`Общий комментарий: ${submission.textAnswer}`);
   }
 
-  if (answerParts.length === 0) {
+  if (answerParts.length === 0 && codeBlocks.length === 0) {
     return NextResponse.json(
-      { error: 'Нет текстовых ответов для проверки ИИ' },
+      { error: 'Нет ответов для проверки' },
       { status: 400 }
     );
   }
 
-  const studentAnswer = answerParts.join('\n\n');
-
-  // Собираем правильные ответы
-  const correctParts: string[] = [];
-  for (const task of submission.homework.tasks) {
-    if (task.correctAnswer) {
-      correctParts.push(`Задача ${task.order + 1}: ${task.correctAnswer}`);
-    }
-  }
-
   const result = await aiCheckHomework({
     taskTitle: submission.homework.title,
-    taskDescription: submission.homework.description || submission.homework.title,
+    taskDescription:
+      submission.homework.description || submission.homework.title,
     correctAnswer: correctParts.length ? correctParts.join('\n') : null,
-    studentAnswer,
+    studentAnswer: answerParts.join('\n\n'),
     subjectName: submission.homework.subject.name,
+    codeBlocks,
   });
 
   if (!result) {
@@ -83,7 +97,6 @@ export async function POST(
     );
   }
 
-  // Формируем итоговый текст
   const review = [
     `**Вердикт:** ${result.verdict}`,
     `**Оценка ИИ:** ${result.score}/100`,
@@ -96,7 +109,6 @@ export async function POST(
     .filter(Boolean)
     .join('\n');
 
-  // Сохраняем в БД
   await prisma.homeworkSubmission.update({
     where: { id },
     data: {
@@ -106,10 +118,9 @@ export async function POST(
     },
   });
 
-  // Уведомляем в Telegram
   try {
     await sendTelegramNotification(
-      `🤖 <b>ИИ проверил ДЗ</b>\n\n👤 ${submission.user.name}\n📝 ${submission.homework.title}\n📊 Оценка ИИ: <b>${result.score}/100</b>\n\n${result.verdict}`
+      `🤖 <b>ИИ проверил ДЗ</b>\n\n👤 ${submission.user.name}\n📝 ${submission.homework.title}\n📊 Оценка: <b>${result.score}/100</b>\n\n${result.verdict}`
     );
   } catch {}
 

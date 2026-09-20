@@ -50,6 +50,7 @@ export async function POST(req: Request) {
     textAnswer,
     taskAnswers,
     taskCodes,
+    taskCodesMetrics,
   } = await req.json();
 
   if (!homeworkId) {
@@ -95,11 +96,7 @@ export async function POST(req: Request) {
         };
         if (result.passed) score++;
       } else {
-        checks[task.id] = {
-          answer: '',
-          passed: false,
-          message: 'Нет ответа',
-        };
+        checks[task.id] = { answer: '', passed: false, message: 'Нет ответа' };
       }
     } else {
       checks[task.id] = {
@@ -123,6 +120,14 @@ export async function POST(req: Request) {
     );
   }
 
+  // Считаем время выполнения
+  const start = await prisma.homeworkStart.findUnique({
+    where: { homeworkId_userId: { homeworkId, userId } },
+  });
+  const timeSpent = start
+    ? Math.round((Date.now() - start.startedAt.getTime()) / 1000)
+    : null;
+
   const lastSubmission = await prisma.homeworkSubmission.findFirst({
     where: { homeworkId, userId },
     orderBy: { version: 'desc' },
@@ -145,6 +150,8 @@ export async function POST(req: Request) {
       textAnswer: textAnswer || null,
       taskAnswers: checks,
       taskCodes: taskCodes || null,
+      taskCodesMetrics: taskCodesMetrics || null,
+      timeSpent,
       autoCheckPassed,
       autoCheckMessage,
       autoScore: total > 0 ? score : null,
@@ -156,8 +163,13 @@ export async function POST(req: Request) {
   try {
     let autoInfo = '';
     if (total > 0) autoInfo = `\n📊 Автопроверка: ${score} из ${total}`;
+    let timeInfo = '';
+    if (timeSpent !== null) {
+      const mins = Math.floor(timeSpent / 60);
+      timeInfo = `\n⏱ Потратил: ${mins} мин`;
+    }
     await sendTelegramNotification(
-      `📥 <b>Новая сдача ДЗ</b>\n\n👤 ${session.user.name}\n📝 ${homework.title}\n🔢 Версия: v${newVersion}${autoInfo}`
+      `📥 <b>Новая сдача ДЗ</b>\n\n👤 ${session.user.name}\n📝 ${homework.title}\n🔢 Версия: v${newVersion}${autoInfo}${timeInfo}`
     );
   } catch {}
 

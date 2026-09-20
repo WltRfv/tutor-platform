@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { HomeworkBoard } from '@/components/shared/HomeworkBoard';
-import { TaskCodeEditor } from './TaskCodeEditor';
+import { TaskCodeEditor, CodeMetrics } from './TaskCodeEditor';
 import { MathText } from '@/components/shared/MathText';
 import {
   ArrowLeft,
@@ -81,6 +81,7 @@ type LastSubmission = {
   taskCodes: Record<string, string> | null;
   autoScore: number | null;
   autoTotal: number | null;
+  timeSpent: number | null;
 } | null;
 
 type Tab = 'tasks' | 'board' | 'files' | 'text';
@@ -101,12 +102,13 @@ export function HomeworkView({
   const [taskCodes, setTaskCodes] = useState<Record<string, string>>(() => {
     const init: Record<string, string> = {};
     homework.tasks.forEach((t) => {
-      if (t.language) {
-        init[t.id] = t.starterCode || '';
-      }
+      if (t.language) init[t.id] = t.starterCode || '';
     });
     return init;
   });
+  const [taskCodesMetrics, setTaskCodesMetrics] = useState<
+    Record<string, CodeMetrics>
+  >({});
 
   const [boardData, setBoardData] = useState<any>(null);
   const [boardPreview, setBoardPreview] = useState<string>('');
@@ -114,6 +116,15 @@ export function HomeworkView({
   const [textAnswer, setTextAnswer] = useState('');
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  // 📍 Отмечаем старт ДЗ (один раз за открытие)
+  useEffect(() => {
+    fetch('/api/homework/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ homeworkId: homework.id }),
+    }).catch(() => {});
+  }, [homework.id]);
 
   const handleBoardSave = (data: { boardData: any; previewUrl: string }) => {
     setBoardData(data.boardData);
@@ -150,12 +161,13 @@ export function HomeworkView({
     }
   };
 
-  const removeFile = (i: number) => {
+  const removeFile = (i: number) =>
     setFiles((prev) => prev.filter((_, idx) => idx !== i));
-  };
 
   const submit = async () => {
-    const answeredCount = Object.values(taskAnswers).filter((a) => a.trim()).length;
+    const answeredCount = Object.values(taskAnswers).filter((a) =>
+      a.trim()
+    ).length;
     const codeCount = Object.values(taskCodes).filter((c) => c.trim()).length;
 
     const hasContent =
@@ -186,6 +198,7 @@ export function HomeworkView({
           taskCodes: Object.fromEntries(
             Object.entries(taskCodes).map(([k, v]) => [k, v.trim()])
           ),
+          taskCodesMetrics,
         }),
       });
       const data = await res.json();
@@ -203,7 +216,9 @@ export function HomeworkView({
   const needsRevision = lastSubmission?.status === 'NEEDS_REVISION';
   const canEdit = !isReviewed;
 
-  const answeredCount = Object.values(taskAnswers).filter((a) => a.trim()).length;
+  const answeredCount = Object.values(taskAnswers).filter((a) =>
+    a.trim()
+  ).length;
   const codeCount = Object.values(taskCodes).filter((c) => c.trim()).length;
   const totalTasks = homework.tasks.length;
 
@@ -235,7 +250,6 @@ export function HomeworkView({
         <ArrowLeft className="h-4 w-4" /> К списку заданий
       </Link>
 
-      {/* Заголовок */}
       <div className="backdrop-blur-xl bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-white/10 rounded-3xl p-6 mb-6">
         <div className="flex items-start gap-4 flex-wrap">
           <div className="p-3 rounded-2xl bg-gradient-to-br from-purple-500 to-blue-500 shadow-lg flex-shrink-0">
@@ -284,7 +298,6 @@ export function HomeworkView({
         )}
       </div>
 
-      {/* Статус */}
       {lastSubmission && (
         <div
           className={cn(
@@ -323,22 +336,11 @@ export function HomeworkView({
                 )}
               </div>
 
-              {lastSubmission.autoTotal !== null &&
-                lastSubmission.autoScore !== null && (
-                  <div className="mt-2 text-sm">
-                    <span className="text-slate-400">Автопроверка: </span>
-                    <span
-                      className={cn(
-                        'font-semibold',
-                        lastSubmission.autoScore === lastSubmission.autoTotal
-                          ? 'text-emerald-400'
-                          : 'text-amber-400'
-                      )}
-                    >
-                      {lastSubmission.autoScore} из {lastSubmission.autoTotal}
-                    </span>
-                  </div>
-                )}
+              {lastSubmission.timeSpent !== null && (
+                <div className="text-xs text-slate-400 mt-1">
+                  ⏱ Потрачено: {Math.floor(lastSubmission.timeSpent / 60)} мин
+                </div>
+              )}
 
               {lastSubmission.teacherComment && (
                 <div className="mt-3 p-3 rounded-xl bg-white/5 border border-white/10">
@@ -355,7 +357,6 @@ export function HomeworkView({
         </div>
       )}
 
-      {/* Редактор */}
       {canEdit && (
         <>
           <div className="mb-4 flex items-center justify-between flex-wrap gap-2">
@@ -384,7 +385,6 @@ export function HomeworkView({
             </div>
           </div>
 
-          {/* Табы */}
           <div className="grid grid-cols-4 gap-2 mb-4 p-1 rounded-xl bg-white/5 border border-white/10">
             {tabs.map((t) => (
               <button
@@ -411,7 +411,6 @@ export function HomeworkView({
             ))}
           </div>
 
-          {/* Контент таба */}
           <AnimatePresence mode="wait">
             <motion.div
               key={tab}
@@ -466,7 +465,6 @@ export function HomeworkView({
                           </div>
                         </div>
 
-                        {/* Текстовая задача */}
                         {!isCodeTask && (
                           <>
                             {task.hasAutoCheck && (
@@ -482,7 +480,6 @@ export function HomeworkView({
                                   : 'введи ответ'}
                               </div>
                             )}
-
                             <Input
                               value={answer}
                               onChange={(e) =>
@@ -503,7 +500,6 @@ export function HomeworkView({
                           </>
                         )}
 
-                        {/* Задача с кодом */}
                         {isCodeTask && (
                           <TaskCodeEditor
                             language={task.language!}
@@ -513,6 +509,12 @@ export function HomeworkView({
                               setTaskCodes((prev) => ({
                                 ...prev,
                                 [task.id]: val,
+                              }))
+                            }
+                            onMetricsChange={(m) =>
+                              setTaskCodesMetrics((prev) => ({
+                                ...prev,
+                                [task.id]: m,
                               }))
                             }
                           />
@@ -600,7 +602,6 @@ export function HomeworkView({
             </motion.div>
           </AnimatePresence>
 
-          {/* К отправке */}
           {filledCount > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -651,7 +652,6 @@ export function HomeworkView({
         </>
       )}
 
-      {/* Разбор предыдущей сдачи */}
       {lastSubmission && (
         <div className="mt-6 space-y-3">
           <h3 className="text-sm font-semibold text-white">
@@ -739,13 +739,6 @@ export function HomeworkView({
                 alt="Твоя работа"
                 className="rounded-xl border border-white/10 w-full h-auto max-h-[600px] object-contain"
               />
-              <a
-                href={lastSubmission.previewUrl}
-                download={`homework-v${lastSubmission.version}.png`}
-                className="inline-flex items-center gap-2 mt-3 text-sm text-purple-400 hover:text-purple-300 transition"
-              >
-                <Download className="h-4 w-4" /> Скачать PNG
-              </a>
             </div>
           )}
 

@@ -75,6 +75,8 @@ type Submission = {
   aiReviewScore: number | null;
   aiReviewedAt: string | null;
   taskCodes: Record<string, string> | null;
+  timeSpent: number | null;
+  taskCodesMetrics: Record<string, any> | null;
 };
 
 type Version = {
@@ -706,6 +708,94 @@ export function SubmissionViewer({
           </div>
         )}
       </div>
+      {/* Время и метрики */}
+      {(submission.timeSpent !== null || submission.taskCodesMetrics) && (
+        <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-5">
+          <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+            ⏱ Время и активность
+          </h3>
+
+          {submission.timeSpent !== null && (
+            <div className="flex items-center gap-3 mb-3">
+              <div className="text-2xl font-bold text-white">
+                {Math.floor(submission.timeSpent / 60)} мин
+              </div>
+              <div className="text-xs text-slate-500">
+                {submission.timeSpent < 60
+                  ? 'быстро'
+                  : submission.timeSpent < 300
+                  ? 'нормально'
+                  : submission.timeSpent > 1800
+                  ? 'очень долго'
+                  : 'долго'}
+              </div>
+            </div>
+          )}
+
+          {submission.taskCodesMetrics &&
+            Object.entries(submission.taskCodesMetrics).map(
+              ([taskId, m]: [string, any]) => {
+                if (!m || m.totalChars === 0) return null;
+                const pasteRatio =
+                  m.totalChars > 0 ? Math.round((m.pastedChars / m.totalChars) * 100) : 0;
+                const suspicious = pasteRatio > 70 || m.avgTypingSpeed > 15;
+
+                return (
+                  <div
+                    key={taskId}
+                    className={cn(
+                      'p-3 rounded-xl border mb-2 text-xs',
+                      suspicious
+                        ? 'bg-amber-500/10 border-amber-500/30'
+                        : 'bg-white/5 border-white/10'
+                    )}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-slate-300 font-medium">
+                        Задача с кодом
+                      </span>
+                      {suspicious && (
+                        <span className="px-2 py-0.5 rounded bg-amber-500/30 text-amber-200 font-bold">
+                          ⚠ Подозрение
+                        </span>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-slate-400">
+                      <div>
+                        Всего символов:{' '}
+                        <span className="text-white">{m.totalChars}</span>
+                      </div>
+                      <div>
+                        Вставлено:{' '}
+                        <span className={pasteRatio > 50 ? 'text-amber-400' : 'text-white'}>
+                          {m.pastedChars} ({pasteRatio}%)
+                        </span>
+                      </div>
+                      <div>
+                        Напечатано:{' '}
+                        <span className="text-white">{m.typedChars}</span>
+                      </div>
+                      <div>
+                        Скорость:{' '}
+                        <span
+                          className={
+                            m.avgTypingSpeed > 15 ? 'text-amber-400' : 'text-white'
+                          }
+                        >
+                          {m.avgTypingSpeed} симв/с
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-slate-500 mt-1">
+                      Время ввода: {m.typingDuration}с · Вставок: {m.pasteCount}
+                    </div>
+                  </div>
+                );
+              }
+            )}
+        </div>
+      )}
+
       {/* История версий */}
       {allVersions.length > 1 && (
         <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6">

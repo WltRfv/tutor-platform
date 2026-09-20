@@ -1,6 +1,5 @@
 'use client';
-import { useState, useRef } from 'react';
-
+import { useState, useRef, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
@@ -9,10 +8,8 @@ import {
   Terminal,
   Code2,
   RotateCcw,
-  Check,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
 
 const LANGUAGE_LABELS: Record<string, string> = {
   python: 'Python 3',
@@ -24,10 +21,20 @@ const LANGUAGE_LABELS: Record<string, string> = {
 
 const DEFAULT_CODE: Record<string, string> = {
   python: '# Напиши код здесь\nprint("Hello, world!")\n',
-  pascal: 'program Task;\nbegin\n  writeln(\'Hello, world!\');\nend.\n',
+  pascal: "program Task;\nbegin\n  writeln('Hello, world!');\nend.\n",
   javascript: '// Напиши код здесь\nconsole.log("Hello, world!");\n',
-  'c++': '// Напиши код здесь\n#include <iostream>\nint main() {\n  std::cout << "Hello, world!" << std::endl;\n  return 0;\n}\n',
+  'c++':
+    '// Напиши код здесь\n#include <iostream>\nint main() {\n  std::cout << "Hello, world!" << std::endl;\n  return 0;\n}\n',
   java: '// Напиши код здесь\npublic class Main {\n  public static void main(String[] args) {\n    System.out.println("Hello, world!");\n  }\n}\n',
+};
+
+export type CodeMetrics = {
+  totalChars: number;
+  pastedChars: number;
+  typedChars: number;
+  typingDuration: number;
+  pasteCount: number;
+  avgTypingSpeed: number;
 };
 
 export function TaskCodeEditor({
@@ -35,12 +42,14 @@ export function TaskCodeEditor({
   starterCode,
   value,
   onChange,
+  onMetricsChange,
   disabled = false,
 }: {
   language: string;
   starterCode: string | null;
   value: string;
   onChange: (val: string) => void;
+  onMetricsChange?: (m: CodeMetrics) => void;
   disabled?: boolean;
 }) {
   const [output, setOutput] = useState('');
@@ -50,11 +59,31 @@ export function TaskCodeEditor({
   const pastedChars = useRef(0);
   const pasteCount = useRef(0);
 
-  const resetMetrics = () => {
-    firstKeystrokeAt.current = null;
-    pastedChars.current = 0;
-    pasteCount.current = 0;
+  const collectMetrics = (): CodeMetrics => {
+    const totalChars = value.length;
+    const pasted = Math.min(pastedChars.current, totalChars);
+    const typed = Math.max(0, totalChars - pasted);
+    const duration = firstKeystrokeAt.current
+      ? Math.max(1, Math.round((Date.now() - firstKeystrokeAt.current) / 1000))
+      : 0;
+    const avgSpeed = duration > 0 ? typed / duration : 0;
+    return {
+      totalChars,
+      pastedChars: pasted,
+      typedChars: typed,
+      typingDuration: duration,
+      pasteCount: pasteCount.current,
+      avgTypingSpeed: Math.round(avgSpeed * 100) / 100,
+    };
   };
+
+  // Сообщаем наружу о метриках при каждом изменении value
+  useEffect(() => {
+    if (onMetricsChange) {
+      onMetricsChange(collectMetrics());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
 
   const initialCode = starterCode || DEFAULT_CODE[language] || '';
 
@@ -76,28 +105,8 @@ export function TaskCodeEditor({
     }
   };
 
-  const collectMetrics = () => {
-    const totalChars = value.length;
-    const pasted = Math.min(pastedChars.current, totalChars);
-    const typed = Math.max(0, totalChars - pasted);
-    const duration = firstKeystrokeAt.current
-      ? Math.max(1, Math.round((Date.now() - firstKeystrokeAt.current) / 1000))
-      : 0;
-    const avgSpeed = duration > 0 ? typed / duration : 0;
-    return {
-      totalChars,
-      pastedChars: pasted,
-      typedChars: typed,
-      typingDuration: duration,
-      pasteCount: pasteCount.current,
-      avgTypingSpeed: Math.round(avgSpeed * 100) / 100,
-    };
-  };
-
   const run = async () => {
-    if (!value.trim()) {
-      return toast.error('Сначала напиши код');
-    }
+    if (!value.trim()) return toast.error('Сначала напиши код');
     setRunning(true);
     setOutput('');
     const metrics = collectMetrics();
@@ -128,13 +137,14 @@ export function TaskCodeEditor({
   const resetCode = () => {
     if (!confirm('Сбросить код к начальному?')) return;
     onChange(starterCode || DEFAULT_CODE[language] || '');
-    resetMetrics();
+    firstKeystrokeAt.current = null;
+    pastedChars.current = 0;
+    pasteCount.current = 0;
     setOutput('');
   };
 
   return (
     <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 overflow-hidden">
-      {/* Шапка */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-emerald-500/20 bg-emerald-500/5">
         <div className="flex items-center gap-2">
           <Code2 className="h-4 w-4 text-emerald-400" />
@@ -169,7 +179,6 @@ export function TaskCodeEditor({
         </div>
       </div>
 
-      {/* Редактор */}
       <textarea
         value={value}
         onChange={(e) => handleChange(e.target.value)}
@@ -182,7 +191,6 @@ export function TaskCodeEditor({
         style={{ minHeight: '200px' }}
       />
 
-      {/* Результат */}
       {output && (
         <div className="border-t border-emerald-500/20">
           <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-900/50">

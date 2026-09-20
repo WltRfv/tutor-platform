@@ -76,6 +76,8 @@ export default async function SubmissionPage({
           aiReview: submission.aiReview,
           aiReviewScore: submission.aiReviewScore,
           aiReviewedAt: submission.aiReviewedAt?.toISOString() || null,
+          timeSpent: submission.timeSpent,
+          taskCodesMetrics: submission.taskCodesMetrics as any,
           homework: {
             id: submission.homework.id,
             title: submission.homework.title,

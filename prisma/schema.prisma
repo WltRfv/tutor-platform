@@ -54,6 +54,7 @@ model User {
   retakeRequests    RetakeRequest[]
   topicUnlocks      TopicUnlock[]
   notificationReads NotificationRead[]
+  homeworkStarts HomeworkStart[]
 }
 
 // ============================================
@@ -323,6 +324,7 @@ model Homework {
 
   tasks       HomeworkTask[]
   submissions HomeworkSubmission[]
+  starts    HomeworkStart[]
 
   @@index([teacherId, createdAt])
   @@index([subjectId])
@@ -385,6 +387,8 @@ model HomeworkSubmission {
   aiReviewScore  Int?
   aiReviewedAt   DateTime?
   taskCodes Json?
+  timeSpent        Int?
+  taskCodesMetrics Json?
 
   @@index([homeworkId, userId, version])
   @@index([homeworkId, createdAt])
@@ -470,5 +474,18 @@ model NotificationRead {
   lastReadAt DateTime @default(now())
 
   @@unique([userId, type])
+  @@index([userId])
+}
+
+model HomeworkStart {
+  id           String   @id @default(cuid())
+  homeworkId   String
+  homework     Homework @relation(fields: [homeworkId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  startedAt    DateTime @default(now())
+  lastActiveAt DateTime @default(now())
+
+  @@unique([homeworkId, userId])
   @@index([userId])
 }

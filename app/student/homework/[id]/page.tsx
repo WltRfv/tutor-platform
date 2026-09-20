@@ -67,6 +67,7 @@ export default async function StudentHomeworkDetailPage({
               taskCodes: homework.submissions[0].taskCodes as any,
               autoScore: homework.submissions[0].autoScore,
               autoTotal: homework.submissions[0].autoTotal,
+              timeSpent: homework.submissions[0].timeSpent,
             }
           : null
       }
