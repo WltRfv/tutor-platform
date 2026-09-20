@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { Activity, Filter } from 'lucide-react';
+import { Activity } from 'lucide-react';
 
 const EVENT_LABELS: Record<string, { label: string; color: string; emoji: string }> = {
   tab_hidden: { label: 'Ушёл со вкладки', color: 'text-red-400', emoji: '🚪' },
@@ -12,17 +12,21 @@ export default async function ActivityPage() {
   const activities = await prisma.activity.findMany({
     orderBy: { createdAt: 'desc' },
     take: 100,
-    include: { user: { select: { name: true, email: true, grade: true } } },
+    include: {
+      user: { select: { name: true, email: true, grade: true } },
+    },
   });
 
-  // Группируем по ученикам для краткой сводки
-  const byUser = activities.reduce((acc, a) => {
-    if (!acc[a.userId]) acc[a.userId] = { name: a.user.name, count: 0 };
-    acc[a.userId].count++;
-    return acc;
-  }, {} as Record<string, { name: string; count: number }>);
+  // Топ учеников по активности
+  const byUser = new Map<string, { name: string; count: number }>();
+  activities.forEach((a) => {
+    if (!byUser.has(a.userId)) {
+      byUser.set(a.userId, { name: a.user.name, count: 0 });
+    }
+    byUser.get(a.userId)!.count++;
+  });
 
-  const topUsers = Object.entries(byUser)
+  const topUsers = Array.from(byUser.entries())
     .sort((a, b) => b[1].count - a[1].count)
     .slice(0, 5);
 
@@ -39,15 +43,19 @@ export default async function ActivityPage() {
       </div>
 
       {topUsers.length > 0 && (
-        <div className="grid md:grid-cols-5 gap-3 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
           {topUsers.map(([userId, info], i) => (
             <div
               key={userId}
               className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl p-4"
             >
               <div className="text-xs text-slate-500 mb-1">#{i + 1}</div>
-              <div className="text-sm text-white font-medium truncate">{info.name}</div>
-              <div className="text-lg font-bold text-blue-400 mt-1">{info.count}</div>
+              <div className="text-sm text-white font-medium truncate">
+                {info.name}
+              </div>
+              <div className="text-lg font-bold text-blue-400 mt-1">
+                {info.count}
+              </div>
             </div>
           ))}
         </div>

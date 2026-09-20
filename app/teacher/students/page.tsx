@@ -5,27 +5,29 @@ import {
   Mail,
   Phone,
   CheckCircle2,
-  Clock,
-  TrendingUp,
   ArrowRight,
+  ClipboardList,
 } from 'lucide-react';
-
-const SUBJECT_LABELS: Record<string, string> = {
-  MATH_5_6: 'Математика 5–6',
-  ALGEBRA_7_9: 'Алгебра 7–9',
-  GEOMETRY_7_9: 'Геометрия 7–9',
-  OGE_PREP: 'ОГЭ',
-  VPR_PREP: 'ВПР',
-  INFORMATICS: 'Информатика',
-};
 
 export default async function StudentsPage() {
   const students = await prisma.user.findMany({
     where: { role: 'STUDENT', status: 'APPROVED' },
     orderBy: { createdAt: 'desc' },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      grade: true,
+      phone: true,
+      userSubjects: {
+        select: {
+          subject: { select: { id: true, name: true } },
+        },
+      },
+    },
   });
 
-  const studentsWithStats = await Promise.all(
+  const withStats = await Promise.all(
     students.map(async (s) => {
       const activityCount = await prisma.activity.count({ where: { userId: s.id } });
       const submissions = await prisma.submission.findMany({
@@ -38,7 +40,13 @@ export default async function StudentsPage() {
               submissions.reduce((sum, x) => sum + (x.score || 0), 0) / submissions.length
             )
           : null;
-      return { ...s, activityCount, avgScore, submissionsCount: submissions.length };
+      return {
+        ...s,
+        subjects: s.userSubjects.map((us) => us.subject),
+        activityCount,
+        submissionsCount: submissions.length,
+        avgScore,
+      };
     })
   );
 
@@ -62,7 +70,7 @@ export default async function StudentsPage() {
         </div>
       ) : (
         <div className="grid md:grid-cols-2 gap-4">
-          {studentsWithStats.map((s) => (
+          {withStats.map((s) => (
             <Link
               key={s.id}
               href={`/teacher/students/${s.id}`}
@@ -95,14 +103,18 @@ export default async function StudentsPage() {
               </div>
 
               <div className="flex flex-wrap gap-1.5 mb-4">
-                {s.subjects.map((sub) => (
-                  <span
-                    key={sub}
-                    className="px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-200 text-xs"
-                  >
-                    {SUBJECT_LABELS[sub] || sub}
-                  </span>
-                ))}
+                {s.subjects.length === 0 ? (
+                  <span className="text-xs text-slate-500">Нет предметов</span>
+                ) : (
+                  s.subjects.map((sub) => (
+                    <span
+                      key={sub.id}
+                      className="px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-200 text-xs"
+                    >
+                      {sub.name}
+                    </span>
+                  ))
+                )}
               </div>
 
               <div className="grid grid-cols-3 gap-2 pt-3 border-t border-white/5">

@@ -5,25 +5,8 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, Save, ArrowLeft, Plus, Trash2, CheckCircle2 } from 'lucide-react';
+import { Loader2, Save, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
-
-const SUBJECTS = [
-  { value: 'MATH_5_6', label: 'Математика 5–6' },
-  { value: 'ALGEBRA_7_9', label: 'Алгебра 7–9' },
-  { value: 'GEOMETRY_7_9', label: 'Геометрия 7–9' },
-  { value: 'OGE_PREP', label: 'Подготовка к ОГЭ' },
-  { value: 'VPR_PREP', label: 'Подготовка к ВПР' },
-  { value: 'INFORMATICS', label: 'Информатика' },
-];
-
-type Question = {
-  id?: string;
-  text: string;
-  options: string[];
-  correct: number;
-};
 
 export default function EditTestPage() {
   const router = useRouter();
@@ -32,74 +15,44 @@ export default function EditTestPage() {
 
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
+  const [subjects, setSubjects] = useState<any[]>([]);
   const [form, setForm] = useState({
     title: '',
-    subject: 'INFORMATICS',
+    subjectId: '',
+    topicId: '',
     timeLimit: 15,
+    attemptsAllowed: 1,
     published: true,
   });
-  const [questions, setQuestions] = useState<Question[]>([
-    { text: '', options: ['', '', '', ''], correct: 0 },
-  ]);
+  const [questions, setQuestions] = useState<any[]>([]);
+  const [mode, setMode] = useState('MANUAL');
 
   useEffect(() => {
-    fetch(`/api/teacher/tests/${id}`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.error) throw new Error(data.error);
+    Promise.all([
+      fetch('/api/teacher/subjects').then((r) => r.json()),
+      fetch(`/api/teacher/tests/${id}`).then((r) => r.json()),
+    ])
+      .then(([subjectsData, testData]) => {
+        setSubjects(subjectsData);
+        if (testData.error) throw new Error(testData.error);
         setForm({
-          title: data.title,
-          subject: data.subject,
-          timeLimit: data.timeLimit || 15,
-          published: data.published,
+          title: testData.title,
+          subjectId: testData.subjectId,
+          topicId: testData.topicId || '',
+          timeLimit: testData.timeLimit || 15,
+          attemptsAllowed: testData.attemptsAllowed || 1,
+          published: testData.published,
         });
-        const qs = (data.questions as Question[]) || [];
-        setQuestions(
-          qs.length
-            ? qs.map((q) => ({
-                text: q.text,
-                options: q.options,
-                correct: q.correct,
-              }))
-            : [{ text: '', options: ['', '', '', ''], correct: 0 }]
-        );
+        setQuestions((testData.questions as any[]) || []);
+        setMode(testData.mode);
       })
       .catch((e) => toast.error(e.message))
       .finally(() => setFetching(false));
   }, [id]);
 
-  const addQuestion = () => {
-    setQuestions([...questions, { text: '', options: ['', '', '', ''], correct: 0 }]);
-  };
-
-  const removeQuestion = (i: number) => {
-    if (questions.length === 1) return toast.error('Должен быть хотя бы 1 вопрос');
-    setQuestions(questions.filter((_, idx) => idx !== i));
-  };
-
-  const updateQuestion = (i: number, patch: Partial<Question>) => {
-    const next = [...questions];
-    next[i] = { ...next[i], ...patch };
-    setQuestions(next);
-  };
-
-  const updateOption = (qi: number, oi: number, val: string) => {
-    const next = [...questions];
-    next[qi].options[oi] = val;
-    setQuestions(next);
-  };
-
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!form.title.trim()) return toast.error('Введи название теста');
-
-    for (let i = 0; i < questions.length; i++) {
-      const q = questions[i];
-      if (!q.text.trim()) return toast.error(`Вопрос ${i + 1}: пустой текст`);
-      if (q.options.some((o) => !o.trim()))
-        return toast.error(`Вопрос ${i + 1}: заполни все варианты`);
-    }
+    if (!form.title.trim()) return toast.error('Введи название');
 
     setLoading(true);
     try {
@@ -107,16 +60,16 @@ export default function EditTestPage() {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...form,
-          questions: questions.map((q, i) => ({
-            id: q.id || `q${i + 1}`,
-            text: q.text,
-            options: q.options,
-            correct: q.correct,
-          })),
+          title: form.title,
+          subjectId: form.subjectId,
+          topicId: form.topicId || null,
+          timeLimit: form.timeLimit,
+          attemptsAllowed: form.attemptsAllowed,
+          published: form.published,
+          ...(mode === 'MANUAL' && { questions }),
         }),
       });
-      if (!res.ok) throw new Error('Ошибка при сохранении');
+      if (!res.ok) throw new Error('Ошибка');
       toast.success('Тест обновлён');
       router.push(`/teacher/content/tests/${id}`);
       router.refresh();
@@ -133,27 +86,32 @@ export default function EditTestPage() {
         <div className="animate-pulse space-y-4">
           <div className="h-9 w-64 bg-white/10 rounded-lg" />
           <div className="h-12 bg-white/5 rounded-xl" />
-          <div className="h-48 bg-white/5 rounded-xl" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-8 max-w-4xl">
+    <div className="p-8 max-w-3xl">
       <Link
         href={`/teacher/content/tests/${id}`}
         className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white mb-6"
       >
-        <ArrowLeft className="h-4 w-4" /> Назад к тесту
+        <ArrowLeft className="h-4 w-4" /> Назад
       </Link>
 
-      <h1 className="text-3xl font-bold text-white mb-1">Редактирование теста</h1>
-      <p className="text-slate-400 mb-8">Обнови вопросы и сохрани изменения</p>
+      <h1 className="text-3xl font-bold text-white mb-1">Редактирование</h1>
+      <p className="text-slate-400 mb-6 text-sm">
+        {mode === 'BANK_CUSTOM' && (
+          <span className="text-amber-400">
+            ⚠️ Тест из банка — вопросы изменить нельзя, только параметры
+          </span>
+        )}
+      </p>
 
-      <form onSubmit={submit} className="space-y-6">
+      <form onSubmit={submit} className="space-y-5">
         <div>
-          <Label className="text-slate-300">Название теста</Label>
+          <Label className="text-slate-300">Название</Label>
           <Input
             value={form.title}
             onChange={(e) => setForm({ ...form, title: e.target.value })}
@@ -164,128 +122,53 @@ export default function EditTestPage() {
 
         <div className="grid md:grid-cols-2 gap-4">
           <div>
-            <Label className="text-slate-300">Предмет</Label>
-            <select
-              value={form.subject}
-              onChange={(e) => setForm({ ...form, subject: e.target.value })}
-              className="mt-2 w-full bg-slate-900 border border-white/10 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:border-purple-500/50"
-            >
-              {SUBJECTS.map((s) => (
-                <option key={s.value} value={s.value}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <Label className="text-slate-300">Ограничение времени (мин)</Label>
+            <Label className="text-slate-300">Время (мин)</Label>
             <Input
               type="number"
-              min={1}
               value={form.timeLimit}
-              onChange={(e) => setForm({ ...form, timeLimit: Number(e.target.value) })}
+              onChange={(e) =>
+                setForm({ ...form, timeLimit: Number(e.target.value) })
+              }
+              className="mt-2 bg-white/5 border-white/10 text-white"
+            />
+          </div>
+          <div>
+            <Label className="text-slate-300">Попыток</Label>
+            <Input
+              type="number"
+              value={form.attemptsAllowed}
+              onChange={(e) =>
+                setForm({ ...form, attemptsAllowed: Number(e.target.value) })
+              }
               className="mt-2 bg-white/5 border-white/10 text-white"
             />
           </div>
         </div>
 
-        <div className="space-y-4">
-          <AnimatePresence>
-            {questions.map((q, qi) => (
-              <motion.div
-                key={qi}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, x: -50 }}
-                className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-5"
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-sm text-purple-300 font-semibold">
-                    Вопрос {qi + 1}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => removeQuestion(qi)}
-                    className="p-1.5 rounded-lg text-red-400 hover:bg-red-500/10"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-
-                <Input
-                  value={q.text}
-                  onChange={(e) => updateQuestion(qi, { text: e.target.value })}
-                  placeholder="Текст вопроса"
-                  className="mb-4 bg-white/5 border-white/10 text-white"
-                  required
-                />
-
-                <div className="space-y-2">
-                  {q.options.map((opt, oi) => {
-                    const isCorrect = q.correct === oi;
-                    return (
-                      <div key={oi} className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => updateQuestion(qi, { correct: oi })}
-                          className={`w-8 h-8 rounded-full border flex items-center justify-center flex-shrink-0 transition ${
-                            isCorrect
-                              ? 'bg-emerald-500 border-emerald-500 text-white'
-                              : 'border-white/20 text-slate-400 hover:border-emerald-500/50'
-                          }`}
-                        >
-                          {isCorrect ? (
-                            <CheckCircle2 className="h-4 w-4" />
-                          ) : (
-                            String.fromCharCode(65 + oi)
-                          )}
-                        </button>
-                        <Input
-                          value={opt}
-                          onChange={(e) => updateOption(qi, oi, e.target.value)}
-                          placeholder={`Вариант ${String.fromCharCode(65 + oi)}`}
-                          className="bg-white/5 border-white/10 text-white"
-                          required
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <p className="text-xs text-slate-500 mt-3">
-                  ✅ Нажми на букву слева, чтобы отметить правильный вариант
-                </p>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-
-          <Button
-            type="button"
-            onClick={addQuestion}
-            variant="outline"
-            className="w-full gap-2 border-white/20 text-white hover:bg-white/5"
-          >
-            <Plus className="h-4 w-4" /> Добавить вопрос
-          </Button>
-        </div>
-
-        <label className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 cursor-pointer">
+        <label className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
           <input
             type="checkbox"
             checked={form.published}
             onChange={(e) => setForm({ ...form, published: e.target.checked })}
             className="w-4 h-4 accent-purple-500"
           />
-          <span className="text-sm text-slate-200">Опубликован (ученики видят)</span>
+          <span className="text-sm text-slate-200">Опубликован</span>
         </label>
+
+        {mode === 'BANK_CUSTOM' && (
+          <div className="backdrop-blur-xl bg-amber-500/5 border border-amber-500/20 rounded-2xl p-4 text-sm text-amber-200">
+            Вопросы этого теста собраны из банка ({questions.length} шт).
+            Если нужно изменить — удали тест и создай новый.
+          </div>
+        )}
 
         <Button
           type="submit"
           disabled={loading}
-          className="w-full h-12 gap-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white"
+          className="w-full h-12 gap-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white"
         >
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-          {loading ? 'Сохранение...' : 'Сохранить изменения'}
+          {loading ? 'Сохранение...' : 'Сохранить'}
         </Button>
       </form>
     </div>

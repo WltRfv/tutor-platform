@@ -2,31 +2,26 @@ import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import { BookOpen, FileText, Plus, ArrowRight, Eye } from 'lucide-react';
 
-const SUBJECT_LABELS: Record<string, string> = {
-  MATH_5_6: 'Математика 5–6',
-  ALGEBRA_7_9: 'Алгебра 7–9',
-  GEOMETRY_7_9: 'Геометрия 7–9',
-  OGE_PREP: 'ОГЭ',
-  VPR_PREP: 'ВПР',
-  INFORMATICS: 'Информатика',
-};
-
 export default async function ContentPage() {
   const notes = await prisma.note.findMany({
     orderBy: { createdAt: 'desc' },
     take: 20,
+    include: { subject: { select: { name: true } } },
   });
 
   const tests = await prisma.test.findMany({
     orderBy: { createdAt: 'desc' },
     take: 20,
+    include: { subject: { select: { name: true } } },
   });
 
   return (
     <div className="p-8 max-w-6xl">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-white mb-1">Конспекты и тесты</h1>
-        <p className="text-slate-400">Создавай материалы и просматривай их как ученик</p>
+        <p className="text-slate-400">
+          Создавай материалы и просматривай их как ученик
+        </p>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6">
@@ -61,7 +56,7 @@ export default async function ContentPage() {
                     <div className="flex-1 min-w-0">
                       <div className="text-sm text-white truncate">{n.title}</div>
                       <div className="text-xs text-slate-500">
-                        {SUBJECT_LABELS[n.subject]}{' '}
+                        {n.subject.name}{' '}
                         {n.published ? '· ✅ опубликован' : '· черновик'}
                       </div>
                     </div>
@@ -104,7 +99,7 @@ export default async function ContentPage() {
                     <div className="flex-1 min-w-0">
                       <div className="text-sm text-white truncate">{t.title}</div>
                       <div className="text-xs text-slate-500">
-                        {SUBJECT_LABELS[t.subject]}{' '}
+                        {t.subject.name}{' '}
                         {t.published ? '· ✅ опубликован' : '· черновик'}
                       </div>
                     </div>

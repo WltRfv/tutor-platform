@@ -1,6 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import Link from 'next/link';
-import { FileText, CheckCircle2, Award } from 'lucide-react';
+import { FileText, Award } from 'lucide-react';
 
 export default async function SubmissionsPage() {
   const submissions = await prisma.submission.findMany({
@@ -8,7 +7,12 @@ export default async function SubmissionsPage() {
     take: 100,
     include: {
       user: { select: { name: true, email: true, grade: true } },
-      test: { select: { title: true, subject: true } },
+      test: {
+        select: {
+          title: true,
+          subject: { select: { name: true } },
+        },
+      },
     },
   });
 
@@ -68,8 +72,15 @@ export default async function SubmissionsPage() {
                     </div>
                     <span className="text-slate-200 truncate">{s.user.name}</span>
                   </div>
-                  <div className="col-span-4 text-slate-300 truncate">
-                    {s.test?.title || <span className="text-slate-500">Задание</span>}
+                  <div className="col-span-4 min-w-0">
+                    <div className="text-slate-300 truncate">
+                      {s.test?.title || <span className="text-slate-500">Задание</span>}
+                    </div>
+                    {s.test?.subject && (
+                      <div className="text-xs text-slate-500 truncate">
+                        {s.test.subject.name}
+                      </div>
+                    )}
                   </div>
                   <div className="col-span-2 text-slate-400">
                     {s.user.grade ? `${s.user.grade} кл.` : '—'}

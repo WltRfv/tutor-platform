@@ -1,8 +1,19 @@
 import { prisma } from '@/lib/prisma';
-import { Settings, Database, Server, Users, Activity, FileText, BookOpen, Code2, Shield } from 'lucide-react';
+import {
+  Settings,
+  Database,
+  Server,
+  Users,
+  Activity,
+  FileText,
+  BookOpen,
+  Code2,
+  Shield,
+  ClipboardList,
+} from 'lucide-react';
 
 export default async function SettingsPage() {
-  const [users, students, teachers, notes, tests, activities, submissions, codeRuns] =
+  const [users, students, teachers, notes, tests, activities, submissions, codeRuns, homeworks] =
     await Promise.all([
       prisma.user.count(),
       prisma.user.count({ where: { role: 'STUDENT', status: 'APPROVED' } }),
@@ -12,6 +23,7 @@ export default async function SettingsPage() {
       prisma.activity.count(),
       prisma.submission.count(),
       prisma.codeRun.count(),
+      prisma.homework.count(),
     ]);
 
   const stats = [
@@ -20,6 +32,7 @@ export default async function SettingsPage() {
     { label: 'Учителей', value: teachers, icon: Shield, color: 'from-amber-500 to-orange-500' },
     { label: 'Конспектов', value: notes, icon: BookOpen, color: 'from-emerald-500 to-teal-500' },
     { label: 'Тестов', value: tests, icon: FileText, color: 'from-orange-500 to-red-500' },
+    { label: 'ДЗ', value: homeworks, icon: ClipboardList, color: 'from-blue-500 to-indigo-500' },
     { label: 'Событий активности', value: activities, icon: Activity, color: 'from-blue-500 to-indigo-500' },
     { label: 'Сданных тестов', value: submissions, icon: FileText, color: 'from-emerald-500 to-green-500' },
     { label: 'Запусков кода', value: codeRuns, icon: Code2, color: 'from-purple-500 to-pink-500' },
@@ -37,7 +50,7 @@ export default async function SettingsPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-3 mb-8">
         {stats.map((s, i) => (
           <div
             key={i}

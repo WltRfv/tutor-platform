@@ -11,6 +11,7 @@ import {
   Users,
   Server,
   ArrowRight,
+  ClipboardList,
 } from 'lucide-react';
 
 const EVENT_LABELS: Record<string, string> = {
@@ -27,6 +28,7 @@ export default async function AdminHome() {
   const totalUsers = await prisma.user.count();
   const totalActivity = await prisma.activity.count();
   const totalSubmissions = await prisma.submission.count();
+  const totalHomeworks = await prisma.homeworkSubmission.count();
 
   const activityToday = await prisma.activity.count({
     where: {
@@ -41,18 +43,68 @@ export default async function AdminHome() {
   });
 
   const cards = [
-    { label: 'Всего пользователей', value: totalUsers, icon: Users, color: 'from-purple-500 to-pink-500' },
-    { label: 'Всего событий', value: totalActivity, icon: Activity, color: 'from-blue-500 to-cyan-500' },
-    { label: 'Событий сегодня', value: activityToday, icon: Server, color: 'from-emerald-500 to-teal-500' },
-    { label: 'Сдано работ', value: totalSubmissions, icon: FileText, color: 'from-orange-500 to-red-500' },
+    {
+      label: 'Всего пользователей',
+      value: totalUsers,
+      icon: Users,
+      color: 'from-purple-500 to-pink-500',
+    },
+    {
+      label: 'Всего событий',
+      value: totalActivity,
+      icon: Activity,
+      color: 'from-blue-500 to-cyan-500',
+    },
+    {
+      label: 'Событий сегодня',
+      value: activityToday,
+      icon: Server,
+      color: 'from-emerald-500 to-teal-500',
+    },
+    {
+      label: 'Сдано ДЗ',
+      value: totalHomeworks,
+      icon: ClipboardList,
+      color: 'from-orange-500 to-red-500',
+    },
   ];
 
   const menu = [
-    { href: '/teacher/admin/activity', label: 'Активность учеников', desc: 'Кто, когда и что делал', icon: Activity, color: 'text-blue-400' },
-    { href: '/teacher/admin/compiler', label: 'Логи компилятора', desc: 'Запуски кода учениками', icon: Code2, color: 'text-purple-400' },
-    { href: '/teacher/admin/submissions', label: 'Сданные работы', desc: 'Код и ответы на проверку', icon: FileText, color: 'text-emerald-400' },
-    { href: '/teacher/admin/notifications', label: 'Уведомления', desc: 'Настройка Telegram-бота', icon: MessageSquare, color: 'text-orange-400' },
-    { href: '/teacher/admin/settings', label: 'Настройки системы', desc: 'Безопасность и параметры', icon: Shield, color: 'text-red-400' },
+    {
+      href: '/teacher/admin/activity',
+      label: 'Активность учеников',
+      desc: 'Кто, когда и что делал',
+      icon: Activity,
+      color: 'text-blue-400',
+    },
+    {
+      href: '/teacher/admin/compiler',
+      label: 'Логи компилятора',
+      desc: 'Запуски кода учениками',
+      icon: Code2,
+      color: 'text-purple-400',
+    },
+    {
+      href: '/teacher/admin/submissions',
+      label: 'Сданные работы',
+      desc: 'Код и ответы на проверку',
+      icon: FileText,
+      color: 'text-emerald-400',
+    },
+    {
+      href: '/teacher/admin/notifications',
+      label: 'Уведомления',
+      desc: 'Настройка Telegram-бота',
+      icon: MessageSquare,
+      color: 'text-orange-400',
+    },
+    {
+      href: '/teacher/admin/settings',
+      label: 'Настройки системы',
+      desc: 'Безопасность и параметры',
+      icon: Shield,
+      color: 'text-red-400',
+    },
   ];
 
   return (
@@ -70,9 +122,13 @@ export default async function AdminHome() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {cards.map((s, i) => (
           <div key={i} className="relative group">
-            <div className={`absolute inset-0 bg-gradient-to-br ${s.color} opacity-0 group-hover:opacity-20 rounded-2xl blur-xl transition-opacity`} />
+            <div
+              className={`absolute inset-0 bg-gradient-to-br ${s.color} opacity-0 group-hover:opacity-20 rounded-2xl blur-xl transition-opacity`}
+            />
             <div className="relative backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-5">
-              <div className={`inline-flex p-2.5 rounded-xl bg-gradient-to-br ${s.color} mb-3 shadow-lg`}>
+              <div
+                className={`inline-flex p-2.5 rounded-xl bg-gradient-to-br ${s.color} mb-3 shadow-lg`}
+              >
                 <s.icon className="h-5 w-5 text-white" />
               </div>
               <div className="text-3xl font-bold text-white mb-1">{s.value}</div>
@@ -104,9 +160,13 @@ export default async function AdminHome() {
         </div>
 
         <div className="relative backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 h-fit">
-          <h2 className="text-lg font-semibold text-white mb-4">Последняя активность</h2>
+          <h2 className="text-lg font-semibold text-white mb-4">
+            Последняя активность
+          </h2>
           {lastActivity.length === 0 ? (
-            <p className="text-slate-500 text-sm py-4 text-center">Событий пока нет</p>
+            <p className="text-slate-500 text-sm py-4 text-center">
+              Событий пока нет
+            </p>
           ) : (
             <div className="space-y-3">
               {lastActivity.map((a) => (

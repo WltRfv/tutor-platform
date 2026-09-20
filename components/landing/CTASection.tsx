@@ -4,9 +4,32 @@ import { useInView } from 'react-intersection-observer';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Sparkles } from 'lucide-react';
+import { useEffect, useState } from 'react';
+
+type Particle = {
+  id: number;
+  left: number;
+  top: number;
+  duration: number;
+  delay: number;
+};
 
 export function CTASection() {
   const { ref, inView } = useInView({ threshold: 0.2, triggerOnce: true });
+  const [particles, setParticles] = useState<Particle[]>([]);
+
+  // Частицы генерируются только на клиенте
+  useEffect(() => {
+    setParticles(
+      Array.from({ length: 15 }, (_, i) => ({
+        id: i,
+        left: Math.random() * 100,
+        top: Math.random() * 100,
+        duration: 4 + Math.random() * 4,
+        delay: Math.random() * 3,
+      }))
+    );
+  }, []);
 
   return (
     <section ref={ref} className="relative py-24">
@@ -20,19 +43,16 @@ export function CTASection() {
           <div className="absolute inset-0 bg-gradient-to-br from-purple-600 via-purple-500 to-blue-600" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.15),transparent_50%)]" />
 
-          {[...Array(15)].map((_, i) => (
+          {particles.map((p) => (
             <motion.div
-              key={i}
+              key={p.id}
               className="absolute w-1.5 h-1.5 rounded-full bg-white/40"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-              }}
+              style={{ left: `${p.left}%`, top: `${p.top}%` }}
               animate={{ y: [0, -30, 0], opacity: [0, 1, 0] }}
               transition={{
-                duration: 4 + Math.random() * 4,
+                duration: p.duration,
                 repeat: Infinity,
-                delay: Math.random() * 3,
+                delay: p.delay,
               }}
             />
           ))}
@@ -52,8 +72,7 @@ export function CTASection() {
               Готов улучшить свои оценки?
             </h2>
             <p className="text-white/90 text-lg max-w-2xl mx-auto mb-10">
-              Оставь заявку — я свяжусь с тобой и подберу удобное время для
-              первого занятия.
+              Оставь заявку — я свяжусь с тобой и подберу удобное время для первого занятия.
             </p>
 
             <div className="flex gap-4 justify-center flex-wrap">

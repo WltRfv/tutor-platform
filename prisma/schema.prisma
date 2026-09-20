@@ -7,6 +7,10 @@ datasource db {
   provider = "postgresql"
 }
 
+// ============================================
+// ENUMS
+// ============================================
+
 enum Role {
   STUDENT
   TEACHER
@@ -18,71 +22,401 @@ enum ApplicationStatus {
   REJECTED
 }
 
-enum Subject {
-  MATH_5_6
-  ALGEBRA_7_9
-  GEOMETRY_7_9
-  OGE_PREP
-  VPR_PREP
-  INFORMATICS
-}
+// ============================================
+// USER
+// ============================================
 
 model User {
-  id        String            @id @default(cuid())
-  email     String            @unique
-  name      String
-  password  String
-  role      Role              @default(STUDENT)
-  status    ApplicationStatus @default(PENDING)
-  grade     Int?
-  phone     String?
+  id            String            @id @default(cuid())
+  email         String            @unique
+  name          String
+  password      String
+  role          Role              @default(STUDENT)
+  status        ApplicationStatus @default(PENDING)
+  grade         Int?
+  phone         String?
   messengerLink String?
-  subjects  Subject[]
-  createdAt DateTime          @default(now())
-  updatedAt DateTime          @updatedAt
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
 
-  activities  Activity[]
-  submissions Submission[]
-  notes       Note[]       @relation("TeacherNotes")
-  codeRuns    CodeRun[]      // ← добавили
+  activities        Activity[]
+  submissions       Submission[]
+  notes             Note[]               @relation("TeacherNotes")
+  codeRuns          CodeRun[]
+  lessons           Lesson[]             @relation("UserLessons")
+  taughtLessons     Lesson[]             @relation("TeacherLessons")
+  homeworkCreated   Homework[]           @relation("TeacherHomework")
+  homeworkTargeted  Homework[]           @relation("UserHomeworkTarget")
+  homeworkSubmitted HomeworkSubmission[]
+  userSubjects      UserSubject[]
+  testsCreated      Test[]               @relation("TeacherTests")
+  questions         Question[]
+  retakeRequests    RetakeRequest[]
+  topicUnlocks      TopicUnlock[]
+  notificationReads NotificationRead[]
 }
+
+// ============================================
+// SUBJECTS (динамический реестр)
+// ============================================
+
+model Subjects {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  name      String
+  category  String
+  grade     Int?
+  color     String   @default("purple")
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users     UserSubject[]
+  notes     Note[]
+  tests     Test[]
+  homeworks Homework[]
+  lessons   Lesson[]
+  questions Question[]
+  topics    Topic[]
+
+  @@map("Subjects")
+}
+
+model UserSubject {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subjectId String
+  subject   Subjects @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  addedBy   String   @default("AUTO")
+  createdAt DateTime @default(now())
+
+  @@unique([userId, subjectId])
+  @@index([userId])
+  @@index([subjectId])
+}
+
+// ============================================
+// TOPICS
+// ============================================
+
+model Topic {
+  id          String   @id @default(cuid())
+  subjectId   String
+  subject     Subjects @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  order       Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  notes     Note[]
+  tests     Test[]
+  homeworks Homework[]
+  unlocks   TopicUnlock[]
+
+  @@index([subjectId, order])
+}
+
+model TopicUnlock {
+  id         String   @id @default(cuid())
+  topicId    String
+  topic      Topic    @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  unlockedAt DateTime @default(now())
+
+  @@unique([topicId, userId])
+  @@index([userId])
+}
+
+// ============================================
+// NOTES (конспекты)
+// ============================================
 
 model Note {
   id        String   @id @default(cuid())
   title     String
   content   String
-  subject   Subject
-  topic     String?
+  subjectId String
+  subject   Subjects @relation(fields: [subjectId], references: [id])
+  topicId   String?
+  topic     Topic?   @relation(fields: [topicId], references: [id])
+  topicName String?
+  imageUrl  String?
   published Boolean  @default(false)
   authorId  String
   author    User     @relation("TeacherNotes", fields: [authorId], references: [id])
   createdAt DateTime @default(now())
 }
 
+// ============================================
+// QUESTIONS (банк заданий)
+// ============================================
+
+model Question {
+  id        String   @id @default(cuid())
+  subjectId String
+  subject   Subjects @relation(fields: [subjectId], references: [id])
+
+  topic      String
+  difficulty Int    @default(2)
+
+  // SINGLE_CHOICE | MULTI_CHOICE | TEXT | NUMBER | TRUE_FALSE
+  type String @default("SINGLE_CHOICE")
+
+  text     String
+  imageUrl String?
+
+  // Для SINGLE_CHOICE
+  options Json?
+  correct Int?
+
+  // Для MULTI_CHOICE
+  correctMulti Json?
+
+  // Для TEXT
+  correctText String?
+  matchMode   String? // CONTAINS | EXACT
+
+  // Для NUMBER
+  correctNumber Float?
+  tolerance     Float? @default(0.01)
+
+  // Для TRUE_FALSE
+  correctBool Boolean?
+
+  explanation String?
+  source      String? // manual | ai | import
+  points      Int     @default(1)
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id])
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@index([subjectId, topic])
+  @@index([difficulty])
+  @@index([type])
+}
+
+// ============================================
+// TESTS
+// ============================================
+
 model Test {
-  id          String       @id @default(cuid())
-  title       String
-  subject     Subject
-  questions   Json
-  timeLimit   Int?
-  published   Boolean      @default(false)
-  createdAt   DateTime     @default(now())
-  submissions Submission[]
+  id    String @id @default(cuid())
+  title String
+
+  subjectId String
+  subject   Subjects @relation(fields: [subjectId], references: [id])
+
+  teacherId String
+  teacher   User   @relation("TeacherTests", fields: [teacherId], references: [id])
+
+  // MANUAL | BANK_CUSTOM
+  mode String
+
+  // JSON-массив вопросов (финальных, для каждой попытки одинаковые)
+  questions Json?
+
+  // { topics: string[], count: number, difficulty?: number, types?: string[] }
+  bankConfig Json?
+
+  timeLimit       Int?
+  attemptsAllowed Int     @default(1)
+  topicId         String?
+  topic           Topic?  @relation(fields: [topicId], references: [id])
+
+  published Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  submissions    Submission[]
+  retakeRequests RetakeRequest[]
+
+  @@index([teacherId, createdAt])
 }
 
 model Submission {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  testId    String?
-  test      Test?    @relation(fields: [testId], references: [id])
-  code      String?
-  language  String?
-  answer    Json?
-  score     Int?
-  status    String   @default("PENDING")
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  testId String?
+  test   Test?   @relation(fields: [testId], references: [id])
+
+  version Int @default(1)
+
+  questions Json @default("[]")
+  answers   Json @default("[]")
+
+  // Старые поля проекта
+  code     String?
+  language String?
+  answer   Json?
+
+  score  Int?
+  status String @default("PENDING")
+
   createdAt DateTime @default(now())
+
+  @@unique([testId, userId, version])
+  @@index([userId, createdAt])
 }
+
+model RetakeRequest {
+  id String @id @default(cuid())
+
+  testId String
+  test   Test   @relation(fields: [testId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  status String @default("PENDING") // PENDING | APPROVED | REJECTED
+
+  reason      String?
+  teacherNote String?
+
+  createdAt  DateTime  @default(now())
+  reviewedAt DateTime?
+
+  @@index([testId, userId])
+  @@index([status])
+}
+
+// ============================================
+// HOMEWORK
+// ============================================
+
+model Homework {
+  id          String  @id @default(cuid())
+  title       String
+  description String?
+
+  subjectId String
+  subject   Subjects @relation(fields: [subjectId], references: [id])
+
+  topicId   String?
+  topic     Topic?  @relation(fields: [topicId], references: [id])
+  topicName String?
+
+  imageUrl String?
+  dueDate  DateTime?
+
+  targetType String @default("ALL") // ALL | SPECIFIC
+
+  targetUserId String?
+  targetUser   User?   @relation("UserHomeworkTarget", fields: [targetUserId], references: [id])
+
+  teacherId String
+  teacher   User   @relation("TeacherHomework", fields: [teacherId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tasks       HomeworkTask[]
+  submissions HomeworkSubmission[]
+
+  @@index([teacherId, createdAt])
+  @@index([subjectId])
+  @@index([targetUserId])
+}
+
+model HomeworkTask {
+  id         String   @id @default(cuid())
+  homeworkId String
+  homework   Homework @relation(fields: [homeworkId], references: [id], onDelete: Cascade)
+  order      Int      @default(0)
+
+  text     String
+  imageUrl String?
+
+  correctAnswer String?
+  answerType    String  @default("TEXT") // TEXT | NUMBER | EXACT
+  points        Int     @default(1)
+
+  createdAt DateTime @default(now())
+
+  @@index([homeworkId, order])
+}
+
+model HomeworkSubmission {
+  id String @id @default(cuid())
+
+  homeworkId String
+  homework   Homework @relation(fields: [homeworkId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  version Int @default(1)
+
+  boardData  Json?
+  previewUrl String?
+  files      Json?
+  textAnswer String?
+
+  // { [taskId]: { answer, passed, message } }
+  taskAnswers Json?
+
+  autoCheckPassed  Boolean?
+  autoCheckMessage String?
+  autoScore        Int?
+  autoTotal        Int?
+
+  status         String  @default("SUBMITTED") // SUBMITTED | REVIEWED | NEEDS_REVISION
+  teacherComment String?
+  gradeEmoji     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  aiReview       String?
+  aiReviewScore  Int?
+  aiReviewedAt   DateTime?
+
+  @@index([homeworkId, userId, version])
+  @@index([homeworkId, createdAt])
+}
+
+// ============================================
+// LESSONS (расписание)
+// ============================================
+
+model Lesson {
+  id           String   @id @default(cuid())
+  title        String?
+  subjectId    String
+  subject      Subjects @relation(fields: [subjectId], references: [id])
+  startAt      DateTime
+  endAt        DateTime
+  telemostLink String?
+  boardLink    String?
+  googleEventId String?
+  status       String   @default("SCHEDULED") // SCHEDULED | COMPLETED | CANCELLED
+  notes        String?
+
+  userId String
+  user   User   @relation("UserLessons", fields: [userId], references: [id])
+
+  teacherId String?
+  teacher   User?   @relation("TeacherLessons", fields: [teacherId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, startAt])
+  @@index([teacherId, startAt])
+}
+
+// ============================================
+// ACTIVITY / CODE RUNS
+// ============================================
 
 model Activity {
   id        String   @id @default(cuid())
@@ -104,7 +438,32 @@ model CodeRun {
   output    String?
   stderr    String?
   status    String   @default("SUCCESS")
+
+  totalChars     Int?   @default(0)
+  pastedChars    Int?   @default(0)
+  typedChars     Int?   @default(0)
+  typingDuration Int?   @default(0)
+  pasteCount     Int?   @default(0)
+  avgTypingSpeed Float? @default(0)
+  aiSuspicion    Int?   @default(0)
+
   createdAt DateTime @default(now())
 
   @@index([userId, createdAt])
+  @@index([aiSuspicion])
+}
+
+// ============================================
+// NOTIFICATIONS
+// ============================================
+
+model NotificationRead {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type       String
+  lastReadAt DateTime @default(now())
+
+  @@unique([userId, type])
+  @@index([userId])
 }

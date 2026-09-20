@@ -2,23 +2,19 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen, ChevronDown } from 'lucide-react';
+import { MathText } from '@/components/shared/MathText';
 
 type Note = {
   id: string;
   title: string;
   content: string;
   subject: string;
+  subjectName: string;
   topic: string | null;
   createdAt: Date | string;
 };
 
-export function NotesList({
-  notes,
-  subjectLabels,
-}: {
-  notes: Note[];
-  subjectLabels: Record<string, string>;
-}) {
+export function NotesList({ notes }: { notes: Note[] }) {
   const [openId, setOpenId] = useState<string | null>(null);
 
   return (
@@ -42,10 +38,12 @@ export function NotesList({
                 <h3 className="text-white font-semibold truncate">{note.title}</h3>
                 <div className="flex items-center gap-2 mt-1">
                   <span className="text-xs px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-200">
-                    {subjectLabels[note.subject] || note.subject}
+                    {note.subjectName}
                   </span>
                   {note.topic && (
-                    <span className="text-xs text-slate-400 truncate">{note.topic}</span>
+                    <span className="text-xs text-slate-400 truncate">
+                      {note.topic}
+                    </span>
                   )}
                 </div>
               </div>
@@ -65,9 +63,9 @@ export function NotesList({
                   className="overflow-hidden"
                 >
                   <div className="px-5 pb-5 pt-2 border-t border-white/5">
-                    <div className="text-slate-300 whitespace-pre-wrap leading-relaxed">
+                    <MathText className="text-slate-300 leading-relaxed">
                       {note.content}
-                    </div>
+                    </MathText>
                   </div>
                 </motion.div>
               )}

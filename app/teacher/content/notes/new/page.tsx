@@ -1,44 +1,80 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, Save, ArrowLeft } from 'lucide-react';
+import { Loader2, Save, ArrowLeft, Image as ImageIcon } from 'lucide-react';
 import Link from 'next/link';
+import { ImageUploader } from '@/components/shared/ImageUploader';
 
-const SUBJECTS = [
-  { value: 'MATH_5_6', label: 'Математика 5–6' },
-  { value: 'ALGEBRA_7_9', label: 'Алгебра 7–9' },
-  { value: 'GEOMETRY_7_9', label: 'Геометрия 7–9' },
-  { value: 'OGE_PREP', label: 'Подготовка к ОГЭ' },
-  { value: 'VPR_PREP', label: 'Подготовка к ВПР' },
-  { value: 'INFORMATICS', label: 'Информатика' },
-];
+type Subject = {
+  id: string;
+  code: string;
+  name: string;
+  category: string;
+  grade: number | null;
+};
+
+type Topic = {
+  id: string;
+  title: string;
+  subjectId: string;
+};
 
 export default function NewNotePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [topics, setTopics] = useState<Topic[]>([]);
   const [form, setForm] = useState({
     title: '',
     content: '',
-    subject: 'INFORMATICS',
-    topic: '',
+    subjectId: '',
+    topicId: '',
+    imageUrl: '',
     published: true,
   });
+
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/teacher/subjects').then((r) => r.json()),
+      fetch('/api/teacher/topics').then((r) => r.json()),
+    ])
+      .then(([subjectsData, topicsData]) => {
+        setSubjects(subjectsData);
+        setTopics(topicsData);
+        if (subjectsData.length > 0 && !form.subjectId) {
+          setForm((f) => ({ ...f, subjectId: subjectsData[0].id }));
+        }
+      })
+      .catch(() => toast.error('Не удалось загрузить данные'));
+  }, []);
+
+  const availableTopics = topics.filter((t) => t.subjectId === form.subjectId);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.title.trim() || !form.content.trim()) {
       return toast.error('Заполни заголовок и содержание');
     }
+    if (!form.subjectId) {
+      return toast.error('Выбери предмет');
+    }
     setLoading(true);
     try {
       const res = await fetch('/api/teacher/notes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          title: form.title,
+          content: form.content,
+          subjectId: form.subjectId,
+          topicId: form.topicId || null,
+          imageUrl: form.imageUrl || null,
+          published: form.published,
+        }),
       });
       if (!res.ok) throw new Error('Ошибка при создании');
       toast.success('Конспект создан');
@@ -61,7 +97,9 @@ export default function NewNotePage() {
       </Link>
 
       <h1 className="text-3xl font-bold text-white mb-1">Новый конспект</h1>
-      <p className="text-slate-400 mb-8">Ученики увидят его сразу после сохранения</p>
+      <p className="text-slate-400 mb-8">
+        Ученики увидят его сразу после сохранения
+      </p>
 
       <form onSubmit={submit} className="space-y-5">
         <div>
@@ -79,13 +117,17 @@ export default function NewNotePage() {
           <div>
             <Label className="text-slate-300">Предмет</Label>
             <select
-              value={form.subject}
-              onChange={(e) => setForm({ ...form, subject: e.target.value })}
+              value={form.subjectId}
+              onChange={(e) =>
+                setForm({ ...form, subjectId: e.target.value, topicId: '' })
+              }
               className="mt-2 w-full bg-slate-900 border border-white/10 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:border-purple-500/50"
+              required
             >
-              {SUBJECTS.map((s) => (
-                <option key={s.value} value={s.value}>
-                  {s.label}
+              <option value="">— Выбери предмет —</option>
+              {subjects.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
                 </option>
               ))}
             </select>
@@ -93,12 +135,23 @@ export default function NewNotePage() {
 
           <div>
             <Label className="text-slate-300">Тема (необязательно)</Label>
-            <Input
-              value={form.topic}
-              onChange={(e) => setForm({ ...form, topic: e.target.value })}
-              placeholder="Например: Уравнения"
-              className="mt-2 bg-white/5 border-white/10 text-white"
-            />
+            <select
+              value={form.topicId}
+              onChange={(e) => setForm({ ...form, topicId: e.target.value })}
+              className="mt-2 w-full bg-slate-900 border border-white/10 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:border-purple-500/50"
+            >
+              <option value="">— Без темы —</option>
+              {availableTopics.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.title}
+                </option>
+              ))}
+            </select>
+            {availableTopics.length === 0 && form.subjectId && (
+              <p className="text-xs text-amber-400 mt-2">
+                ⚠️ По этому предмету нет тем. Создай их в разделе «Темы»
+              </p>
+            )}
           </div>
         </div>
 
@@ -107,10 +160,32 @@ export default function NewNotePage() {
           <textarea
             value={form.content}
             onChange={(e) => setForm({ ...form, content: e.target.value })}
-            placeholder="Текст конспекта. Можно использовать переносы строк и формулы."
+            placeholder="Текст конспекта. Можно использовать переносы строк и формулы: $x^2 + 5x = 0$"
             rows={15}
             className="mt-2 w-full bg-white/5 border border-white/10 text-white rounded-xl p-4 text-sm resize-y focus:outline-none focus:border-purple-500/50 leading-relaxed"
             required
+          />
+          <p className="text-xs text-slate-500 mt-1">
+            💡 Формулы через KaTeX: <code className="text-purple-300">$x^2$</code>{' '}
+            (инлайн), <code className="text-purple-300">$$...$$</code> (блок)
+          </p>
+        </div>
+
+        {/* КАРТИНКА-ОБЛОЖКА */}
+        <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <ImageIcon className="h-4 w-4 text-purple-400" />
+            <h3 className="text-sm font-semibold text-white">
+              Обложка конспекта (необязательно)
+            </h3>
+          </div>
+          <p className="text-xs text-slate-400 mb-4">
+            Картинка появится сверху конспекта у ученика
+          </p>
+          <ImageUploader
+            label="Картинка-обложка"
+            value={form.imageUrl}
+            onChange={(url) => setForm({ ...form, imageUrl: url })}
           />
         </div>
 
@@ -131,7 +206,11 @@ export default function NewNotePage() {
           disabled={loading}
           className="w-full h-12 gap-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white"
         >
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+          {loading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="h-4 w-4" />
+          )}
           {loading ? 'Сохранение...' : 'Сохранить конспект'}
         </Button>
       </form>

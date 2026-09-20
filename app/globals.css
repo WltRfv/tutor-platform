@@ -43,3 +43,447 @@ body {
   background-color: rgb(2 6 23);
   color: white;
 }
+
+/* ==========================================
+   LIGHT THEME OVERRIDES
+   Автоматически перекрашивает тёмные классы
+   в светлые, когда html не имеет .dark
+   ========================================== */
+
+/* Фон страниц */
+html:not(.dark) body {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+html:not(.dark) .bg-slate-950 {
+  background-color: #f1f5f9 !important;
+}
+
+html:not(.dark) .bg-slate-950\/50 {
+  background-color: rgba(241, 245, 249, 0.85) !important;
+}
+
+html:not(.dark) .bg-slate-950\/60 {
+  background-color: #f8fafc !important;
+}
+
+html:not(.dark) .bg-slate-950\/70 {
+  background-color: rgba(241, 245, 249, 0.9) !important;
+}
+
+html:not(.dark) .bg-slate-950\/80 {
+  background-color: #f8fafc !important;
+}
+
+/* Сайдбары и панели */
+html:not(.dark) .bg-slate-900 {
+  background-color: #ffffff !important;
+}
+
+html:not(.dark) .bg-slate-900\/50 {
+  background-color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Карточки: белые наложения превращаем в светло-серые */
+html:not(.dark) .bg-white\/5 {
+  background-color: rgba(0, 0, 0, 0.03) !important;
+}
+
+html:not(.dark) .bg-white\/10 {
+  background-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+html:not(.dark) .bg-white\/20 {
+  background-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Границы */
+html:not(.dark) .border-white\/5 {
+  border-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+html:not(.dark) .border-white\/10 {
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+html:not(.dark) .border-white\/20 {
+  border-color: rgba(0, 0, 0, 0.15) !important;
+}
+
+html:not(.dark) .border-white\/30 {
+  border-color: rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Текст */
+html:not(.dark) .text-white {
+  color: #0f172a !important;
+}
+
+html:not(.dark) .text-slate-100 {
+  color: #0f172a !important;
+}
+
+html:not(.dark) .text-slate-200 {
+  color: #1e293b !important;
+}
+
+html:not(.dark) .text-slate-300 {
+  color: #334155 !important;
+}
+
+html:not(.dark) .text-slate-400 {
+  color: #64748b !important;
+}
+
+html:not(.dark) .text-slate-500 {
+  color: #94a3b8 !important;
+}
+
+/* Hover состояния */
+html:not(.dark) .hover\:bg-white\/5:hover {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+}
+
+html:not(.dark) .hover\:bg-white\/10:hover {
+  background-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+html:not(.dark) .hover\:bg-white\/20:hover {
+  background-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+html:not(.dark) .hover\:text-white:hover {
+  color: #0f172a !important;
+}
+
+/* Анимированный фон лендинга в светлой теме */
+html:not(.dark) .from-slate-950 {
+  --tw-gradient-from: #f1f5f9 !important;
+}
+
+html:not(.dark) .via-purple-950\/30 {
+  --tw-gradient-via: rgba(216, 180, 254, 0.3) !important;
+}
+
+html:not(.dark) .to-slate-950 {
+  --tw-gradient-to: #f1f5f9 !important;
+}
+
+/* Текст в Hero */
+html:not(.dark) .text-purple-200 {
+  color: #7c3aed !important;
+}
+
+html:not(.dark) .text-purple-300 {
+  color: #7c3aed !important;
+}
+
+html:not(.dark) .text-blue-300 {
+  color: #2563eb !important;
+}
+
+html:not(.dark) .text-pink-300 {
+  color: #db2777 !important;
+}
+
+/* Логотип "Репетитор." */
+html:not(.dark) .text-purple-500 {
+  color: #7c3aed !important;
+}
+
+/* Сетка анимированного фона — сделаем посветлее */
+html:not(.dark) [style*="linear-gradient(to right, rgb(168 85 247"] {
+  opacity: 0.08 !important;
+}
+
+/* Inputs и формы */
+html:not(.dark) input,
+html:not(.dark) textarea,
+html:not(.dark) select {
+  color: #0f172a !important;
+}
+
+html:not(.dark) input::placeholder,
+html:not(.dark) textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Скроллбар */
+html:not(.dark) ::-webkit-scrollbar-track {
+  background: #e2e8f0;
+}
+
+html:not(.dark) ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+html:not(.dark) ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+/* ==========================================
+   FULLCALENDAR — ПОЛНЫЕ СТИЛИ ДЛЯ ТЁМНОЙ ТЕМЫ
+   ========================================== */
+
+.fc {
+  --fc-border-color: rgba(255, 255, 255, 0.1);
+  --fc-page-bg-color: transparent;
+  --fc-neutral-bg-color: rgba(255, 255, 255, 0.03);
+  --fc-today-bg-color: rgba(168, 85, 247, 0.08);
+  --fc-now-indicator-color: #ef4444;
+  --fc-button-bg-color: rgba(255, 255, 255, 0.05);
+  --fc-button-border-color: rgba(255, 255, 255, 0.1);
+  --fc-button-hover-bg-color: rgba(255, 255, 255, 0.1);
+  --fc-button-hover-border-color: rgba(255, 255, 255, 0.2);
+  --fc-button-active-bg-color: rgba(168, 85, 247, 0.3);
+  --fc-button-active-border-color: rgba(168, 85, 247, 0.5);
+  color: #e2e8f0;
+  font-family: inherit;
+}
+
+/* === ТАБЛИЦА === */
+.fc .fc-scrollgrid {
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.fc .fc-scrollgrid-section > * {
+  border: none !important;
+}
+
+.fc-theme-standard td,
+.fc-theme-standard th {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.fc-theme-standard .fc-scrollgrid {
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* === ЗАГОЛОВКИ ДНЕЙ === */
+.fc .fc-col-header-cell {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  padding: 12px 0 !important;
+}
+
+.fc .fc-col-header-cell-cushion {
+  color: #94a3b8 !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  text-decoration: none !important;
+  padding: 4px 8px !important;
+}
+
+.fc .fc-col-header-cell.fc-day-today .fc-col-header-cell-cushion {
+  color: #a855f7 !important;
+}
+
+/* === ВРЕМЯ СЛЕВА === */
+.fc .fc-timegrid-slot {
+  height: 48px !important;
+  border-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+.fc .fc-timegrid-slot-minor {
+  border-top-style: dashed !important;
+}
+
+.fc .fc-timegrid-slot-label {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.fc .fc-timegrid-slot-label-cushion {
+  color: #64748b !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  padding: 0 8px !important;
+}
+
+.fc .fc-timegrid-axis {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* === ЯЧЕЙКИ ДНЯ === */
+.fc .fc-timegrid-col {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.fc .fc-timegrid-col.fc-day-today {
+  background: rgba(168, 85, 247, 0.06) !important;
+}
+
+.fc .fc-daygrid-day {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.fc .fc-daygrid-day-number {
+  color: #cbd5e1 !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  padding: 6px 10px !important;
+  text-decoration: none !important;
+}
+
+.fc .fc-daygrid-day.fc-day-today {
+  background: rgba(168, 85, 247, 0.08) !important;
+}
+
+.fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
+  color: #a855f7 !important;
+  font-weight: 700 !important;
+}
+
+/* === СОБЫТИЯ === */
+.fc .fc-event {
+  border-radius: 8px !important;
+  padding: 3px 8px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  border: none !important;
+  cursor: pointer !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+  transition: transform 0.15s, opacity 0.15s !important;
+}
+
+.fc .fc-event:hover {
+  opacity: 0.9 !important;
+  transform: translateY(-1px) !important;
+}
+
+.fc .fc-timegrid-event {
+  border-radius: 6px !important;
+}
+
+.fc .fc-event-time {
+  font-weight: 600 !important;
+  font-size: 11px !important;
+}
+
+.fc .fc-event-title {
+  font-weight: 500 !important;
+  font-size: 12px !important;
+}
+
+/* === TOOLBAR === */
+.fc .fc-toolbar {
+  margin-bottom: 20px !important;
+  gap: 12px !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+}
+
+.fc .fc-toolbar-chunk {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+.fc .fc-toolbar-title {
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+  text-transform: capitalize !important;
+  padding: 0 8px !important;
+}
+
+/* === КНОПКИ === */
+.fc .fc-button {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #e2e8f0 !important;
+  border-radius: 8px !important;
+  padding: 8px 14px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  text-transform: capitalize !important;
+  box-shadow: none !important;
+  transition: all 0.15s ease !important;
+  height: auto !important;
+  cursor: pointer !important;
+  outline: none !important;
+}
+
+.fc .fc-button:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+}
+
+.fc .fc-button:focus-visible {
+  box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.4) !important;
+}
+
+.fc .fc-button-primary:not(:disabled).fc-button-active,
+.fc .fc-button-primary:not(:disabled):active {
+  background: rgba(168, 85, 247, 0.3) !important;
+  border-color: rgba(168, 85, 247, 0.5) !important;
+  color: #ffffff !important;
+}
+
+.fc .fc-button:disabled {
+  opacity: 0.4 !important;
+  cursor: not-allowed !important;
+}
+
+.fc .fc-button .fc-icon {
+  font-size: 14px !important;
+  vertical-align: middle !important;
+}
+
+.fc .fc-button-group > .fc-button:first-child {
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+}
+
+.fc .fc-button-group > .fc-button:not(:first-child):not(:last-child) {
+  border-radius: 0 !important;
+}
+
+.fc .fc-button-group > .fc-button:last-child {
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+}
+
+.fc .fc-button-group > .fc-button:not(:first-child) {
+  margin-left: -1px !important;
+}
+
+/* === ИНДИКАТОР ВРЕМЕНИ === */
+.fc .fc-timegrid-now-indicator-line {
+  border-color: #ef4444 !important;
+  border-width: 2px !important;
+}
+
+.fc .fc-timegrid-now-indicator-arrow {
+  border-color: #ef4444 !important;
+  background: #ef4444 !important;
+}
+
+/* === ВЫХОДНЫЕ === */
+.fc .fc-day-sat .fc-col-header-cell-cushion,
+.fc .fc-day-sun .fc-col-header-cell-cushion {
+  color: #f87171 !important;
+}
+
+/* === SCROLLBAR === */
+.fc .fc-scroller::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.fc .fc-scroller::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.fc .fc-scroller::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+
+.fc .fc-scroller::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}

@@ -1,16 +1,8 @@
-import { prisma } from '@/lib/prisma';
 import { MessageSquare, CheckCircle2, XCircle, Bell } from 'lucide-react';
 
-export default async function NotificationsPage() {
+export default function NotificationsPage() {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = process.env.TELEGRAM_TEACHER_CHAT_ID;
-
-  const recentNotifications = await prisma.activity.findMany({
-    where: { eventType: { in: ['tab_hidden', 'tab_visible'] } },
-    orderBy: { createdAt: 'desc' },
-    take: 5,
-    include: { user: { select: { name: true } } },
-  });
 
   return (
     <div className="p-8 max-w-4xl">
@@ -42,7 +34,8 @@ export default async function NotificationsPage() {
             </div>
           )}
           <p className="text-xs text-slate-500 mt-3">
-            Переменная окружения <code className="text-purple-300">TELEGRAM_BOT_TOKEN</code>
+            Переменная окружения{' '}
+            <code className="text-purple-300">TELEGRAM_BOT_TOKEN</code>
           </p>
         </div>
 
@@ -63,13 +56,16 @@ export default async function NotificationsPage() {
             </div>
           )}
           <p className="text-xs text-slate-500 mt-3">
-            Переменная окружения <code className="text-purple-300">TELEGRAM_TEACHER_CHAT_ID</code>
+            Переменная окружения{' '}
+            <code className="text-purple-300">TELEGRAM_TEACHER_CHAT_ID</code>
           </p>
         </div>
       </div>
 
       <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6">
-        <h2 className="text-lg font-semibold text-white mb-4">Что отправляется в Telegram</h2>
+        <h2 className="text-lg font-semibold text-white mb-4">
+          Что отправляется в Telegram
+        </h2>
         <ul className="space-y-3 text-sm text-slate-300">
           <li className="flex items-start gap-3">
             <CheckCircle2 className="h-4 w-4 text-emerald-400 mt-0.5 flex-shrink-0" />
@@ -82,6 +78,10 @@ export default async function NotificationsPage() {
           <li className="flex items-start gap-3">
             <CheckCircle2 className="h-4 w-4 text-emerald-400 mt-0.5 flex-shrink-0" />
             <span>📝 Сдача тестов учениками</span>
+          </li>
+          <li className="flex items-start gap-3">
+            <CheckCircle2 className="h-4 w-4 text-emerald-400 mt-0.5 flex-shrink-0" />
+            <span>📚 Сдачи домашних заданий</span>
           </li>
           <li className="flex items-start gap-3">
             <CheckCircle2 className="h-4 w-4 text-emerald-400 mt-0.5 flex-shrink-0" />

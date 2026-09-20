@@ -12,7 +12,10 @@ export async function GET(
   }
 
   const { id } = await params;
-  const test = await prisma.test.findUnique({ where: { id } });
+  const test = await prisma.test.findUnique({
+    where: { id },
+    include: { subject: { select: { name: true } } },
+  });
 
   if (!test) return NextResponse.json({ error: 'Не найдено' }, { status: 404 });
 
@@ -29,19 +32,37 @@ export async function PATCH(
   }
 
   const { id } = await params;
-  const { title, subject, questions, timeLimit, published } = await req.json();
+  const {
+    title,
+    subjectId,
+    topicId,
+    questions,
+    bankConfig,
+    timeLimit,
+    attemptsAllowed,
+    published,
+  } = await req.json();
 
-  if (!title || !subject || !questions?.length) {
-    return NextResponse.json({ error: 'Заполни все поля' }, { status: 400 });
+  if (!title || !subjectId) {
+    return NextResponse.json({ error: 'Заполни заголовок и предмет' }, { status: 400 });
+  }
+
+  const existing = await prisma.test.findUnique({ where: { id } });
+  if (!existing) {
+    return NextResponse.json({ error: 'Не найдено' }, { status: 404 });
   }
 
   const test = await prisma.test.update({
     where: { id },
     data: {
       title,
-      subject,
-      questions,
+      subjectId,
+      ...(questions !== undefined && { questions }),
+      ...(bankConfig !== undefined && { bankConfig }),
       timeLimit: timeLimit || null,
+      attemptsAllowed:
+        typeof attemptsAllowed === 'number' ? attemptsAllowed : 1,
+      topicId: topicId || null,
       published: Boolean(published),
     },
   });

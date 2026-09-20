@@ -55,3 +55,7 @@ migration.sql
 
 # Vercel
 .vercel/
+!.env.example
+# Отдельные серверы (запускаются отдельно, не часть основного проекта)
+tldraw-sync-server/
+piston-server/

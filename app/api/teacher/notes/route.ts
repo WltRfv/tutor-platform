@@ -8,9 +8,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Нет доступа' }, { status: 403 });
   }
 
-  const { title, content, subject, topic, published } = await req.json();
+  const { title, content, subjectId, topicId, imageUrl, published } =
+    await req.json();
 
-  if (!title || !content || !subject) {
+  if (!title || !content || !subjectId) {
     return NextResponse.json({ error: 'Заполни все поля' }, { status: 400 });
   }
 
@@ -18,8 +19,9 @@ export async function POST(req: Request) {
     data: {
       title,
       content,
-      subject,
-      topic: topic || null,
+      subjectId,
+      topicId: topicId || null,
+      imageUrl: imageUrl || null,
       published: Boolean(published),
       authorId: (session.user as any).id,
     },

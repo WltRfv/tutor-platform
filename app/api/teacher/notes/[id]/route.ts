@@ -12,7 +12,10 @@ export async function GET(
   }
 
   const { id } = await params;
-  const note = await prisma.note.findUnique({ where: { id } });
+  const note = await prisma.note.findUnique({
+    where: { id },
+    include: { subject: { select: { name: true } } },
+  });
 
   if (!note) return NextResponse.json({ error: 'Не найдено' }, { status: 404 });
 
@@ -29,19 +32,22 @@ export async function PATCH(
   }
 
   const { id } = await params;
-  const { title, content, subject, topic, published } = await req.json();
+  const { title, content, subjectId, topicId, imageUrl, published } = await req.json();
 
-  if (!title || !content || !subject) {
+  if (!title || !content || !subjectId) {
     return NextResponse.json({ error: 'Заполни все поля' }, { status: 400 });
   }
+
+  
 
   const note = await prisma.note.update({
     where: { id },
     data: {
       title,
       content,
-      subject,
-      topic: topic || null,
+      subjectId,
+      topicId: topicId || null,
+      imageUrl: imageUrl || null,
       published: Boolean(published),
     },
   });

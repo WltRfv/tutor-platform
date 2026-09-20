@@ -1,6 +1,5 @@
 import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
-import { MessengerLinkEditor } from '@/components/teacher/MessengerLinkEditor';
 import Link from 'next/link';
 import {
   ArrowLeft,
@@ -11,22 +10,14 @@ import {
   Activity,
   FileText,
   Code2,
-  BookOpen,
   TrendingUp,
-  Clock,
   CheckCircle2,
   XCircle,
   Link2,
 } from 'lucide-react';
-
-const SUBJECT_LABELS: Record<string, string> = {
-  MATH_5_6: 'Математика 5–6',
-  ALGEBRA_7_9: 'Алгебра 7–9',
-  GEOMETRY_7_9: 'Геометрия 7–9',
-  OGE_PREP: 'ОГЭ',
-  VPR_PREP: 'ВПР',
-  INFORMATICS: 'Информатика',
-};
+import { MessengerLinkEditor } from '@/components/teacher/MessengerLinkEditor';
+import { StudentSubjectsManager } from '@/components/teacher/StudentSubjectsManager';
+import { StudentTopicsManager } from '@/components/teacher/StudentTopicsManager';
 
 const EVENT_LABELS: Record<string, { label: string; color: string; emoji: string }> = {
   tab_hidden: { label: 'Ушёл со вкладки', color: 'text-red-400', emoji: '🚪' },
@@ -42,7 +33,16 @@ export default async function StudentDetailPage({
 }) {
   const { id } = await params;
 
-  const student = await prisma.user.findUnique({ where: { id } });
+  const student = await prisma.user.findUnique({
+    where: { id },
+    include: {
+      userSubjects: {
+        include: { subject: true },
+        orderBy: { createdAt: 'asc' },
+      },
+    },
+  });
+
   if (!student || student.role !== 'STUDENT') notFound();
 
   const activities = await prisma.activity.findMany({
@@ -55,7 +55,7 @@ export default async function StudentDetailPage({
     where: { userId: id },
     orderBy: { createdAt: 'desc' },
     take: 20,
-    include: { test: { select: { title: true, subject: true } } },
+    include: { test: { select: { title: true } } },
   });
 
   const codeRuns = await prisma.codeRun.findMany({
@@ -63,6 +63,35 @@ export default async function StudentDetailPage({
     orderBy: { createdAt: 'desc' },
     take: 10,
   });
+
+  const allSubjects = await prisma.subjects.findMany({
+    where: { isActive: true },
+    orderBy: { order: 'asc' },
+    select: { id: true, name: true, code: true, grade: true, category: true },
+  });
+
+  const userSubjectIds = student.userSubjects.map((us) => us.subjectId);
+  const topics = await prisma.topic.findMany({
+    where: { subjectId: { in: userSubjectIds }, isActive: true },
+    orderBy: [{ subjectId: 'asc' }, { order: 'asc' }],
+    include: {
+      subject: { select: { id: true, name: true } },
+      unlocks: { where: { userId: id }, select: { id: true, unlockedAt: true } },
+      _count: { select: { notes: true, tests: true, homeworks: true } },
+    },
+  });
+
+  const topicsData = topics.map((t) => ({
+    id: t.id,
+    title: t.title,
+    description: t.description,
+    order: t.order,
+    subjectId: t.subjectId,
+    subjectName: t.subject.name,
+    isUnlocked: t.unlocks.length > 0,
+    unlockedAt: t.unlocks[0]?.unlockedAt?.toISOString() || null,
+    counts: t._count,
+  }));
 
   const avgScore =
     submissions.length > 0
@@ -82,7 +111,6 @@ export default async function StudentDetailPage({
         <ArrowLeft className="h-4 w-4" /> Назад к ученикам
       </Link>
 
-      {/* Профиль */}
       <div className="backdrop-blur-xl bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-white/10 rounded-3xl p-8 mb-6">
         <div className="flex items-start gap-6 flex-wrap">
           <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white text-3xl font-bold shadow-2xl shadow-purple-500/30 flex-shrink-0">
@@ -109,42 +137,46 @@ export default async function StudentDetailPage({
                 с {new Date(student.createdAt).toLocaleDateString('ru-RU')}
               </span>
             </div>
-            <div className="flex flex-wrap gap-2 mt-3">
-              {student.subjects.map((s) => (
-                <span
-                  key={s}
-                  className="px-2.5 py-1 rounded-md bg-purple-500/20 text-purple-200 text-xs font-medium"
-                >
-                  {SUBJECT_LABELS[s] || s}
-                </span>
-              ))}
-            </div>
           </div>
         </div>
       </div>
-    {/* Ссылка на чат */}
-    <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-5 mb-6">
+
+      <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-5 mb-6">
         <div className="flex items-start gap-3">
-            <div className="p-2.5 rounded-xl bg-gradient-to-br from-purple-500 to-blue-500 flex-shrink-0">
-                <Link2 className="h-5 w-5 text-white" />
-            </div>
-            <div className="flex-1">
+          <div className="p-2.5 rounded-xl bg-gradient-to-br from-purple-500 to-blue-500 flex-shrink-0">
+            <Link2 className="h-5 w-5 text-white" />
+          </div>
+          <div className="flex-1">
             <h2 className="text-sm font-semibold text-white mb-2">Быстрая связь</h2>
             <MessengerLinkEditor
-                studentId={student.id}
-                initialLink={(student as any).messengerLink}
+              studentId={student.id}
+              initialLink={student.messengerLink}
             />
-            </div>
+          </div>
         </div>
-    </div>
-      {/* Метрики */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      </div>
+
+      <StudentSubjectsManager
+        studentId={student.id}
+        currentSubjects={student.userSubjects.map((us) => ({
+          userSubjectId: us.id,
+          id: us.subject.id,
+          name: us.subject.name,
+          code: us.subject.code,
+          addedBy: us.addedBy,
+        }))}
+        allSubjects={allSubjects}
+      />
+
+      <StudentTopicsManager studentId={student.id} initialTopics={topicsData} />
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 my-6">
         <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-5">
           <div className="inline-flex p-2 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 mb-3">
             <Activity className="h-4 w-4 text-white" />
           </div>
           <div className="text-2xl font-bold text-white">{activities.length}</div>
-          <div className="text-xs text-slate-500 mt-0.5">событий активности</div>
+          <div className="text-xs text-slate-500 mt-0.5">событий</div>
         </div>
 
         <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-5">
@@ -175,7 +207,6 @@ export default async function StudentDetailPage({
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6">
-        {/* Сданные тесты */}
         <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6">
           <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
             <FileText className="h-5 w-5 text-emerald-400" />
@@ -185,7 +216,7 @@ export default async function StudentDetailPage({
             <p className="text-slate-500 text-sm py-6 text-center">Ещё не сдавал</p>
           ) : (
             <div className="space-y-2">
-              {submissions.map((s) => {
+              {submissions.slice(0, 8).map((s) => {
                 const score = s.score ?? 0;
                 const color =
                   score >= 80
@@ -215,7 +246,6 @@ export default async function StudentDetailPage({
           )}
         </div>
 
-        {/* Запуски кода */}
         <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6">
           <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
             <Code2 className="h-5 w-5 text-purple-400" />
@@ -249,7 +279,6 @@ export default async function StudentDetailPage({
         </div>
       </div>
 
-      {/* Активность */}
       <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 mt-6">
         <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
           <Activity className="h-5 w-5 text-blue-400" />

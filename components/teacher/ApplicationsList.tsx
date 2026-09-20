@@ -3,7 +3,15 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { Check, X, Mail, Phone, GraduationCap, Loader2, Clock } from 'lucide-react';
+import {
+  Check,
+  X,
+  Mail,
+  Phone,
+  GraduationCap,
+  Loader2,
+  Clock,
+} from 'lucide-react';
 
 type App = {
   id: string;
@@ -11,17 +19,8 @@ type App = {
   email: string;
   grade: number | null;
   phone: string | null;
-  subjects: string[];
-  createdAt: Date | string;
-};
-
-const SUBJECT_LABELS: Record<string, string> = {
-  MATH_5_6: 'Математика 5–6',
-  ALGEBRA_7_9: 'Алгебра 7–9',
-  GEOMETRY_7_9: 'Геометрия 7–9',
-  OGE_PREP: 'ОГЭ',
-  VPR_PREP: 'ВПР',
-  INFORMATICS: 'Информатика',
+  subjects: { id: string; name: string }[];
+  createdAt: string;
 };
 
 export function ApplicationsList({ initial }: { initial: App[] }) {
@@ -48,7 +47,7 @@ export function ApplicationsList({ initial }: { initial: App[] }) {
 
   if (apps.length === 0) {
     return (
-      <div className="text-center py-20 text-slate-500">
+      <div className="text-center py-20 text-slate-500 backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl">
         <Check className="h-12 w-12 mx-auto mb-4 opacity-30" />
         Все заявки обработаны 🎉
       </div>
@@ -70,8 +69,26 @@ export function ApplicationsList({ initial }: { initial: App[] }) {
             <div className="relative backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 hover:border-purple-500/30 transition">
               <div className="flex justify-between items-start gap-6 flex-wrap">
                 <div className="flex-1 min-w-[240px]">
-                  <h3 className="text-lg font-semibold text-white mb-2">{app.name}</h3>
-                  <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-400">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white font-semibold flex-shrink-0">
+                      {app.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-white">
+                        {app.name}
+                      </h3>
+                      <div className="text-xs text-slate-500">
+                        {new Date(app.createdAt).toLocaleDateString('ru-RU', {
+                          day: '2-digit',
+                          month: 'long',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-400 mt-3">
                     <span className="flex items-center gap-2">
                       <Mail className="h-4 w-4" /> {app.email}
                     </span>
@@ -85,20 +102,23 @@ export function ApplicationsList({ initial }: { initial: App[] }) {
                         <GraduationCap className="h-4 w-4" /> {app.grade} класс
                       </span>
                     )}
-                    <span className="flex items-center gap-2">
-                      <Clock className="h-4 w-4" />
-                      {new Date(app.createdAt).toLocaleDateString('ru-RU')}
-                    </span>
                   </div>
+
                   <div className="flex flex-wrap gap-2 mt-3">
-                    {app.subjects.map((s) => (
-                      <span
-                        key={s}
-                        className="px-2 py-1 rounded-md bg-purple-500/20 text-purple-200 text-xs"
-                      >
-                        {SUBJECT_LABELS[s] || s}
+                    {app.subjects.length === 0 ? (
+                      <span className="text-xs text-slate-500">
+                        Предметы не выбраны
                       </span>
-                    ))}
+                    ) : (
+                      app.subjects.map((s) => (
+                        <span
+                          key={s.id}
+                          className="px-2 py-1 rounded-md bg-purple-500/20 text-purple-200 text-xs"
+                        >
+                          {s.name}
+                        </span>
+                      ))
+                    )}
                   </div>
                 </div>
 
