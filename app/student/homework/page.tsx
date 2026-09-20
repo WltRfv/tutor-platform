@@ -38,7 +38,9 @@ export default async function StudentHomeworkPage({
   if (subjectIds.length === 0) {
     return (
       <div className="p-8 max-w-5xl">
-        <h1 className="text-3xl font-bold text-white mb-1">Домашние задания</h1>
+        <h1 className="text-3xl font-bold text-white mb-1">
+          Домашние задания
+        </h1>
         <p className="text-slate-400 mb-6">У тебя пока нет предметов</p>
       </div>
     );
@@ -216,9 +218,9 @@ export default async function StudentHomeworkPage({
                       )}
                     </div>
                     <div className="flex items-center gap-2 text-xs text-slate-400 flex-wrap">
-                      {hw.topic && (
+                      {hw.topicName && (
                         <span className="px-2 py-0.5 rounded-md bg-blue-500/20 text-blue-200">
-                          {hw.topic}
+                          {hw.topicName}
                         </span>
                       )}
                       {hw.targetType === 'SPECIFIC' ? (
@@ -237,7 +239,9 @@ export default async function StudentHomeworkPage({
                         </span>
                       )}
                       {lastSub && (
-                        <span className="text-slate-500">v{lastSub.version}</span>
+                        <span className="text-slate-500">
+                          v{lastSub.version}
+                        </span>
                       )}
                     </div>
                   </div>

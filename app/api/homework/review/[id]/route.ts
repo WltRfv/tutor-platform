@@ -12,14 +12,14 @@ export async function PATCH(
   }
 
   const { id } = await params;
-  const { status, teacherComment, grade } = await req.json();
+  const { status, teacherComment, gradeEmoji } = await req.json();
 
   const submission = await prisma.homeworkSubmission.update({
     where: { id },
     data: {
       status: status || 'REVIEWED',
       teacherComment: teacherComment || null,
-      grade: typeof grade === 'number' ? grade : null,
+      gradeEmoji: gradeEmoji || null,
     },
   });
 

@@ -50,14 +50,16 @@ export default async function HomeworkViewPage({
             <ClipboardList className="h-6 w-6 text-white" />
           </div>
           <div className="flex-1 min-w-[200px]">
-            <h1 className="text-2xl font-bold text-white mb-2">{homework.title}</h1>
+            <h1 className="text-2xl font-bold text-white mb-2">
+              {homework.title}
+            </h1>
             <div className="flex flex-wrap items-center gap-2 text-sm text-slate-400">
               <span className="px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-200">
                 {homework.subject.name}
               </span>
-              {homework.topic && (
+              {homework.topicName && (
                 <span className="px-2 py-0.5 rounded-md bg-blue-500/20 text-blue-200">
-                  {homework.topic}
+                  {homework.topicName}
                 </span>
               )}
               {homework.targetType === 'SPECIFIC' ? (
@@ -91,7 +93,11 @@ export default async function HomeworkViewPage({
         {homework.imageUrl && (
           <div className="mt-4 rounded-xl overflow-hidden border border-white/10">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={homework.imageUrl} alt="Условие" className="w-full h-auto" />
+            <img
+              src={homework.imageUrl}
+              alt="Условие"
+              className="w-full h-auto"
+            />
           </div>
         )}
       </div>

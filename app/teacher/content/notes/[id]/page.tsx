@@ -1,18 +1,16 @@
 import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, BookOpen, Eye, EyeOff, Calendar, Trash2 } from 'lucide-react';
+import {
+  ArrowLeft,
+  BookOpen,
+  Eye,
+  EyeOff,
+  Calendar,
+  Edit,
+} from 'lucide-react';
 import { DeleteNoteButton } from '@/components/teacher/DeleteNoteButton';
-import { Edit } from 'lucide-react';
-
-const SUBJECT_LABELS: Record<string, string> = {
-  MATH_5_6: 'Математика 5–6',
-  ALGEBRA_7_9: 'Алгебра 7–9',
-  GEOMETRY_7_9: 'Геометрия 7–9',
-  OGE_PREP: 'ОГЭ',
-  VPR_PREP: 'ВПР',
-  INFORMATICS: 'Информатика',
-};
+import { MathText } from '@/components/shared/MathText';
 
 export default async function NoteViewPage({
   params,
@@ -20,7 +18,10 @@ export default async function NoteViewPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const note = await prisma.note.findUnique({ where: { id } });
+  const note = await prisma.note.findUnique({
+    where: { id },
+    include: { subject: { select: { name: true } } },
+  });
 
   if (!note) notFound();
 
@@ -41,9 +42,9 @@ export default async function NoteViewPage({
           <h1 className="text-3xl font-bold text-white mb-2">{note.title}</h1>
           <div className="flex flex-wrap items-center gap-3 text-sm text-slate-400">
             <span className="px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-200">
-              {SUBJECT_LABELS[note.subject]}
+              {note.subject.name}
             </span>
-            {note.topic && <span>· {note.topic}</span>}
+            {note.topicName && <span>· {note.topicName}</span>}
             <span className="flex items-center gap-1">
               <Calendar className="h-3.5 w-3.5" />
               {new Date(note.createdAt).toLocaleDateString('ru-RU')}
@@ -68,21 +69,32 @@ export default async function NoteViewPage({
           </div>
         </div>
         <div className="flex gap-2">
-        <Link
+          <Link
             href={`/teacher/content/notes/${note.id}/edit`}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-white/10 text-slate-300 hover:text-white hover:bg-white/5 transition text-sm"
-        >
+          >
             <Edit className="h-4 w-4" />
             Редактировать
-        </Link>
-        <DeleteNoteButton id={note.id} />
+          </Link>
+          <DeleteNoteButton id={note.id} />
         </div>
       </div>
 
-      <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8">
-        <div className="text-slate-300 whitespace-pre-wrap leading-relaxed">
-          {note.content}
+      {note.imageUrl && (
+        <div className="mb-6 rounded-2xl overflow-hidden border border-white/10">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={note.imageUrl}
+            alt={note.title}
+            className="w-full h-auto max-h-[400px] object-cover"
+          />
         </div>
+      )}
+
+      <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8">
+        <MathText className="text-slate-300 leading-relaxed">
+          {note.content}
+        </MathText>
       </div>
 
       <p className="text-xs text-slate-500 mt-6 text-center">

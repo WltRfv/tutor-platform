@@ -46,7 +46,9 @@ export default async function TeacherHomeworkPage() {
             <ClipboardList className="h-5 w-5 text-white" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-white">Домашние задания</h1>
+            <h1 className="text-3xl font-bold text-white">
+              Домашние задания
+            </h1>
             <p className="text-slate-400 text-sm">
               Всего заданий: {homeworks.length}
             </p>
@@ -76,8 +78,12 @@ export default async function TeacherHomeworkPage() {
       ) : (
         <div className="space-y-3">
           {homeworks.map((hw) => {
-            const uniqueStudents = new Set(hw.submissions.map((s) => s.userId));
-            const reviewed = hw.submissions.filter((s) => s.status === 'REVIEWED').length;
+            const uniqueStudents = new Set(
+              hw.submissions.map((s) => s.userId)
+            );
+            const reviewed = hw.submissions.filter(
+              (s) => s.status === 'REVIEWED'
+            ).length;
             const totalStudents = uniqueStudents.size;
 
             return (
@@ -99,9 +105,9 @@ export default async function TeacherHomeworkPage() {
                       <span className="px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-200">
                         {hw.subject.name}
                       </span>
-                      {hw.topic && (
+                      {hw.topicName && (
                         <span className="px-2 py-0.5 rounded-md bg-blue-500/20 text-blue-200">
-                          {hw.topic}
+                          {hw.topicName}
                         </span>
                       )}
                       {hw.targetType === 'SPECIFIC' ? (
@@ -117,7 +123,8 @@ export default async function TeacherHomeworkPage() {
                       {hw.dueDate && (
                         <span className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
-                          до {new Date(hw.dueDate).toLocaleDateString('ru-RU')}
+                          до{' '}
+                          {new Date(hw.dueDate).toLocaleDateString('ru-RU')}
                         </span>
                       )}
                       <span className="flex items-center gap-1">
@@ -125,7 +132,8 @@ export default async function TeacherHomeworkPage() {
                       </span>
                       {reviewed > 0 && (
                         <span className="flex items-center gap-1 text-emerald-400">
-                          <CheckCircle2 className="h-3 w-3" /> {reviewed} проверено
+                          <CheckCircle2 className="h-3 w-3" /> {reviewed}{' '}
+                          проверено
                         </span>
                       )}
                     </div>
