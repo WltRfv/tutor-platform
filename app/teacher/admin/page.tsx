@@ -14,6 +14,9 @@ import {
   ClipboardList,
 } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 const EVENT_LABELS: Record<string, string> = {
   tab_hidden: '🚪 Ушёл со вкладки',
   tab_visible: '👁 Вернулся',

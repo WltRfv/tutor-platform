@@ -16,7 +16,7 @@ export async function GET() {
   const readMap = new Map(reads.map((r) => [r.type, r.lastReadAt]));
 
   // Если никогда не читал — считаем с этого момента (сутки назад)
-  const defaultFrom = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const defaultFrom = new Date(0);
   const getFrom = (type: string) => readMap.get(type) || defaultFrom;
 
   if (role === 'TEACHER') {

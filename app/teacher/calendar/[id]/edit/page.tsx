@@ -16,6 +16,9 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 type Subject = { id: string; name: string; code: string };
 
 export default function EditLessonPage() {

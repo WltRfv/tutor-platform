@@ -2,6 +2,9 @@ import { prisma } from '@/lib/prisma';
 import { Code2, CheckCircle2, XCircle, AlertTriangle, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 const LANGUAGE_LABELS: Record<string, string> = {
   python: 'Python',
   javascript: 'JavaScript',

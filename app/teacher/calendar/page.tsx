@@ -5,6 +5,9 @@ import Link from 'next/link';
 import { Calendar, Plus, List } from 'lucide-react';
 import { CalendarView } from '@/components/shared/CalendarView';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 const SUBJECT_COLORS: Record<string, string> = {
   math: '#a855f7',
   algebra: '#3b82f6',

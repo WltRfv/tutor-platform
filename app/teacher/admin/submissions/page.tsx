@@ -1,6 +1,9 @@
 import { prisma } from '@/lib/prisma';
 import { FileText, Award } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function SubmissionsPage() {
   const submissions = await prisma.submission.findMany({
     orderBy: { createdAt: 'desc' },

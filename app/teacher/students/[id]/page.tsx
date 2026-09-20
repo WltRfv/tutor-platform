@@ -19,6 +19,9 @@ import { MessengerLinkEditor } from '@/components/teacher/MessengerLinkEditor';
 import { StudentSubjectsManager } from '@/components/teacher/StudentSubjectsManager';
 import { StudentTopicsManager } from '@/components/teacher/StudentTopicsManager';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 const EVENT_LABELS: Record<string, { label: string; color: string; emoji: string }> = {
   tab_hidden: { label: 'Ушёл со вкладки', color: 'text-red-400', emoji: '🚪' },
   tab_visible: { label: 'Вернулся', color: 'text-emerald-400', emoji: '👁' },

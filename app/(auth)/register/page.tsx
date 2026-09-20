@@ -107,7 +107,7 @@ export default function RegisterPage() {
               </select>
             </div>
             <div>
-              <Label>Telegram / WhatsApp для связи</Label>
+              <Label>Связь (телефон или @ник в TG / VK / MAX)</Label>
               <Input
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}

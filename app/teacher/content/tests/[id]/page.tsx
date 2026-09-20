@@ -17,6 +17,9 @@ import {
 import { DeleteTestButton } from '@/components/teacher/DeleteTestButton';
 import { MathText } from '@/components/shared/MathText';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 const TYPE_LABELS: Record<string, string> = {
   SINGLE_CHOICE: 'Один вариант',
   MULTI_CHOICE: 'Несколько вариантов',

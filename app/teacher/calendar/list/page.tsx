@@ -5,6 +5,9 @@ import Link from 'next/link';
 import { LessonCard } from '@/components/shared/LessonCard';
 import { Calendar, ArrowLeft, Plus, Clock } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function TeacherCalendarListPage() {
   const session = await auth();
   if (!session) redirect('/login');

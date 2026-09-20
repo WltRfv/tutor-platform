@@ -3,6 +3,9 @@ import { redirect, notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { TestPageClient } from '@/components/student/TestPageClient';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function TestPage({
   params,
 }: {

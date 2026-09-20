@@ -1,6 +1,10 @@
 import { prisma } from '@/lib/prisma';
 import { ApplicationsList } from '@/components/teacher/ApplicationsList';
 
+// ⚠️ Отключаем кеш Vercel — страница всегда будет запрашивать свежие данные
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function ApplicationsPage() {
   const applications = await prisma.user.findMany({
     where: { status: 'PENDING' },

@@ -1,6 +1,9 @@
 import { prisma } from '@/lib/prisma';
 import { RetakeRequestsList } from '@/components/teacher/RetakeRequestsList';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function RetakesPage() {
   const requests = await prisma.retakeRequest.findMany({
     where: { status: 'PENDING' },

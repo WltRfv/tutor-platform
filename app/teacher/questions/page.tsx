@@ -1,6 +1,9 @@
 import { prisma } from '@/lib/prisma';
 import { QuestionsList } from '@/components/teacher/QuestionsList';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function QuestionsPage() {
   const subjects = await prisma.subjects.findMany({
     where: { isActive: true },

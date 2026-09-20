@@ -1,6 +1,9 @@
 import { prisma } from '@/lib/prisma';
 import { TopicsManager } from '@/components/teacher/TopicsManager';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function TopicsPage() {
   const subjects = await prisma.subjects.findMany({
     where: { isActive: true },

@@ -14,6 +14,9 @@ import {
 } from 'lucide-react';
 import { StudentSubjectTabs } from '@/components/student/StudentSubjectTabs';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function StudentHomeworkPage({
   searchParams,
 }: {

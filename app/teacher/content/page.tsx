@@ -2,6 +2,9 @@ import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import { BookOpen, FileText, Plus, ArrowRight, Eye } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function ContentPage() {
   const notes = await prisma.note.findMany({
     orderBy: { createdAt: 'desc' },

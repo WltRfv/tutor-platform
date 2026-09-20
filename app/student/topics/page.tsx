@@ -6,6 +6,9 @@ import { StudentSubjectTabs } from '@/components/student/StudentSubjectTabs';
 import Link from 'next/link';
 import { BookOpen, FileText, ArrowRight, Layers } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function StudentTopicsPage({
   searchParams,
 }: {

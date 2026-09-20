@@ -5,6 +5,9 @@ import Link from 'next/link';
 import { FileText, Clock, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { StudentSubjectTabs } from '@/components/student/StudentSubjectTabs';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function TestsPage({
   searchParams,
 }: {
