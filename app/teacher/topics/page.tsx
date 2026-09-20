@@ -16,6 +16,18 @@ export default async function TopicsPage() {
     include: {
       subject: { select: { name: true, id: true } },
       _count: { select: { notes: true, tests: true, homeworks: true } },
+      notes: {
+        select: { id: true, title: true, published: true },
+        orderBy: { createdAt: 'desc' },
+      },
+      tests: {
+        select: { id: true, title: true, published: true },
+        orderBy: { createdAt: 'desc' },
+      },
+      homeworks: {
+        select: { id: true, title: true, createdAt: true },
+        orderBy: { createdAt: 'desc' },
+      },
     },
   });
 

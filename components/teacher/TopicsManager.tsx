@@ -17,11 +17,18 @@ import {
   BookOpen,
   FileText,
   ClipboardList,
-  Users,
+  ChevronDown,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
+import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
 type Subject = { id: string; name: string; code: string };
+
+type NoteItem = { id: string; title: string; published: boolean };
+type TestItem = { id: string; title: string; published: boolean };
+type HomeworkItem = { id: string; title: string; createdAt: string | Date };
 
 type Topic = {
   id: string;
@@ -32,6 +39,9 @@ type Topic = {
   isActive: boolean;
   subject: { id: string; name: string };
   _count: { notes: number; tests: number; homeworks: number };
+  notes: NoteItem[];
+  tests: TestItem[];
+  homeworks: HomeworkItem[];
 };
 
 export function TopicsManager({
@@ -47,6 +57,7 @@ export function TopicsManager({
   const [showAdd, setShowAdd] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [form, setForm] = useState({
     subjectId: subjects[0]?.id || '',
     title: '',
@@ -97,7 +108,12 @@ export function TopicsManager({
   };
 
   const remove = async (id: string) => {
-    if (!confirm('Удалить тему? Все связанные материалы останутся без темы.')) return;
+    if (
+      !confirm(
+        'Удалить тему? Конспекты, тесты и ДЗ останутся, но потеряют привязку к теме.'
+      )
+    )
+      return;
     setLoading(true);
     try {
       const res = await fetch(`/api/teacher/topics/${id}`, { method: 'DELETE' });
@@ -122,6 +138,10 @@ export function TopicsManager({
     setShowAdd(true);
   };
 
+  const toggleExpand = (id: string) => {
+    setExpandedId((prev) => (prev === id ? null : id));
+  };
+
   return (
     <div>
       <div className="mb-8 flex items-center justify-between gap-4 flex-wrap">
@@ -132,7 +152,7 @@ export function TopicsManager({
           <div>
             <h1 className="text-3xl font-bold text-white">Темы</h1>
             <p className="text-slate-400 text-sm">
-              Управляй темами и открывай их ученикам
+              Кликни по теме, чтобы раскрыть конспекты, тесты и ДЗ
             </p>
           </div>
         </div>
@@ -182,7 +202,7 @@ export function TopicsManager({
         })}
       </div>
 
-      {/* Форма */}
+      {/* Форма создания/редактирования */}
       <AnimatePresence>
         {showAdd && (
           <motion.div
@@ -209,7 +229,9 @@ export function TopicsManager({
                   <Label className="text-slate-300">Предмет</Label>
                   <select
                     value={form.subjectId}
-                    onChange={(e) => setForm({ ...form, subjectId: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, subjectId: e.target.value })
+                    }
                     className="mt-2 w-full bg-slate-900 border border-white/10 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:border-purple-500/50"
                   >
                     {subjects.map((s) => (
@@ -225,7 +247,9 @@ export function TopicsManager({
                     <Label className="text-slate-300">Название темы</Label>
                     <Input
                       value={form.title}
-                      onChange={(e) => setForm({ ...form, title: e.target.value })}
+                      onChange={(e) =>
+                        setForm({ ...form, title: e.target.value })
+                      }
                       placeholder="Например: Квадратные уравнения"
                       className="mt-2 bg-white/5 border-white/10 text-white"
                     />
@@ -244,10 +268,14 @@ export function TopicsManager({
                 </div>
 
                 <div>
-                  <Label className="text-slate-300">Описание (необязательно)</Label>
+                  <Label className="text-slate-300">
+                    Описание (необязательно)
+                  </Label>
                   <textarea
                     value={form.description}
-                    onChange={(e) => setForm({ ...form, description: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, description: e.target.value })
+                    }
                     rows={2}
                     className="mt-2 w-full bg-white/5 border border-white/10 text-white rounded-xl p-3 text-sm resize-y focus:outline-none focus:border-purple-500/50"
                   />
@@ -271,7 +299,7 @@ export function TopicsManager({
         )}
       </AnimatePresence>
 
-      {/* Список */}
+      {/* Список тем */}
       {filtered.length === 0 ? (
         <div className="text-center py-20 text-slate-500 backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl">
           <Layers className="h-12 w-12 mx-auto mb-4 opacity-30" />
@@ -279,65 +307,202 @@ export function TopicsManager({
         </div>
       ) : (
         <div className="space-y-3">
-          {filtered.map((t) => (
-            <div
-              key={t.id}
-              className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-5 hover:border-purple-500/30 transition"
-            >
-              <div className="flex items-start gap-4 flex-wrap">
-                <div className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex-shrink-0">
-                  <Layers className="h-5 w-5 text-white" />
+          {filtered.map((t) => {
+            const isOpen = expandedId === t.id;
+            const total =
+              t._count.notes + t._count.tests + t._count.homeworks;
+            return (
+              <div
+                key={t.id}
+                className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:border-purple-500/30 transition"
+              >
+                {/* Шапка темы */}
+                <div className="p-5">
+                  <div className="flex items-start gap-4 flex-wrap">
+                    <button
+                      onClick={() => toggleExpand(t.id)}
+                      className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex-shrink-0 hover:scale-105 transition"
+                      aria-label="Раскрыть"
+                    >
+                      <ChevronDown
+                        className={cn(
+                          'h-5 w-5 text-white transition-transform',
+                          isOpen && 'rotate-180'
+                        )}
+                      />
+                    </button>
+
+                    <div
+                      className="flex-1 min-w-[200px] cursor-pointer"
+                      onClick={() => toggleExpand(t.id)}
+                    >
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <h3 className="text-white font-semibold">{t.title}</h3>
+                        <span className="text-xs px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-200">
+                          {t.subject.name}
+                        </span>
+                        <span className="text-xs text-slate-500">
+                          #{t.order}
+                        </span>
+                      </div>
+                      {t.description && (
+                        <p className="text-sm text-slate-400 mt-1">
+                          {t.description}
+                        </p>
+                      )}
+
+                      <div className="flex flex-wrap gap-3 mt-3 text-xs text-slate-500">
+                        <span className="flex items-center gap-1">
+                          <BookOpen className="h-3 w-3" />{' '}
+                          {t._count.notes} конспектов
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <FileText className="h-3 w-3" /> {t._count.tests}{' '}
+                          тестов
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <ClipboardList className="h-3 w-3" />{' '}
+                          {t._count.homeworks} ДЗ
+                        </span>
+                        {total === 0 && (
+                          <span className="text-slate-600 italic">
+                            пусто — ничего не привязано
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => startEdit(t)}
+                        className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition"
+                        title="Редактировать"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => remove(t.id)}
+                        disabled={loading}
+                        className="p-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition"
+                        title="Удалить"
+                      >
+                        {loading ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="flex-1 min-w-[200px]">
-                  <div className="flex items-center gap-2 flex-wrap mb-1">
-                    <h3 className="text-white font-semibold">{t.title}</h3>
-                    <span className="text-xs px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-200">
-                      {t.subject.name}
-                    </span>
-                    <span className="text-xs text-slate-500">#{t.order}</span>
-                  </div>
-                  {t.description && (
-                    <p className="text-sm text-slate-400 mt-1">{t.description}</p>
+                {/* Развёрнутое содержимое */}
+                <AnimatePresence initial={false}>
+                  {isOpen && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="px-5 pb-5 pt-2 border-t border-white/5 grid md:grid-cols-3 gap-4">
+                        {/* Конспекты */}
+                        <div>
+                          <div className="flex items-center gap-2 mb-3 text-sm font-semibold text-white">
+                            <BookOpen className="h-4 w-4 text-emerald-400" />
+                            Конспекты ({t.notes.length})
+                          </div>
+                          {t.notes.length === 0 ? (
+                            <p className="text-xs text-slate-500">
+                              нет конспектов
+                            </p>
+                          ) : (
+                            <div className="space-y-1.5">
+                              {t.notes.map((n) => (
+                                <Link
+                                  key={n.id}
+                                  href={`/teacher/content/notes/${n.id}`}
+                                  className="flex items-center gap-2 p-2 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 hover:border-emerald-500/30 transition text-xs"
+                                >
+                                  {n.published ? (
+                                    <Eye className="h-3 w-3 text-emerald-400 flex-shrink-0" />
+                                  ) : (
+                                    <EyeOff className="h-3 w-3 text-slate-500 flex-shrink-0" />
+                                  )}
+                                  <span className="text-slate-200 truncate">
+                                    {n.title}
+                                  </span>
+                                </Link>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Тесты */}
+                        <div>
+                          <div className="flex items-center gap-2 mb-3 text-sm font-semibold text-white">
+                            <FileText className="h-4 w-4 text-blue-400" />
+                            Тесты ({t.tests.length})
+                          </div>
+                          {t.tests.length === 0 ? (
+                            <p className="text-xs text-slate-500">
+                              нет тестов
+                            </p>
+                          ) : (
+                            <div className="space-y-1.5">
+                              {t.tests.map((te) => (
+                                <Link
+                                  key={te.id}
+                                  href={`/teacher/content/tests/${te.id}`}
+                                  className="flex items-center gap-2 p-2 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 hover:border-blue-500/30 transition text-xs"
+                                >
+                                  {te.published ? (
+                                    <Eye className="h-3 w-3 text-emerald-400 flex-shrink-0" />
+                                  ) : (
+                                    <EyeOff className="h-3 w-3 text-slate-500 flex-shrink-0" />
+                                  )}
+                                  <span className="text-slate-200 truncate">
+                                    {te.title}
+                                  </span>
+                                </Link>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* ДЗ */}
+                        <div>
+                          <div className="flex items-center gap-2 mb-3 text-sm font-semibold text-white">
+                            <ClipboardList className="h-4 w-4 text-amber-400" />
+                            Домашние задания ({t.homeworks.length})
+                          </div>
+                          {t.homeworks.length === 0 ? (
+                            <p className="text-xs text-slate-500">нет ДЗ</p>
+                          ) : (
+                            <div className="space-y-1.5">
+                              {t.homeworks.map((h) => (
+                                <Link
+                                  key={h.id}
+                                  href={`/teacher/homework/${h.id}`}
+                                  className="flex items-center gap-2 p-2 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 hover:border-amber-500/30 transition text-xs"
+                                >
+                                  <ClipboardList className="h-3 w-3 text-amber-400 flex-shrink-0" />
+                                  <span className="text-slate-200 truncate">
+                                    {h.title}
+                                  </span>
+                                </Link>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
                   )}
-
-                  <div className="flex flex-wrap gap-3 mt-3 text-xs text-slate-500">
-                    <span className="flex items-center gap-1">
-                      <BookOpen className="h-3 w-3" /> {t._count.notes} конспектов
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <FileText className="h-3 w-3" /> {t._count.tests} тестов
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <ClipboardList className="h-3 w-3" /> {t._count.homeworks} ДЗ
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => startEdit(t)}
-                    className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition"
-                    title="Редактировать"
-                  >
-                    <Edit className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => remove(t.id)}
-                    disabled={loading}
-                    className="p-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition"
-                    title="Удалить"
-                  >
-                    {loading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Trash2 className="h-4 w-4" />
-                    )}
-                  </button>
-                </div>
+                </AnimatePresence>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
