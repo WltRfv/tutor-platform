@@ -55,6 +55,7 @@ model User {
   topicUnlocks      TopicUnlock[]
   notificationReads NotificationRead[]
   homeworkStarts HomeworkStart[]
+  lessonPlans     LessonPlan[]         @relation("TeacherLessonPlans")
 }
 
 // ============================================
@@ -80,6 +81,7 @@ model Subjects {
   lessons   Lesson[]
   questions Question[]
   topics    Topic[]
+  lessonPlans LessonPlan[]
 
   @@map("Subjects")
 }
@@ -117,6 +119,7 @@ model Topic {
   tests     Test[]
   homeworks Homework[]
   unlocks   TopicUnlock[]
+  lessonPlans LessonPlan[]
 
   @@index([subjectId, order])
 }
@@ -151,6 +154,26 @@ model Note {
   authorId  String
   author    User     @relation("TeacherNotes", fields: [authorId], references: [id])
   createdAt DateTime @default(now())
+}
+
+model LessonPlan {
+  id          String   @id @default(cuid())
+  title       String
+  subjectId   String
+  subject     Subjects @relation(fields: [subjectId], references: [id])
+  topicId     String?
+  topic       Topic?   @relation(fields: [topicId], references: [id])
+  topicName   String?
+  content     String
+  duration    Int      @default(45)
+  published   Boolean  @default(false)
+  authorId    String
+  author      User     @relation("TeacherLessonPlans", fields: [authorId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([subjectId])
+  @@index([topicId])
 }
 
 // ============================================

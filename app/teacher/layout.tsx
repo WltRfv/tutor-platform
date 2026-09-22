@@ -22,6 +22,7 @@ import {
   HelpCircle,
   Menu,
   X,
+  BookMarked,
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/shared/ThemeToggle';
 import { NotificationBell } from '@/components/shared/NotificationBell';
@@ -39,6 +40,7 @@ const teacherMenu = [
   { href: '/teacher/questions', label: 'Банк заданий', icon: HelpCircle },
   { href: '/teacher/homework', label: 'Домашние задания', icon: ClipboardList },
   { href: '/teacher/content', label: 'Конспекты и тесты', icon: BookOpen },
+  { href: '/teacher/lesson-plans', label: 'Методички', icon: BookMarked },
   { href: '/teacher/calendar', label: 'Расписание', icon: Calendar },
   { href: '/teacher/retakes', label: 'Пересдачи', icon: RefreshCw },
 ];
