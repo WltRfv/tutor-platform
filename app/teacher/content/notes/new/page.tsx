@@ -1,11 +1,20 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, Save, ArrowLeft, Image as ImageIcon } from 'lucide-react';
+import {
+  Loader2,
+  Save,
+  ArrowLeft,
+  Image as ImageIcon,
+  Table2,
+  Sigma,
+  SquareFunction,
+  Upload,
+} from 'lucide-react';
 import Link from 'next/link';
 import { ImageUploader } from '@/components/shared/ImageUploader';
 
@@ -28,6 +37,10 @@ export default function NewNotePage() {
   const [loading, setLoading] = useState(false);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [topics, setTopics] = useState<Topic[]>([]);
+  const [uploadingInline, setUploadingInline] = useState(false);
+  const contentRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [form, setForm] = useState({
     title: '',
     content: '',
@@ -50,9 +63,59 @@ export default function NewNotePage() {
         }
       })
       .catch(() => toast.error('Не удалось загрузить данные'));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const availableTopics = topics.filter((t) => t.subjectId === form.subjectId);
+
+  // === Вставка в позицию курсора ===
+  const insertAtCursor = (text: string) => {
+    const el = contentRef.current;
+    if (!el) {
+      setForm((f) => ({ ...f, content: f.content + text }));
+      return;
+    }
+    const start = el.selectionStart;
+    const end = el.selectionEnd;
+    const next = form.content.slice(0, start) + text + form.content.slice(end);
+    setForm((f) => ({ ...f, content: next }));
+    requestAnimationFrame(() => {
+      el.focus();
+      el.selectionStart = el.selectionEnd = start + text.length;
+    });
+  };
+
+  // === Инлайн-загрузка картинки ===
+  const handleInlineUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Файл больше 5 МБ');
+      return;
+    }
+    if (!file.type.startsWith('image/')) {
+      toast.error('Только изображения');
+      return;
+    }
+    setUploadingInline(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/teacher/upload-image', {
+        method: 'POST',
+        body: fd,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      insertAtCursor(`\n![${file.name}](${data.url})\n`);
+      toast.success('Картинка вставлена');
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setUploadingInline(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -155,23 +218,81 @@ export default function NewNotePage() {
           </div>
         </div>
 
+        {/* === Содержание с панелью вставки === */}
         <div>
           <Label className="text-slate-300">Содержание</Label>
+
+          <div className="mt-2 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingInline}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/30 text-xs text-slate-300 hover:text-white transition disabled:opacity-50"
+            >
+              {uploadingInline ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Upload className="h-3.5 w-3.5" />
+              )}
+              Картинка
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleInlineUpload}
+              className="hidden"
+            />
+
+            <button
+              type="button"
+              onClick={() =>
+                insertAtCursor(
+                  '\n| Заголовок 1 | Заголовок 2 |\n|---|---|\n|  |  |\n|  |  |\n'
+                )
+              }
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/30 text-xs text-slate-300 hover:text-white transition"
+            >
+              <Table2 className="h-3.5 w-3.5" />
+              Таблица
+            </button>
+
+            <button
+              type="button"
+              onClick={() => insertAtCursor('$x^2$')}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/30 text-xs text-slate-300 hover:text-white transition"
+            >
+              <Sigma className="h-3.5 w-3.5" />
+              Формула
+            </button>
+
+            <button
+              type="button"
+              onClick={() => insertAtCursor('\n$$\n\n$$\n')}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/30 text-xs text-slate-300 hover:text-white transition"
+            >
+              <SquareFunction className="h-3.5 w-3.5" />
+              Блок формулы
+            </button>
+          </div>
+
           <textarea
+            ref={contentRef}
             value={form.content}
             onChange={(e) => setForm({ ...form, content: e.target.value })}
-            placeholder="Текст конспекта. Можно использовать переносы строк и формулы: $x^2 + 5x = 0$"
-            rows={15}
+            placeholder="Текст конспекта. Поддерживается markdown: картинки, таблицы, списки, формулы."
+            rows={18}
             className="mt-2 w-full bg-white/5 border border-white/10 text-white rounded-xl p-4 text-sm resize-y focus:outline-none focus:border-purple-500/50 leading-relaxed"
             required
           />
           <p className="text-xs text-slate-500 mt-1">
-            💡 Формулы через KaTeX: <code className="text-purple-300">$x^2$</code>{' '}
-            (инлайн), <code className="text-purple-300">$$...$$</code> (блок)
+            💡 Формулы: <code className="text-purple-300">$x^2$</code> (инлайн),{' '}
+            <code className="text-purple-300">$$...$$</code> (блок). Картинки:{' '}
+            <code className="text-purple-300">![alt](url)</code>. Таблицы: markdown.
           </p>
         </div>
 
-        {/* КАРТИНКА-ОБЛОЖКА */}
+        {/* Обложка */}
         <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-5">
           <div className="flex items-center gap-2 mb-3">
             <ImageIcon className="h-4 w-4 text-purple-400" />
