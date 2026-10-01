@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   Calendar,
   Video,
+  TrendingUp,
 } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -41,10 +42,7 @@ export default async function TeacherHome() {
 
   const now = new Date();
   const upcomingLessons = await prisma.lesson.findMany({
-    where: {
-      startAt: { gte: now },
-      status: 'SCHEDULED',
-    },
+    where: { startAt: { gte: now }, status: 'SCHEDULED' },
     orderBy: { startAt: 'asc' },
     take: 5,
     include: {
@@ -52,6 +50,30 @@ export default async function TeacherHome() {
       subject: { select: { name: true } },
     },
   });
+
+  // Активность за 7 дней
+  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const weekActivity = await prisma.activity.findMany({
+    where: { createdAt: { gte: weekAgo } },
+    select: { createdAt: true },
+  });
+
+  const dailyCounts: Record<string, number> = {};
+  const dayKeys: string[] = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+    const key = d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' });
+    dailyCounts[key] = 0;
+    dayKeys.push(key);
+  }
+  weekActivity.forEach((a) => {
+    const key = new Date(a.createdAt).toLocaleDateString('ru-RU', {
+      day: '2-digit',
+      month: '2-digit',
+    });
+    if (dailyCounts[key] !== undefined) dailyCounts[key]++;
+  });
+  const maxDaily = Math.max(...Object.values(dailyCounts), 1);
 
   return (
     <div className="p-8 max-w-5xl">
@@ -117,6 +139,47 @@ export default async function TeacherHome() {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Активность за 7 дней */}
+      <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-emerald-400" />
+            Активность учеников за 7 дней
+          </h2>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-slate-500">
+              Всего: {weekActivity.length} событий
+            </span>
+            <Link
+              href="/teacher/admin/activity"
+              className="text-sm text-purple-400 hover:text-purple-300 flex items-center gap-1"
+            >
+              Подробнее <ArrowRight className="h-3 w-3" />
+            </Link>
+          </div>
+        </div>
+        <div className="flex items-end justify-between gap-2 h-32">
+          {dayKeys.map((day) => {
+            const count = dailyCounts[day];
+            return (
+              <div key={day} className="flex-1 flex flex-col items-center gap-2">
+                <div className="w-full flex-1 flex items-end">
+                  <div
+                    className="w-full rounded-t-lg bg-gradient-to-t from-purple-500/60 to-blue-500/80 transition-all hover:from-purple-400 hover:to-blue-400"
+                    style={{
+                      height: `${Math.max((count / maxDaily) * 100, 4)}%`,
+                      minHeight: '6px',
+                    }}
+                    title={`${count} событий`}
+                  />
+                </div>
+                <span className="text-[10px] text-slate-500">{day}</span>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* Ближайшие занятия */}

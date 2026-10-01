@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { getCategoriesForGrade } from '@/lib/subjects';
+import { getCategoriesForGrade, getSubjectCode, SUBJECT_NAMES } from '@/lib/subjects';
 import { cn } from '@/lib/utils';
 import { ArrowLeft, Check } from 'lucide-react';
 
@@ -96,6 +96,14 @@ export default function RegisterPage() {
   const currentCategories = activeGrade ? getCategoriesForGrade(activeGrade) : [];
   const activeSelections = activeGrade ? categoriesByGrade[activeGrade] || [] : [];
 
+  // Красивое имя предмета с классом, например "Алгебра 7" или "ВПР 7"
+  const getDisplayName = (catId: string, grade: number) => {
+    const code = getSubjectCode(catId, grade);
+    if (code && SUBJECT_NAMES[code]) return SUBJECT_NAMES[code];
+    const cat = getCategoriesForGrade(grade).find((c) => c.id === catId);
+    return cat ? `${cat.label} ${grade}` : catId;
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-purple-500/10 to-blue-500/10">
       <Card className="w-full max-w-2xl">
@@ -172,7 +180,6 @@ export default function RegisterPage() {
             <div>
               <Label className="mb-2 block">Классы и предметы</Label>
               <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-4 space-y-4">
-                {/* Чипы выбранных классов */}
                 {selectedGrades.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {selectedGrades.map((g) => (
@@ -219,6 +226,7 @@ export default function RegisterPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {currentCategories.map((cat) => {
                         const isSel = activeSelections.includes(cat.id);
+                        const displayName = getDisplayName(cat.id, activeGrade);
                         return (
                           <button
                             key={cat.id}
@@ -244,7 +252,7 @@ export default function RegisterPage() {
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="text-white text-sm font-medium">
-                                  {cat.label}
+                                  {displayName}
                                 </div>
                                 <div className="text-xs text-slate-400">
                                   {cat.description}
