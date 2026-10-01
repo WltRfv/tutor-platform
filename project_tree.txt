@@ -1,0 +1,639 @@
+.
+├── .agents
+│   └── skills
+│       ├── prisma-composer-core-concepts
+│       │   └── SKILL.md
+│       └── prisma-platform-core-concepts
+│           └── SKILL.md
+├── .claude
+│   └── skills
+│       ├── prisma-composer-core-concepts
+│       │   └── SKILL.md
+│       └── prisma-platform-core-concepts
+│           └── SKILL.md
+├── .cursor
+│   └── skills
+│       ├── prisma-composer-core-concepts
+│       │   └── SKILL.md
+│       └── prisma-platform-core-concepts
+│           └── SKILL.md
+├── .devin
+│   └── skills
+│       ├── prisma-composer-core-concepts
+│       │   └── SKILL.md
+│       └── prisma-platform-core-concepts
+│           └── SKILL.md
+├── .env.example
+├── .env.local
+├── .gitattributes
+├── .gitignore
+├── .npmrc
+├── AGENTS.md
+├── CLAUDE.md
+├── README.md
+├── app
+│   ├── (auth)
+│   │   ├── login
+│   │   │   └── page.tsx
+│   │   └── register
+│   │       └── page.tsx
+│   ├── api
+│   │   ├── auth
+│   │   │   └── [...nextauth]
+│   │   │       └── route.ts
+│   │   ├── compiler
+│   │   │   └── run
+│   │   │       └── route.ts
+│   │   ├── homework
+│   │   │   ├── [id]
+│   │   │   │   ├── route.ts
+│   │   │   │   └── submissions
+│   │   │   ├── review
+│   │   │   │   └── [id]
+│   │   │   │       └── route.ts
+│   │   │   ├── route.ts
+│   │   │   ├── start
+│   │   │   │   └── route.ts
+│   │   │   ├── submit
+│   │   │   │   └── route.ts
+│   │   │   └── upload
+│   │   │       └── route.ts
+│   │   ├── lessons
+│   │   │   ├── [id]
+│   │   │   │   └── route.ts
+│   │   │   └── route.ts
+│   │   ├── notifications
+│   │   │   ├── read
+│   │   │   │   └── route.ts
+│   │   │   └── route.ts
+│   │   ├── register
+│   │   │   └── route.ts
+│   │   ├── teacher
+│   │   │   ├── applications
+│   │   │   │   └── [id]
+│   │   │   │       └── route.ts
+│   │   │   ├── homework
+│   │   │   │   ├── submission
+│   │   │   │   │   ├── [id]
+│   │   │   │   │   │   ├── ai-check
+│   │   │   │   │   │   │   └── route.ts
+│   │   │   │   │   │   └── route.ts
+│   │   │   │   │   └── ф
+│   │   │   │   └── ф
+│   │   │   ├── lesson-plans
+│   │   │   │   ├── [id]
+│   │   │   │   │   └── route.ts
+│   │   │   │   └── route.ts
+│   │   │   ├── notes
+│   │   │   │   ├── [id]
+│   │   │   │   │   └── route.ts
+│   │   │   │   └── route.ts
+│   │   │   ├── questions
+│   │   │   │   ├── [id]
+│   │   │   │   │   └── route.ts
+│   │   │   │   ├── import
+│   │   │   │   │   └── route.ts
+│   │   │   │   ├── route.ts
+│   │   │   │   └── stats
+│   │   │   │       └── route.ts
+│   │   │   ├── retakes
+│   │   │   │   └── [id]
+│   │   │   │       └── route.ts
+│   │   │   ├── students
+│   │   │   │   ├── [id]
+│   │   │   │   │   ├── route.ts
+│   │   │   │   │   ├── subjects
+│   │   │   │   │   │   ├── [subjectId]
+│   │   │   │   │   │   │   └── route.ts
+│   │   │   │   │   │   └── route.ts
+│   │   │   │   │   └── topics
+│   │   │   │   │       └── route.ts
+│   │   │   │   └── route.ts
+│   │   │   ├── students-list
+│   │   │   │   └── route.ts
+│   │   │   ├── subjects
+│   │   │   │   └── route.ts
+│   │   │   ├── tests
+│   │   │   │   ├── [id]
+│   │   │   │   │   └── route.ts
+│   │   │   │   └── route.ts
+│   │   │   ├── topics
+│   │   │   │   ├── [id]
+│   │   │   │   │   ├── route.ts
+│   │   │   │   │   ├── unlock
+│   │   │   │   │   │   └── route.ts
+│   │   │   │   │   └── unlocks
+│   │   │   │   │       └── route.ts
+│   │   │   │   └── route.ts
+│   │   │   └── upload-image
+│   │   │       └── route.ts
+│   │   ├── telegram
+│   │   ├── tests
+│   │   │   ├── [id]
+│   │   │   │   └── retake-request
+│   │   │   │       └── route.ts
+│   │   │   └── submit
+│   │   │       └── route.ts
+│   │   └── track
+│   │       └── route.ts
+│   ├── apple-icon.tsx
+│   ├── board
+│   │   └── page.tsx
+│   ├── favicon.ico
+│   ├── globals.css
+│   ├── icon.tsx
+│   ├── layout.tsx
+│   ├── opengraph-image.tsx
+│   ├── page.tsx
+│   ├── providers.tsx
+│   ├── robots.ts
+│   ├── sitemap.ts
+│   ├── student
+│   │   ├── calendar
+│   │   │   └── page.tsx
+│   │   ├── compiler
+│   │   │   └── page.tsx
+│   │   ├── homework
+│   │   │   ├── [id]
+│   │   │   │   └── page.tsx
+│   │   │   └── page.tsx
+│   │   ├── layout.tsx
+│   │   ├── loading.tsx
+│   │   ├── notes
+│   │   │   └── page.tsx
+│   │   ├── page.tsx
+│   │   ├── tests
+│   │   │   ├── [id]
+│   │   │   │   └── page.tsx
+│   │   │   └── page.tsx
+│   │   └── topics
+│   │       └── page.tsx
+│   └── teacher
+│       ├── admin
+│       │   ├── activity
+│       │   │   └── page.tsx
+│       │   ├── compiler
+│       │   │   └── page.tsx
+│       │   ├── loading.tsx
+│       │   ├── notifications
+│       │   │   └── page.tsx
+│       │   ├── page.tsx
+│       │   ├── settings
+│       │   │   └── page.tsx
+│       │   └── submissions
+│       │       └── page.tsx
+│       ├── applications
+│       │   └── page.tsx
+│       ├── calendar
+│       │   ├── [id]
+│       │   │   └── edit
+│       │   │       └── page.tsx
+│       │   ├── list
+│       │   │   └── page.tsx
+│       │   ├── new
+│       │   │   └── page.tsx
+│       │   └── page.tsx
+│       ├── content
+│       │   ├── loading.tsx
+│       │   ├── notes
+│       │   │   ├── [id]
+│       │   │   │   ├── edit
+│       │   │   │   │   └── page.tsx
+│       │   │   │   └── page.tsx
+│       │   │   └── new
+│       │   │       └── page.tsx
+│       │   ├── page.tsx
+│       │   └── tests
+│       │       ├── [id]
+│       │       │   ├── edit
+│       │       │   │   └── page.tsx
+│       │       │   └── page.tsx
+│       │       └── new
+│       │           └── page.tsx
+│       ├── homework
+│       │   ├── [id]
+│       │   │   ├── page.tsx
+│       │   │   └── review
+│       │   │       └── [submissionId]
+│       │   ├── new
+│       │   │   └── page.tsx
+│       │   ├── page.tsx
+│       │   └── submission
+│       │       └── [id]
+│       │           └── page.tsx
+│       ├── layout.tsx
+│       ├── lesson-plans
+│       │   ├── [id]
+│       │   │   ├── edit
+│       │   │   │   └── page.tsx
+│       │   │   └── page.tsx
+│       │   ├── new
+│       │   │   └── page.tsx
+│       │   └── page.tsx
+│       ├── loading.tsx
+│       ├── page.tsx
+│       ├── questions
+│       │   ├── import
+│       │   │   └── page.tsx
+│       │   └── page.tsx
+│       ├── retakes
+│       │   └── page.tsx
+│       ├── students
+│       │   ├── [id]
+│       │   │   └── page.tsx
+│       │   └── page.tsx
+│       ├── topics
+│       │   └── page.tsx
+│       └── upload-image
+│           └── route.ts
+├── auth.config.ts
+├── auth.ts
+├── components
+│   ├── landing
+│   │   ├── About.tsx
+│   │   ├── AnimatedBackground.tsx
+│   │   ├── CTASection.tsx
+│   │   ├── Hero.tsx
+│   │   ├── Pricing.tsx
+│   │   ├── Stats.tsx
+│   │   └── Subjects.tsx
+│   ├── shared
+│   │   ├── BoardClient.tsx
+│   │   ├── CalendarView.tsx
+│   │   ├── HomeworkBoard.tsx
+│   │   ├── ImageUploader.tsx
+│   │   ├── LessonCard.tsx
+│   │   ├── MathText.tsx
+│   │   ├── NotificationBell.tsx
+│   │   ├── ThemeProvider.tsx
+│   │   └── ThemeToggle.tsx
+│   ├── student
+│   │   ├── CodeCompiler.tsx
+│   │   ├── HomeworkView.tsx
+│   │   ├── NotesList.tsx
+│   │   ├── RetakeRequestModal.tsx
+│   │   ├── StudentSubjectTabs.tsx
+│   │   ├── StudentTopicsView.tsx
+│   │   ├── TaskCodeEditor.tsx
+│   │   ├── TestPageClient.tsx
+│   │   └── TestRunner.tsx
+│   ├── teacher
+│   │   ├── ApplicationsList.tsx
+│   │   ├── DeleteLessonPlanButton.tsx
+│   │   ├── DeleteNoteButton.tsx
+│   │   ├── DeleteTestButton.tsx
+│   │   ├── MessengerLinkEditor.tsx
+│   │   ├── QuestionForm.tsx
+│   │   ├── QuestionsList.tsx
+│   │   ├── RetakeRequestsList.tsx
+│   │   ├── StudentSubjectsManager.tsx
+│   │   ├── StudentTopicsManager.tsx
+│   │   ├── SubmissionViewer.tsx
+│   │   ├── SubmissionsList.tsx
+│   │   └── TopicsManager.tsx
+│   └── ui
+│       ├── avatar.tsx
+│       ├── badge.tsx
+│       ├── button.tsx
+│       ├── card.tsx
+│       ├── dialog.tsx
+│       ├── dropdown-menu.tsx
+│       ├── input.tsx
+│       ├── label.tsx
+│       ├── select.tsx
+│       ├── separator.tsx
+│       ├── sheet.tsx
+│       ├── sonner.tsx
+│       ├── tabs.tsx
+│       └── textarea.tsx
+├── components.json
+├── eslint.config.mjs
+├── export_project.mjs
+├── hooks
+│   └── use-activity-tracker.ts
+├── lib
+│   ├── ai-checker.ts
+│   ├── google-calendar.ts
+│   ├── prisma.ts
+│   ├── sortByNumber.ts
+│   ├── subjects.ts
+│   ├── supabase.ts
+│   ├── telegram.ts
+│   └── utils.ts
+├── migration.sql
+├── next-auth.d.ts
+├── next-env.d.ts
+├── next.config.ts
+├── package-lock.json
+├── package.json
+├── postcss.config.mjs
+├── prisma
+│   └── schema.prisma
+├── prisma.config.ts
+├── project_dump.txt
+├── project_tree.txt
+├── proxy.ts
+├── public
+│   ├── file.svg
+│   ├── globe.svg
+│   ├── next.svg
+│   ├── teacher.jpg
+│   ├── tldraw-assets
+│   │   ├── embed-icons
+│   │   │   ├── canva.png
+│   │   │   ├── codepen.png
+│   │   │   ├── codesandbox.png
+│   │   │   ├── desmos.png
+│   │   │   ├── excalidraw.png
+│   │   │   ├── felt.png
+│   │   │   ├── figma.png
+│   │   │   ├── github_gist.png
+│   │   │   ├── google_calendar.png
+│   │   │   ├── google_maps.png
+│   │   │   ├── google_slides.png
+│   │   │   ├── observable.png
+│   │   │   ├── replit.png
+│   │   │   ├── scratch.png
+│   │   │   ├── spotify.png
+│   │   │   ├── tldraw.png
+│   │   │   ├── val_town.png
+│   │   │   ├── vimeo.png
+│   │   │   └── youtube.png
+│   │   ├── fonts
+│   │   │   ├── IBMPlexMono-Bold.woff2
+│   │   │   ├── IBMPlexMono-BoldItalic.woff2
+│   │   │   ├── IBMPlexMono-Medium.woff2
+│   │   │   ├── IBMPlexMono-MediumItalic.woff2
+│   │   │   ├── IBMPlexSans-Bold.woff2
+│   │   │   ├── IBMPlexSans-BoldItalic.woff2
+│   │   │   ├── IBMPlexSans-Medium.woff2
+│   │   │   ├── IBMPlexSans-MediumItalic.woff2
+│   │   │   ├── IBMPlexSerif-Bold.woff2
+│   │   │   ├── IBMPlexSerif-BoldItalic.woff2
+│   │   │   ├── IBMPlexSerif-Medium.woff2
+│   │   │   ├── IBMPlexSerif-MediumItalic.woff2
+│   │   │   ├── Shantell_Sans-Informal_Bold.woff2
+│   │   │   ├── Shantell_Sans-Informal_Bold_Italic.woff2
+│   │   │   ├── Shantell_Sans-Informal_Regular.woff2
+│   │   │   └── Shantell_Sans-Informal_Regular_Italic.woff2
+│   │   ├── icons
+│   │   │   └── icon
+│   │   │       ├── 0_merged.svg
+│   │   │       ├── align-bottom.svg
+│   │   │       ├── align-center-horizontal.svg
+│   │   │       ├── align-center-vertical.svg
+│   │   │       ├── align-left.svg
+│   │   │       ├── align-right.svg
+│   │   │       ├── align-top.svg
+│   │   │       ├── alt.svg
+│   │   │       ├── arrow-arc.svg
+│   │   │       ├── arrow-cycle.svg
+│   │   │       ├── arrow-elbow.svg
+│   │   │       ├── arrow-left.svg
+│   │   │       ├── arrowhead-arrow.svg
+│   │   │       ├── arrowhead-bar.svg
+│   │   │       ├── arrowhead-diamond.svg
+│   │   │       ├── arrowhead-dot.svg
+│   │   │       ├── arrowhead-none.svg
+│   │   │       ├── arrowhead-square.svg
+│   │   │       ├── arrowhead-triangle-inverted.svg
+│   │   │       ├── arrowhead-triangle.svg
+│   │   │       ├── blob.svg
+│   │   │       ├── bold.svg
+│   │   │       ├── bookmark.svg
+│   │   │       ├── bring-forward.svg
+│   │   │       ├── bring-to-front.svg
+│   │   │       ├── broken.svg
+│   │   │       ├── bulletList.svg
+│   │   │       ├── check-circle.svg
+│   │   │       ├── check.svg
+│   │   │       ├── chevron-down.svg
+│   │   │       ├── chevron-left.svg
+│   │   │       ├── chevron-right.svg
+│   │   │       ├── chevron-up.svg
+│   │   │       ├── chevrons-ne.svg
+│   │   │       ├── chevrons-sw.svg
+│   │   │       ├── clipboard-copied.svg
+│   │   │       ├── clipboard-copy.svg
+│   │   │       ├── closed.svg
+│   │   │       ├── code.svg
+│   │   │       ├── color.svg
+│   │   │       ├── comment.svg
+│   │   │       ├── corners.svg
+│   │   │       ├── crop.svg
+│   │   │       ├── cross-2.svg
+│   │   │       ├── cross-circle.svg
+│   │   │       ├── dash-dashed.svg
+│   │   │       ├── dash-dotted.svg
+│   │   │       ├── dash-draw.svg
+│   │   │       ├── dash-solid.svg
+│   │   │       ├── disconnected.svg
+│   │   │       ├── discord.svg
+│   │   │       ├── distribute-horizontal.svg
+│   │   │       ├── distribute-vertical.svg
+│   │   │       ├── dot.svg
+│   │   │       ├── dots-horizontal.svg
+│   │   │       ├── dots-vertical.svg
+│   │   │       ├── download.svg
+│   │   │       ├── drag-handle-dots.svg
+│   │   │       ├── duplicate.svg
+│   │   │       ├── edit.svg
+│   │   │       ├── external-link.svg
+│   │   │       ├── fill-fill.svg
+│   │   │       ├── fill-lined-fill.svg
+│   │   │       ├── fill-none.svg
+│   │   │       ├── fill-pattern.svg
+│   │   │       ├── fill-semi.svg
+│   │   │       ├── fill-solid.svg
+│   │   │       ├── follow.svg
+│   │   │       ├── following.svg
+│   │   │       ├── font-draw.svg
+│   │   │       ├── font-mono.svg
+│   │   │       ├── font-sans.svg
+│   │   │       ├── font-serif.svg
+│   │   │       ├── geo-arrow-down.svg
+│   │   │       ├── geo-arrow-left.svg
+│   │   │       ├── geo-arrow-right.svg
+│   │   │       ├── geo-arrow-up.svg
+│   │   │       ├── geo-check-box.svg
+│   │   │       ├── geo-cloud.svg
+│   │   │       ├── geo-diamond.svg
+│   │   │       ├── geo-ellipse.svg
+│   │   │       ├── geo-heart.svg
+│   │   │       ├── geo-hexagon.svg
+│   │   │       ├── geo-octagon.svg
+│   │   │       ├── geo-oval.svg
+│   │   │       ├── geo-pentagon.svg
+│   │   │       ├── geo-rectangle.svg
+│   │   │       ├── geo-rhombus-2.svg
+│   │   │       ├── geo-rhombus.svg
+│   │   │       ├── geo-star.svg
+│   │   │       ├── geo-trapezoid.svg
+│   │   │       ├── geo-triangle.svg
+│   │   │       ├── geo-x-box.svg
+│   │   │       ├── github.svg
+│   │   │       ├── group.svg
+│   │   │       ├── heading.svg
+│   │   │       ├── help-circle.svg
+│   │   │       ├── highlight.svg
+│   │   │       ├── horizontal-align-end.svg
+│   │   │       ├── horizontal-align-middle.svg
+│   │   │       ├── horizontal-align-start.svg
+│   │   │       ├── icon-names.json
+│   │   │       ├── info-circle.svg
+│   │   │       ├── italic.svg
+│   │   │       ├── leading.svg
+│   │   │       ├── link.svg
+│   │   │       ├── list.svg
+│   │   │       ├── lock.svg
+│   │   │       ├── manual.svg
+│   │   │       ├── menu.svg
+│   │   │       ├── minus.svg
+│   │   │       ├── mixed.svg
+│   │   │       ├── pack.svg
+│   │   │       ├── plus.svg
+│   │   │       ├── question-mark-circle.svg
+│   │   │       ├── question-mark.svg
+│   │   │       ├── redo.svg
+│   │   │       ├── reset-zoom.svg
+│   │   │       ├── rotate-ccw.svg
+│   │   │       ├── rotate-cw.svg
+│   │   │       ├── send-backward.svg
+│   │   │       ├── send-to-back.svg
+│   │   │       ├── share-1.svg
+│   │   │       ├── size-extra-large.svg
+│   │   │       ├── size-large.svg
+│   │   │       ├── size-medium.svg
+│   │   │       ├── size-small.svg
+│   │   │       ├── spline-cubic.svg
+│   │   │       ├── spline-line.svg
+│   │   │       ├── stack-horizontal.svg
+│   │   │       ├── stack-vertical.svg
+│   │   │       ├── status-offline.svg
+│   │   │       ├── stretch-horizontal.svg
+│   │   │       ├── stretch-vertical.svg
+│   │   │       ├── strike.svg
+│   │   │       ├── text-align-center.svg
+│   │   │       ├── text-align-left.svg
+│   │   │       ├── text-align-right.svg
+│   │   │       ├── toggle-off.svg
+│   │   │       ├── toggle-on.svg
+│   │   │       ├── tool-arrow.svg
+│   │   │       ├── tool-eraser.svg
+│   │   │       ├── tool-frame.svg
+│   │   │       ├── tool-hand.svg
+│   │   │       ├── tool-highlight.svg
+│   │   │       ├── tool-laser.svg
+│   │   │       ├── tool-line.svg
+│   │   │       ├── tool-media.svg
+│   │   │       ├── tool-note.svg
+│   │   │       ├── tool-pencil.svg
+│   │   │       ├── tool-pointer.svg
+│   │   │       ├── tool-screenshot.svg
+│   │   │       ├── tool-text.svg
+│   │   │       ├── trash.svg
+│   │   │       ├── twitter.svg
+│   │   │       ├── underline.svg
+│   │   │       ├── undo.svg
+│   │   │       ├── ungroup.svg
+│   │   │       ├── unlock.svg
+│   │   │       ├── vertical-align-end.svg
+│   │   │       ├── vertical-align-middle.svg
+│   │   │       ├── vertical-align-start.svg
+│   │   │       ├── warning-triangle.svg
+│   │   │       ├── zoom-in.svg
+│   │   │       └── zoom-out.svg
+│   │   └── translations
+│   │       ├── ar.json
+│   │       ├── bn.json
+│   │       ├── ca.json
+│   │       ├── cs.json
+│   │       ├── da.json
+│   │       ├── de.json
+│   │       ├── el.json
+│   │       ├── en.json
+│   │       ├── es.json
+│   │       ├── fa.json
+│   │       ├── fi.json
+│   │       ├── fr.json
+│   │       ├── gl.json
+│   │       ├── gu-in.json
+│   │       ├── he.json
+│   │       ├── hi-in.json
+│   │       ├── hr.json
+│   │       ├── hu.json
+│   │       ├── id.json
+│   │       ├── it.json
+│   │       ├── ja.json
+│   │       ├── km-kh.json
+│   │       ├── kn.json
+│   │       ├── ko-kr.json
+│   │       ├── ku.json
+│   │       ├── languages.json
+│   │       ├── main.json
+│   │       ├── ml.json
+│   │       ├── mr.json
+│   │       ├── ms.json
+│   │       ├── my.json
+│   │       ├── ne.json
+│   │       ├── nl.json
+│   │       ├── no.json
+│   │       ├── pa.json
+│   │       ├── pl.json
+│   │       ├── pt-br.json
+│   │       ├── pt-pt.json
+│   │       ├── ro.json
+│   │       ├── ru.json
+│   │       ├── sl.json
+│   │       ├── so.json
+│   │       ├── sv.json
+│   │       ├── ta.json
+│   │       ├── te.json
+│   │       ├── th.json
+│   │       ├── tl.json
+│   │       ├── tr.json
+│   │       ├── uk.json
+│   │       ├── ur.json
+│   │       ├── vi.json
+│   │       ├── zh-cn.json
+│   │       └── zh-tw.json
+│   ├── vercel.svg
+│   └── window.svg
+├── settings.json
+├── src
+│   └── generated
+│       └── prisma
+│           ├── browser.ts
+│           ├── client.ts
+│           ├── commonInputTypes.ts
+│           ├── enums.ts
+│           ├── internal
+│           │   ├── class.ts
+│           │   ├── prismaNamespace.ts
+│           │   └── prismaNamespaceBrowser.ts
+│           ├── models
+│           │   ├── Activity.ts
+│           │   ├── CodeRun.ts
+│           │   ├── Homework.ts
+│           │   ├── HomeworkStart.ts
+│           │   ├── HomeworkSubmission.ts
+│           │   ├── HomeworkTask.ts
+│           │   ├── Lesson.ts
+│           │   ├── LessonPlan.ts
+│           │   ├── Note.ts
+│           │   ├── NotificationRead.ts
+│           │   ├── Question.ts
+│           │   ├── RetakeRequest.ts
+│           │   ├── Subjects.ts
+│           │   ├── Submission.ts
+│           │   ├── Test.ts
+│           │   ├── Topic.ts
+│           │   ├── TopicUnlock.ts
+│           │   ├── User.ts
+│           │   └── UserSubject.ts
+│           └── models.ts
+├── tsconfig.json
+└── types
+    └── index.ts
+
+149 directories, 488 files

@@ -27,17 +27,20 @@ enum ApplicationStatus {
 // ============================================
 
 model User {
-  id            String            @id @default(cuid())
-  email         String            @unique
-  name          String
-  password      String
-  role          Role              @default(STUDENT)
-  status        ApplicationStatus @default(PENDING)
-  grade         Int?
-  phone         String?
-  messengerLink String?
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
+  id              String            @id @default(cuid())
+  email           String            @unique
+  name            String
+  password        String
+  role            Role              @default(STUDENT)
+  status          ApplicationStatus @default(PENDING)
+  grade           Int?
+  grades          Int[]             @default([])
+  phone           String?
+  messengerLink   String?
+  messengerType   String?
+  messengerHandle String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
 
   activities        Activity[]
   submissions       Submission[]
@@ -54,8 +57,8 @@ model User {
   retakeRequests    RetakeRequest[]
   topicUnlocks      TopicUnlock[]
   notificationReads NotificationRead[]
-  homeworkStarts HomeworkStart[]
-  lessonPlans     LessonPlan[]         @relation("TeacherLessonPlans")
+  homeworkStarts    HomeworkStart[]
+  lessonPlans       LessonPlan[]         @relation("TeacherLessonPlans")
 }
 
 // ============================================
@@ -74,13 +77,13 @@ model Subjects {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  users     UserSubject[]
-  notes     Note[]
-  tests     Test[]
-  homeworks Homework[]
-  lessons   Lesson[]
-  questions Question[]
-  topics    Topic[]
+  users       UserSubject[]
+  notes       Note[]
+  tests       Test[]
+  homeworks   Homework[]
+  lessons     Lesson[]
+  questions   Question[]
+  topics      Topic[]
   lessonPlans LessonPlan[]
 
   @@map("Subjects")
@@ -115,10 +118,10 @@ model Topic {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  notes     Note[]
-  tests     Test[]
-  homeworks Homework[]
-  unlocks   TopicUnlock[]
+  notes       Note[]
+  tests       Test[]
+  homeworks   Homework[]
+  unlocks     TopicUnlock[]
   lessonPlans LessonPlan[]
 
   @@index([subjectId, order])
@@ -157,20 +160,20 @@ model Note {
 }
 
 model LessonPlan {
-  id          String   @id @default(cuid())
-  title       String
-  subjectId   String
-  subject     Subjects @relation(fields: [subjectId], references: [id])
-  topicId     String?
-  topic       Topic?   @relation(fields: [topicId], references: [id])
-  topicName   String?
-  content     String
-  duration    Int      @default(45)
-  published   Boolean  @default(false)
-  authorId    String
-  author      User     @relation("TeacherLessonPlans", fields: [authorId], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  title     String
+  subjectId String
+  subject   Subjects @relation(fields: [subjectId], references: [id])
+  topicId   String?
+  topic     Topic?   @relation(fields: [topicId], references: [id])
+  topicName String?
+  content   String
+  duration  Int      @default(45)
+  published Boolean  @default(false)
+  authorId  String
+  author    User     @relation("TeacherLessonPlans", fields: [authorId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([subjectId])
   @@index([topicId])
@@ -188,32 +191,22 @@ model Question {
   topic      String
   difficulty Int    @default(2)
 
-  // SINGLE_CHOICE | MULTI_CHOICE | TEXT | NUMBER | TRUE_FALSE
   type String @default("SINGLE_CHOICE")
 
   text     String
   imageUrl String?
 
-  // Для SINGLE_CHOICE
-  options Json?
-  correct Int?
-
-  // Для MULTI_CHOICE
+  options      Json?
+  correct      Int?
   correctMulti Json?
-
-  // Для TEXT
-  correctText String?
-  matchMode   String? // CONTAINS | EXACT
-
-  // Для NUMBER
+  correctText  String?
+  matchMode    String?
   correctNumber Float?
-  tolerance     Float? @default(0.01)
-
-  // Для TRUE_FALSE
-  correctBool Boolean?
+  tolerance     Float?  @default(0.01)
+  correctBool   Boolean?
 
   explanation String?
-  source      String? // manual | ai | import
+  source      String?
   points      Int     @default(1)
 
   authorId String
@@ -241,13 +234,9 @@ model Test {
   teacherId String
   teacher   User   @relation("TeacherTests", fields: [teacherId], references: [id])
 
-  // MANUAL | BANK_CUSTOM
   mode String
 
-  // JSON-массив вопросов (финальных, для каждой попытки одинаковые)
-  questions Json?
-
-  // { topics: string[], count: number, difficulty?: number, types?: string[] }
+  questions  Json?
   bankConfig Json?
 
   timeLimit       Int?
@@ -280,7 +269,6 @@ model Submission {
   questions Json @default("[]")
   answers   Json @default("[]")
 
-  // Старые поля проекта
   code     String?
   language String?
   answer   Json?
@@ -303,7 +291,7 @@ model RetakeRequest {
   userId String
   user   User   @relation(fields: [userId], references: [id])
 
-  status String @default("PENDING") // PENDING | APPROVED | REJECTED
+  status String @default("PENDING")
 
   reason      String?
   teacherNote String?
@@ -334,8 +322,7 @@ model Homework {
   imageUrl String?
   dueDate  DateTime?
 
-  targetType String @default("ALL") // ALL | SPECIFIC
-
+  targetType   String  @default("ALL")
   targetUserId String?
   targetUser   User?   @relation("UserHomeworkTarget", fields: [targetUserId], references: [id])
 
@@ -347,7 +334,7 @@ model Homework {
 
   tasks       HomeworkTask[]
   submissions HomeworkSubmission[]
-  starts    HomeworkStart[]
+  starts      HomeworkStart[]
 
   @@index([teacherId, createdAt])
   @@index([subjectId])
@@ -367,7 +354,6 @@ model HomeworkTask {
   answerType    String  @default("TEXT")
   points        Int     @default(1)
 
-  // Для задач по программированию
   language    String?
   starterCode String?
 
@@ -391,8 +377,6 @@ model HomeworkSubmission {
   previewUrl String?
   files      Json?
   textAnswer String?
-
-  // { [taskId]: { answer, passed, message } }
   taskAnswers Json?
 
   autoCheckPassed  Boolean?
@@ -400,17 +384,18 @@ model HomeworkSubmission {
   autoScore        Int?
   autoTotal        Int?
 
-  status         String  @default("SUBMITTED") // SUBMITTED | REVIEWED | NEEDS_REVISION
+  status         String  @default("SUBMITTED")
   teacherComment String?
   gradeEmoji     String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
   aiReview       String?
   aiReviewScore  Int?
   aiReviewedAt   DateTime?
-  taskCodes Json?
-  timeSpent        Int?
+  taskCodes      Json?
+  timeSpent      Int?
   taskCodesMetrics Json?
 
   @@index([homeworkId, userId, version])
@@ -422,17 +407,17 @@ model HomeworkSubmission {
 // ============================================
 
 model Lesson {
-  id           String   @id @default(cuid())
-  title        String?
-  subjectId    String
-  subject      Subjects @relation(fields: [subjectId], references: [id])
-  startAt      DateTime
-  endAt        DateTime
-  telemostLink String?
-  boardLink    String?
+  id            String   @id @default(cuid())
+  title         String?
+  subjectId     String
+  subject       Subjects @relation(fields: [subjectId], references: [id])
+  startAt       DateTime
+  endAt         DateTime
+  telemostLink  String?
+  boardLink     String?
   googleEventId String?
-  status       String   @default("SCHEDULED") // SCHEDULED | COMPLETED | CANCELLED
-  notes        String?
+  status        String   @default("SCHEDULED")
+  notes         String?
 
   userId String
   user   User   @relation("UserLessons", fields: [userId], references: [id])
@@ -462,14 +447,14 @@ model Activity {
 }
 
 model CodeRun {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  language  String
-  code      String
-  output    String?
-  stderr    String?
-  status    String   @default("SUCCESS")
+  id       String  @id @default(cuid())
+  userId   String
+  user     User    @relation(fields: [userId], references: [id])
+  language String
+  code     String
+  output   String?
+  stderr   String?
+  status   String  @default("SUCCESS")
 
   totalChars     Int?   @default(0)
   pastedChars    Int?   @default(0)
