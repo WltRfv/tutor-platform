@@ -40,7 +40,7 @@ body {
 }
 
 /* ==========================================================
-   ТЁМНАЯ ТЕМА — фиолетовая (как сейчас)
+   ТЁМНАЯ ТЕМА — фиолетовая
    ========================================================== */
 
 html.dark,
@@ -48,6 +48,12 @@ html {
   --bg-1: #020617;
   --bg-2: rgba(88, 28, 135, 0.3);
   --bg-3: #020617;
+  --bg-center: radial-gradient(
+    ellipse 65% 55% at 50% 50%,
+    rgba(88, 28, 135, 0.55) 0%,
+    rgba(88, 28, 135, 0.15) 45%,
+    transparent 75%
+  );
   --blob-1: rgba(168, 85, 247, 0.4);
   --blob-2: rgba(59, 130, 246, 0.4);
   --blob-3: rgba(236, 72, 153, 0.35);
@@ -73,30 +79,30 @@ html.dark .hover\:text-accent-foreground:hover {
 }
 
 /* ==========================================================
-   СВЕТЛАЯ ТЕМА — единый вариант из палитры:
+   СВЕТЛАЯ ТЕМА — единый вариант из палитры
    #E1DFEB #8B8BC7 #A471CC #864A95 #A9B9FE #05071C
    ========================================================== */
 
 html:not(.dark) {
-  --pal-bg:        #E1DFEB;   /* фон страницы */
-  --pal-card:      #F2F0F7;   /* карточки (вместо белого) */
-  --pal-soft:      #D4D2E0;   /* секции */
-  --pal-text:      #05071C;   /* основной текст — тёмно-синий, не чёрный */
-  --pal-text-2:    #3f3850;   /* вторичный */
-  --pal-text-mute: #6b6480;   /* приглушённый */
-  --pal-primary:   #864A95;   /* тёмно-фиолетовый акцент */
-  --pal-secondary: #A471CC;   /* яркий фиолетовый */
-  --pal-tertiary:  #8B8BC7;   /* средний фиолетово-серый */
-  --pal-highlight: #A9B9FE;   /* нежно-голубой */
-  --pal-on-primary: #E1DFEB;  /* текст на тёмно-фиолетовом фоне */
+  --pal-bg:        #E1DFEB;
+  --pal-card:      #F2F0F7;
+  --pal-soft:      #D4D2E0;
+  --pal-text:      #05071C;
+  --pal-text-2:    #3f3850;
+  --pal-text-mute: #6b6480;
+  --pal-primary:   #864A95;
+  --pal-secondary: #A471CC;
+  --pal-tertiary:  #8B8BC7;
+  --pal-highlight: #A9B9FE;
+  --pal-on-primary: #E1DFEB;
 
   --accent-bg: var(--pal-bg);
   --accent-soft: var(--pal-soft);
   --accent-primary: var(--pal-primary);
   --accent-secondary: var(--pal-secondary);
-  --accent-blob-1: rgba(164, 113, 204, 0.35);  /* A471CC */
-  --accent-blob-2: rgba(169, 185, 254, 0.42);  /* A9B9FE */
-  --accent-blob-3: rgba(139, 139, 199, 0.38);  /* 8B8BC7 */
+  --accent-blob-1: rgba(164, 113, 204, 0.35);
+  --accent-blob-2: rgba(169, 185, 254, 0.42);
+  --accent-blob-3: rgba(139, 139, 199, 0.38);
   --accent-grid: rgba(134, 74, 149, 0.12);
   --accent-particle: rgba(134, 74, 149, 0.45);
 
@@ -108,6 +114,15 @@ html:not(.dark) {
   --blob-3: var(--accent-blob-3);
   --grid-line: var(--accent-grid);
   --particle: var(--accent-particle);
+
+  /* Светлые края → тёмный центр (из фиолетового #864A95) */
+  --bg-center: radial-gradient(
+    ellipse 70% 60% at 50% 50%,
+    rgba(134, 74, 149, 0.28) 0%,
+    rgba(134, 74, 149, 0.12) 40%,
+    rgba(134, 74, 149, 0.04) 60%,
+    transparent 80%
+  );
 }
 
 html:not(.dark) body {
@@ -127,7 +142,7 @@ html:not(.dark) .bg-slate-900\/50 { background-color: color-mix(in srgb, var(--p
 html:not(.dark) .bg-slate-800 { background-color: var(--pal-soft) !important; }
 html:not(.dark) .bg-slate-700 { background-color: color-mix(in srgb, var(--pal-soft) 85%, var(--pal-bg)) !important; }
 
-/* Никаких чистых белых кнопок/плашек */
+/* Никаких чистых белых плашек */
 html:not(.dark) .bg-white { background-color: var(--pal-card) !important; }
 html:not(.dark) .bg-white\/90 { background-color: color-mix(in srgb, var(--pal-card) 90%, transparent) !important; }
 html:not(.dark) .bg-white\/80 { background-color: color-mix(in srgb, var(--pal-card) 80%, transparent) !important; }
@@ -146,7 +161,7 @@ html:not(.dark) .border-white\/20 { border-color: color-mix(in srgb, var(--pal-p
 html:not(.dark) .border-white\/30 { border-color: color-mix(in srgb, var(--pal-primary) 24%, transparent) !important; }
 html:not(.dark) .border-white\/40 { border-color: color-mix(in srgb, var(--pal-primary) 30%, transparent) !important; }
 
-/* --- ТЕКСТ: белый → тёмно-синий #05071C --- */
+/* --- ТЕКСТ: белый → тёмно-синий --- */
 html:not(.dark) .text-white { color: var(--pal-text) !important; }
 html:not(.dark) .text-white\/90 { color: var(--pal-text-2) !important; }
 html:not(.dark) .text-white\/80 { color: var(--pal-text-2) !important; }
@@ -164,7 +179,7 @@ html:not(.dark) .hover\:bg-white\/10:hover { background-color: color-mix(in srgb
 html:not(.dark) .hover\:bg-white\/20:hover { background-color: color-mix(in srgb, var(--pal-primary) 14%, transparent) !important; }
 html:not(.dark) .hover\:text-white:hover { color: var(--pal-text) !important; }
 
-/* --- ЗАЩИТА светлого текста на тёмно-фиолетовых градиентных кнопках --- */
+/* Защита светлого текста на тёмно-фиолетовых градиентных кнопках */
 html:not(.dark) :is(
   [class*="from-purple-5"], [class*="from-purple-6"],
   [class*="from-indigo-5"], [class*="from-indigo-6"],
@@ -182,7 +197,7 @@ html:not(.dark) :is(
   border-color: color-mix(in srgb, var(--pal-on-primary) 40%, transparent) !important;
 }
 
-/* --- ГРАДИЕНТЫ: акцентные → наша палитра --- */
+/* --- ГРАДИЕНТЫ --- */
 html:not(.dark) .from-purple-400 { --tw-gradient-from: var(--pal-primary) !important; }
 html:not(.dark) .via-pink-400 { --tw-gradient-via: var(--pal-secondary) !important; }
 html:not(.dark) .to-blue-400 { --tw-gradient-to: var(--pal-tertiary) !important; }
@@ -204,7 +219,7 @@ html:not(.dark) .border-purple-500\/50 { border-color: color-mix(in srgb, var(--
 html:not(.dark) .bg-purple-500\/10 { background-color: color-mix(in srgb, var(--pal-primary) 10%, transparent) !important; }
 html:not(.dark) .bg-purple-500\/20 { background-color: color-mix(in srgb, var(--pal-primary) 15%, transparent) !important; }
 
-/* Акцентные текстовые цвета — тянутся к палитре */
+/* Акцентный текст */
 html:not(.dark) .text-purple-200,
 html:not(.dark) .text-purple-300,
 html:not(.dark) .text-purple-400,
@@ -251,7 +266,7 @@ html:not(.dark) .text-cyan-500 { color: #3f6f85 !important; }
 
 html:not(.dark) .text-yellow-300 { color: #8a6b3a !important; }
 
-/* Subjects — фиолетово-голубые градиенты в тон палитры */
+/* Subjects — в тон палитры */
 html:not(.dark) .from-purple-500.to-pink-500 {
   --tw-gradient-from: var(--pal-primary) !important;
   --tw-gradient-to: var(--pal-secondary) !important;

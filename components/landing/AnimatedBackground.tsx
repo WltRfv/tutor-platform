@@ -27,13 +27,19 @@ export function AnimatedBackground() {
 
   return (
     <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-      {/* Базовый градиент — цвета из CSS-переменных */}
+      {/* Базовый градиент */}
       <div
         className="absolute inset-0"
         style={{
           background:
             'linear-gradient(to bottom right, var(--bg-1), var(--bg-2), var(--bg-3))',
         }}
+      />
+
+      {/* Радиальный градиент: светлые края → тёмный центр */}
+      <div
+        className="absolute inset-0"
+        style={{ background: 'var(--bg-center)' }}
       />
 
       {/* Сетка */}
