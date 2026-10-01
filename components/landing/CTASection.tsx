@@ -4,9 +4,31 @@ import { useInView } from 'react-intersection-observer';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Sparkles } from 'lucide-react';
+import { useEffect, useState } from 'react';
+
+type Particle = {
+  id: number;
+  left: number;
+  top: number;
+  duration: number;
+  delay: number;
+};
 
 export function CTASection() {
   const { ref, inView } = useInView({ threshold: 0.2, triggerOnce: true });
+  const [particles, setParticles] = useState<Particle[]>([]);
+
+  useEffect(() => {
+    setParticles(
+      Array.from({ length: 15 }, (_, i) => ({
+        id: i,
+        left: Math.random() * 100,
+        top: Math.random() * 100,
+        duration: 4 + Math.random() * 4,
+        delay: Math.random() * 3,
+      }))
+    );
+  }, []);
 
   return (
     <section ref={ref} className="relative py-24">
@@ -14,26 +36,43 @@ export function CTASection() {
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.7 }}
-          className="relative max-w-4xl mx-auto"
+          transition={{ duration: 0.8 }}
+          className="relative overflow-hidden rounded-3xl cta-simple"
         >
-          {/* Размытое свечение позади — как в карточке тарифа */}
-          <div className="absolute inset-0 cta-glow rounded-3xl" aria-hidden />
+          <div className="absolute inset-0 cta-simple-bg" />
+          <div className="absolute inset-0 cta-simple-overlay" />
 
-          {/* Сам блок: полупрозрачный, с рамкой, как популярный тариф */}
-          <div className="relative cta-card rounded-3xl px-8 py-16 md:py-20 text-center">
-            {/* Бейдж — иконка + текст, без фона */}
-            <div className="inline-flex items-center gap-2 mb-6 cta-badge">
-              <Sparkles className="h-4 w-4 cta-badge-icon" />
-              <span className="text-xs font-bold tracking-[0.2em] uppercase cta-badge-text">
+          {particles.map((p) => (
+            <motion.div
+              key={p.id}
+              className="absolute w-1.5 h-1.5 rounded-full cta-simple-particle"
+              style={{ left: `${p.left}%`, top: `${p.top}%` }}
+              animate={{ y: [0, -30, 0], opacity: [0, 1, 0] }}
+              transition={{
+                duration: p.duration,
+                repeat: Infinity,
+                delay: p.delay,
+              }}
+            />
+          ))}
+
+          <div className="relative px-6 py-20 md:py-24 text-center">
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={inView ? { scale: 1 } : {}}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full backdrop-blur-sm mb-6 cta-simple-badge"
+            >
+              <Sparkles className="h-4 w-4 cta-simple-badge-icon" />
+              <span className="text-sm font-medium cta-simple-badge-text">
                 Начни учиться сегодня
               </span>
-            </div>
+            </motion.div>
 
-            <h2 className="text-4xl md:text-6xl font-bold mb-6 max-w-3xl mx-auto cta-title">
+            <h2 className="text-4xl md:text-6xl font-bold mb-6 max-w-3xl mx-auto cta-simple-title">
               Готов улучшить свои оценки?
             </h2>
-            <p className="text-lg max-w-2xl mx-auto mb-10 cta-text">
+            <p className="text-lg max-w-2xl mx-auto mb-10 cta-simple-text">
               Оставь заявку — я свяжусь с тобой и подберу удобное время для первого занятия.
             </p>
 
@@ -41,7 +80,7 @@ export function CTASection() {
               <Link href="/register">
                 <Button
                   size="lg"
-                  className="cta-btn-primary gap-2 font-semibold h-12 px-8"
+                  className="cta-simple-btn-primary gap-2 font-semibold h-12 px-8"
                 >
                   Подать заявку <ArrowRight className="h-4 w-4" />
                 </Button>
@@ -50,7 +89,7 @@ export function CTASection() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="cta-btn-outline h-12 px-8"
+                  className="cta-simple-btn-outline h-12 px-8"
                 >
                   Войти
                 </Button>
