@@ -307,14 +307,39 @@ html:not(.dark) ::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(-
 html:not(.dark) ::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, var(--pal-primary) 55%, var(--pal-soft)); }
 
 /* ==========================================================
-   CTA-СЕКЦИЯ (нижний блок "Готов улучшить свои оценки?")
-   Тёмная тема: яркий фиолетовый градиент как было.
-   Светлая тема: светлый фиолетовый фон + тёмный текст.
+   CTA-СЕКЦИЯ — "Готов улучшить свои оценки?"
+   Тёмная тема: яркий фиолетовый градиент.
+   Светлая тема: парящая плашка — центр светлый/прозрачный,
+   края тёмно-фиолетовые + многослойные тени для глубины.
    ========================================================== */
 
-/* --- ТЁМНАЯ ТЕМА --- */
-html.dark .cta-block-bg,
-html:not(.dark) .cta-block-bg {
+/* ---------- ОБЩЕЕ ---------- */
+.cta-block {
+  position: relative;
+  border-radius: 24px;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.cta-block-bg,
+.cta-block-sheen {
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.cta-particle {
+  pointer-events: none;
+}
+
+/* ---------- ТЁМНАЯ ТЕМА ---------- */
+html.dark .cta-block {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 30px 80px rgba(88, 28, 135, 0.4),
+    0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+html.dark .cta-block-bg {
   background: linear-gradient(
     to bottom right,
     var(--accent-primary),
@@ -322,33 +347,28 @@ html:not(.dark) .cta-block-bg {
   );
 }
 
-html.dark .cta-block-overlay,
-html:not(.dark) .cta-block-overlay {
+html.dark .cta-block-sheen {
   background: radial-gradient(
     circle at 30% 20%,
     rgba(255, 255, 255, 0.15),
-    transparent 50%
+    transparent 55%
   );
 }
 
-html.dark .cta-particle,
-html:not(.dark) .cta-particle {
-  background: rgba(255, 255, 255, 0.4);
+html.dark .cta-particle {
+  background: rgba(255, 255, 255, 0.45);
 }
+
+html.dark .cta-badge {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+  padding-bottom: 6px;
+}
+html.dark .cta-badge-icon { color: #fde047; }
+html.dark .cta-badge-text { color: #ffffff; }
 
 html.dark .cta-title,
 html.dark .cta-text {
   color: #ffffff;
-}
-
-html.dark .cta-badge {
-  background: rgba(255, 255, 255, 0.2);
-}
-html.dark .cta-badge-text {
-  color: #ffffff;
-}
-html.dark .cta-badge-icon {
-  color: #fde047;
 }
 
 html.dark .cta-btn-primary {
@@ -360,40 +380,77 @@ html.dark .cta-btn-primary:hover {
 }
 
 html.dark .cta-btn-outline {
-  border-color: rgba(255, 255, 255, 0.4);
+  border-color: rgba(255, 255, 255, 0.45);
   color: #ffffff;
 }
 html.dark .cta-btn-outline:hover {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* --- СВЕТЛАЯ ТЕМА: светлый фиолетовый фон + тёмный текст --- */
+/* ---------- СВЕТЛАЯ ТЕМА ---------- */
 
-/* Фон плашки — светлый фиолетовый */
-html:not(.dark) .cta-block-bg {
-  background: #A471CC !important;
-}
-
-/* Оверлей — мягкий светлый блик */
-html:not(.dark) .cta-block-overlay {
-  background: radial-gradient(
-    circle at 30% 20%,
-    rgba(225, 223, 235, 0.25),
-    transparent 55%
-  ) !important;
-}
-
-/* Рамка вокруг всей плашки */
+/* Парящая плашка: тень + лёгкая анимация */
 html:not(.dark) .cta-block {
-  border: 2px solid #864A95 !important;
+  border: 2px solid #864A95;
+  box-shadow:
+    0 40px 90px rgba(134, 74, 149, 0.35),
+    0 20px 40px rgba(134, 74, 149, 0.22),
+    0 6px 14px rgba(134, 74, 149, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  animation: cta-float 7s ease-in-out infinite;
 }
 
-/* Частицы — чуть темнее, чтобы были видны на светлом фоне */
+@keyframes cta-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+
+/* Радиальный градиент: центр — светлый и полупрозрачный,
+   края — тёмно-фиолетовые. Плашка как бы парит. */
+html:not(.dark) .cta-block-bg {
+  background: radial-gradient(
+    ellipse 95% 95% at 50% 50%,
+    rgba(225, 223, 235, 0.82) 0%,
+    rgba(225, 223, 235, 0.62) 30%,
+    rgba(180, 145, 205, 0.7) 55%,
+    #864A95 80%,
+    #6b3d7a 100%
+  );
+}
+
+/* Мягкий верхний блик для «стеклянности» */
+html:not(.dark) .cta-block-sheen {
+  background:
+    radial-gradient(
+      ellipse 60% 40% at 50% 0%,
+      rgba(255, 255, 255, 0.25),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 50% 30% at 50% 100%,
+      rgba(134, 74, 149, 0.25),
+      transparent 70%
+    );
+}
+
+/* Частицы — тёмные, чтобы было видно на светлом центре */
 html:not(.dark) .cta-particle {
-  background: rgba(5, 7, 28, 0.25) !important;
+  background: rgba(134, 74, 149, 0.45);
 }
 
-/* Весь текст на плашке — самый тёмный из палитры #05071C */
+/* Бейдж — без белой плашки. Только иконка + текст + тонкая линия снизу */
+html:not(.dark) .cta-badge {
+  border-bottom: 1px solid rgba(134, 74, 149, 0.5);
+  padding-bottom: 6px;
+}
+html:not(.dark) .cta-badge-icon {
+  color: #864A95;
+}
+html:not(.dark) .cta-badge-text {
+  color: #864A95;
+}
+
+/* Заголовок и абзац — самый тёмный из палитры */
 html:not(.dark) .cta-title,
 html:not(.dark) .cta-text,
 html:not(.dark) .cta-section h2,
@@ -401,38 +458,28 @@ html:not(.dark) .cta-section p {
   color: #05071C !important;
 }
 
-/* Бейдж "Начни учиться сегодня" — светлый фон + тёмный текст (инверсия) */
-html:not(.dark) .cta-badge {
-  background-color: #E1DFEB !important;
-  backdrop-filter: blur(6px);
-}
-html:not(.dark) .cta-badge-text {
-  color: #05071C !important;
-}
-html:not(.dark) .cta-badge-icon {
-  color: #864A95 !important;
-}
-
-/* Кнопка "Подать заявку" — тёмно-фиолетовая с лавандовым текстом */
+/* Кнопка "Подать заявку" — тёмно-фиолетовая, светлый текст */
 html:not(.dark) .cta-btn-primary {
   background-color: #864A95 !important;
   color: #E1DFEB !important;
   border: 2px solid #864A95 !important;
+  box-shadow: 0 6px 18px rgba(134, 74, 149, 0.35);
 }
 html:not(.dark) .cta-btn-primary:hover {
   background-color: #6b3d7a !important;
   color: #E1DFEB !important;
+  box-shadow: 0 8px 22px rgba(134, 74, 149, 0.45);
 }
 
-/* Кнопка "Войти" — прозрачная, рамка и текст тёмно-фиолетовые */
+/* Кнопка "Войти" — прозрачная, тёмно-фиолетовая рамка, ЧЁРНЫЙ текст */
 html:not(.dark) .cta-btn-outline {
   background-color: transparent !important;
   border: 2px solid #864A95 !important;
-  color: #864A95 !important;
+  color: #05071C !important;
 }
 html:not(.dark) .cta-btn-outline:hover {
-  background-color: rgba(134, 74, 149, 0.1) !important;
-  color: #6b3d7a !important;
+  background-color: rgba(134, 74, 149, 0.12) !important;
+  color: #05071C !important;
 }
 
 /* ==========================================================

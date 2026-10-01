@@ -20,12 +20,12 @@ export function CTASection() {
 
   useEffect(() => {
     setParticles(
-      Array.from({ length: 15 }, (_, i) => ({
+      Array.from({ length: 18 }, (_, i) => ({
         id: i,
         left: Math.random() * 100,
         top: Math.random() * 100,
-        duration: 4 + Math.random() * 4,
-        delay: Math.random() * 3,
+        duration: 5 + Math.random() * 5,
+        delay: Math.random() * 4,
       }))
     );
   }, []);
@@ -37,18 +37,21 @@ export function CTASection() {
           initial={{ opacity: 0, y: 40 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8 }}
-          className="relative overflow-hidden rounded-3xl cta-block"
+          className="relative cta-block"
         >
-          {/* Фон плашки — управляется через CSS-переменную */}
+          {/* Многослойный фон: центр светлый, края тёмные */}
           <div className="absolute inset-0 cta-block-bg" />
-          <div className="absolute inset-0 cta-block-overlay" />
 
+          {/* Лёгкий блик сверху */}
+          <div className="absolute inset-0 cta-block-sheen" />
+
+          {/* Плавающие частицы — дают глубину */}
           {particles.map((p) => (
             <motion.div
               key={p.id}
-              className="absolute w-1.5 h-1.5 rounded-full cta-particle"
+              className="absolute w-1 h-1 rounded-full cta-particle"
               style={{ left: `${p.left}%`, top: `${p.top}%` }}
-              animate={{ y: [0, -30, 0], opacity: [0, 1, 0] }}
+              animate={{ y: [0, -25, 0], opacity: [0, 1, 0] }}
               transition={{
                 duration: p.duration,
                 repeat: Infinity,
@@ -57,15 +60,16 @@ export function CTASection() {
             />
           ))}
 
-          <div className="relative px-6 py-20 md:py-24 text-center">
+          <div className="relative px-8 py-16 md:py-20 text-center">
+            {/* Бейдж без плашки — иконка + текст + подчёркивание */}
             <motion.div
-              initial={{ scale: 0 }}
-              animate={inView ? { scale: 1 } : {}}
+              initial={{ opacity: 0, y: 10 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full backdrop-blur-sm mb-6 cta-badge"
+              className="inline-flex items-center gap-2 mb-6 cta-badge"
             >
               <Sparkles className="h-4 w-4 cta-badge-icon" />
-              <span className="text-sm font-medium cta-badge-text">
+              <span className="text-sm font-semibold tracking-wide uppercase cta-badge-text">
                 Начни учиться сегодня
               </span>
             </motion.div>
