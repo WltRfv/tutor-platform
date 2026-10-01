@@ -363,7 +363,7 @@ html:not(.dark) .photo-caption .text-white {
 }
 html:not(.dark) .photo-caption .text-purple-200,
 html:not(.dark) .photo-caption .text-purple-300 {
-  color: #D4D2E0 !important;                 /* мягкий лавандово-серый, не сливается с синим свитером */
+  color: #dddaee !important;                 /* мягкий лавандово-серый, не сливается с синим свитером */
 }
 
 html:not(.dark) .photo-caption {

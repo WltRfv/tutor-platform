@@ -59,7 +59,7 @@ export function Stats() {
                   </>
                 ) : (
                   <>
-                    <div className="text-base font-semibold text-white leading-tight">
+                    <div className="text-2xl font-bold bg-gradient-to-br from-white to-purple-200 bg-clip-text text-transparent leading-tight">
                       {s.title}
                     </div>
                     <div className="text-sm text-slate-400 mt-1">{s.label}</div>
