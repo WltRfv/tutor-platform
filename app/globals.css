@@ -77,7 +77,33 @@ html.dark .theme-toggle-btn:hover svg {
 html.dark .hover\:text-accent-foreground:hover {
   color: #cbd5e1 !important;
 }
+/* ==========================================================
+   ПЕРЕКРАСКА TAILWIND-ФОНОВ ДЛЯ ТЁМНЫХ ПРЕСЕТОВ
+   ========================================================== */
 
+/* --- Графит (dark-slate) --- */
+html.dark[data-dark="dark-slate"] body { background-color: #0b1729; }
+html.dark[data-dark="dark-slate"] .bg-slate-950 { background-color: #0b1729 !important; }
+html.dark[data-dark="dark-slate"] .bg-slate-950\/50 { background-color: rgba(11, 23, 41, 0.85) !important; }
+html.dark[data-dark="dark-slate"] .bg-slate-950\/60 { background-color: rgba(11, 23, 41, 0.7) !important; }
+html.dark[data-dark="dark-slate"] .bg-slate-950\/70 { background-color: rgba(11, 23, 41, 0.9) !important; }
+html.dark[data-dark="dark-slate"] .bg-slate-950\/80 { background-color: rgba(11, 23, 41, 0.95) !important; }
+html.dark[data-dark="dark-slate"] .bg-slate-900 { background-color: #16233d !important; }
+html.dark[data-dark="dark-slate"] .bg-slate-900\/50 { background-color: rgba(22, 35, 61, 0.8) !important; }
+html.dark[data-dark="dark-slate"] .bg-slate-800 { background-color: #1f3050 !important; }
+html.dark[data-dark="dark-slate"] .bg-slate-700 { background-color: #2a4066 !important; }
+
+/* --- Изумруд (dark-emerald) --- */
+html.dark[data-dark="dark-emerald"] body { background-color: #041a13; }
+html.dark[data-dark="dark-emerald"] .bg-slate-950 { background-color: #041a13 !important; }
+html.dark[data-dark="dark-emerald"] .bg-slate-950\/50 { background-color: rgba(4, 26, 19, 0.85) !important; }
+html.dark[data-dark="dark-emerald"] .bg-slate-950\/60 { background-color: rgba(4, 26, 19, 0.7) !important; }
+html.dark[data-dark="dark-emerald"] .bg-slate-950\/70 { background-color: rgba(4, 26, 19, 0.9) !important; }
+html.dark[data-dark="dark-emerald"] .bg-slate-950\/80 { background-color: rgba(4, 26, 19, 0.95) !important; }
+html.dark[data-dark="dark-emerald"] .bg-slate-900 { background-color: #0a2b21 !important; }
+html.dark[data-dark="dark-emerald"] .bg-slate-900\/50 { background-color: rgba(10, 43, 33, 0.8) !important; }
+html.dark[data-dark="dark-emerald"] .bg-slate-800 { background-color: #123b2d !important; }
+html.dark[data-dark="dark-emerald"] .bg-slate-700 { background-color: #1a4d3b !important; }
 /* ==========================================================
    СВЕТЛАЯ ТЕМА — единый вариант из палитры
    #E1DFEB #8B8BC7 #A471CC #864A95 #A9B9FE #05071C
