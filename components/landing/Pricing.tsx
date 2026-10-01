@@ -93,7 +93,7 @@ export function Pricing() {
               animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.5, delay: 0.2 + i * 0.1 }}
               whileHover={{ y: -8 }}
-              className="relative group"
+              className="relative group h-full"
             >
               {plan.popular && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 text-white text-xs font-semibold shadow-lg z-10">
@@ -108,7 +108,7 @@ export function Pricing() {
                 }`}
               />
               <div
-                className={`relative h-full backdrop-blur-xl rounded-2xl p-8 transition-all ${
+                className={`relative h-full flex flex-col backdrop-blur-xl rounded-2xl p-8 transition-all ${
                   plan.popular
                     ? 'bg-gradient-to-br from-purple-500/10 to-blue-500/10 border-2 border-purple-500/50'
                     : 'bg-white/5 border border-white/10 hover:border-white/20'
@@ -123,7 +123,7 @@ export function Pricing() {
                   {plan.price}
                 </div>
 
-                <ul className="space-y-3 mb-8">
+                <ul className="space-y-3 mb-8 flex-1">
                   {plan.features.map((f, j) => (
                     <li key={j} className="flex items-start gap-3 text-sm text-slate-300">
                       <Check className="h-5 w-5 text-purple-400 flex-shrink-0 mt-0.5" />
