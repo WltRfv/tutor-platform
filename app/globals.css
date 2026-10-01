@@ -358,18 +358,40 @@ html:not(.dark) .cta-dark-zone .bg-white\/20 {
    ФОТО-ПОДПИСЬ (About) — всегда светлая, на фото тёмный оверлей
    ========================================================== */
 
-/* Светлая тема: белый текст из Tailwind заменяем на лаванду из палитры */
 html:not(.dark) .photo-caption .text-white {
-  color: var(--pal-on-primary) !important;
+  color: var(--pal-on-primary) !important;   /* #E1DFEB — светлая лаванда */
 }
 html:not(.dark) .photo-caption .text-purple-200,
 html:not(.dark) .photo-caption .text-purple-300 {
-  color: var(--pal-highlight) !important;
+  color: #D4D2E0 !important;                 /* мягкий лавандово-серый, не сливается с синим свитером */
 }
 
-/* На всякий случай — добавим лёгкую тень для читаемости */
 html:not(.dark) .photo-caption {
-  text-shadow: 0 1px 3px rgba(5, 7, 28, 0.45);
+  text-shadow: 0 1px 3px rgba(5, 7, 28, 0.55);
+}
+
+/* ==========================================================
+   STATS: градиентная цифра "3+ года опыта" и т.п.
+   В светлой теме был белый → теперь фиолетовый из палитры
+   ========================================================== */
+
+html:not(.dark) .bg-gradient-to-br.from-white.to-purple-200 {
+  --tw-gradient-from: var(--pal-primary) !important;
+  --tw-gradient-to: var(--pal-secondary) !important;
+}
+
+html:not(.dark) .bg-gradient-to-br.from-white.to-purple-300 {
+  --tw-gradient-from: var(--pal-primary) !important;
+  --tw-gradient-to: var(--pal-secondary) !important;
+}
+
+/* Общая защита: любые градиентные тексты с from-white в светлой теме */
+html:not(.dark) .from-white {
+  --tw-gradient-from: var(--pal-primary) !important;
+}
+html:not(.dark) .to-purple-200,
+html:not(.dark) .to-purple-300 {
+  --tw-gradient-to: var(--pal-secondary) !important;
 }
 
 /* ==========================================================
