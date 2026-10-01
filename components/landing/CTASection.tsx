@@ -14,8 +14,6 @@ type Particle = {
   delay: number;
 };
 
-const FAN_ANGLES = [0, 60, 120, 180, 240, 300];
-
 export function CTASection() {
   const { ref, inView } = useInView({ threshold: 0.2, triggerOnce: true });
   const [particles, setParticles] = useState<Particle[]>([]);
@@ -39,98 +37,63 @@ export function CTASection() {
           initial={{ opacity: 0, y: 40 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8 }}
-          className="relative"
+          className="relative overflow-hidden rounded-3xl cta-simple"
         >
-          {/* Веер из треугольников только контуром — позади плашки */}
-          <div className="cta-fan" aria-hidden="true">
-            <svg
-              viewBox="0 0 1200 800"
-              preserveAspectRatio="none"
-              className="w-full h-full"
+          <div className="absolute inset-0 cta-simple-bg" />
+          <div className="absolute inset-0 cta-simple-overlay" />
+
+          {particles.map((p) => (
+            <motion.div
+              key={p.id}
+              className="absolute w-1.5 h-1.5 rounded-full cta-simple-particle"
+              style={{ left: `${p.left}%`, top: `${p.top}%` }}
+              animate={{ y: [0, -30, 0], opacity: [0, 1, 0] }}
+              transition={{
+                duration: p.duration,
+                repeat: Infinity,
+                delay: p.delay,
+              }}
+            />
+          ))}
+
+          <div className="relative px-6 py-20 md:py-24 text-center">
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={inView ? { scale: 1 } : {}}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full backdrop-blur-sm mb-6 cta-simple-badge"
             >
-              <defs>
-                <linearGradient id="ctaFanGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="var(--fan-1)" />
-                  <stop offset="55%" stopColor="var(--fan-2)" />
-                  <stop offset="100%" stopColor="var(--fan-3)" />
-                </linearGradient>
-              </defs>
-              <g
-                fill="none"
-                stroke="url(#ctaFanGradient)"
-                strokeWidth="2"
-                strokeLinejoin="round"
-                opacity="0.75"
-              >
-                {FAN_ANGLES.map((deg) => (
-                  <polygon
-                    key={deg}
-                    points="600,400 1150,355 1150,445"
-                    transform={`rotate(${deg} 600 400)`}
-                  />
-                ))}
-              </g>
-            </svg>
-          </div>
+              <Sparkles className="h-4 w-4 cta-simple-badge-icon" />
+              <span className="text-sm font-medium cta-simple-badge-text">
+                Начни учиться сегодня
+              </span>
+            </motion.div>
 
-          {/* Плашка */}
-          <div className="relative overflow-hidden rounded-3xl cta-simple z-10">
-            <div className="absolute inset-0 cta-simple-bg" />
-            <div className="absolute inset-0 cta-simple-overlay" />
+            <h2 className="text-4xl md:text-6xl font-bold mb-6 max-w-3xl mx-auto cta-simple-title">
+              Готов улучшить свои оценки?
+            </h2>
+            <p className="text-lg max-w-2xl mx-auto mb-10 cta-simple-text">
+              Оставь заявку — я свяжусь с тобой и подберу удобное время для первого занятия.
+            </p>
 
-            {particles.map((p) => (
-              <motion.div
-                key={p.id}
-                className="absolute w-1.5 h-1.5 rounded-full cta-simple-particle"
-                style={{ left: `${p.left}%`, top: `${p.top}%` }}
-                animate={{ y: [0, -30, 0], opacity: [0, 1, 0] }}
-                transition={{
-                  duration: p.duration,
-                  repeat: Infinity,
-                  delay: p.delay,
-                }}
-              />
-            ))}
-
-            <div className="relative px-6 py-20 md:py-24 text-center">
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={inView ? { scale: 1 } : {}}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full backdrop-blur-sm mb-6 cta-simple-badge"
-              >
-                <Sparkles className="h-4 w-4 cta-simple-badge-icon" />
-                <span className="text-sm font-medium cta-simple-badge-text">
-                  Начни учиться сегодня
-                </span>
-              </motion.div>
-
-              <h2 className="text-4xl md:text-6xl font-bold mb-6 max-w-3xl mx-auto cta-simple-title">
-                Готов улучшить свои оценки?
-              </h2>
-              <p className="text-lg max-w-2xl mx-auto mb-10 cta-simple-text">
-                Оставь заявку — я свяжусь с тобой и подберу удобное время для первого занятия.
-              </p>
-
-              <div className="flex gap-4 justify-center flex-wrap">
-                <Link href="/register">
-                  <Button
-                    size="lg"
-                    className="cta-simple-btn-primary gap-2 font-semibold h-12 px-8"
-                  >
-                    Подать заявку <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </Link>
-                <Link href="/login">
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="cta-simple-btn-outline h-12 px-8"
-                  >
-                    Войти
-                  </Button>
-                </Link>
-              </div>
+            <div className="flex gap-4 justify-center flex-wrap">
+              <Link href="/register">
+                <Button
+                  size="lg"
+                  className="cta-simple-btn-primary gap-2 font-semibold h-12 px-8"
+                >
+                  Подать заявку <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+              <Link href="/login">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="cta-simple-btn-outline h-12 px-8"
+                >
+                  Войти
+                </Button>
+              </Link>
             </div>
           </div>
         </motion.div>
