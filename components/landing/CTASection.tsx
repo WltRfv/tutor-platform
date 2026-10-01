@@ -14,7 +14,7 @@ type Particle = {
   delay: number;
 };
 
-const FAN_ANGLES = [-70, -35, 0, 35, 70];
+const FAN_ANGLES = [0, 60, 120, 180, 240, 300];
 
 export function CTASection() {
   const { ref, inView } = useInView({ threshold: 0.2, triggerOnce: true });
@@ -41,51 +41,39 @@ export function CTASection() {
           transition={{ duration: 0.8 }}
           className="relative"
         >
-          {/* Веер треугольников позади плашки */}
+          {/* Веер из треугольников только контуром — позади плашки */}
           <div className="cta-fan" aria-hidden="true">
             <svg
-              viewBox="0 0 400 400"
+              viewBox="0 0 1200 800"
               preserveAspectRatio="none"
               className="w-full h-full"
             >
               <defs>
-                <linearGradient
-                  id="ctaFanGradient"
-                  x1="0"
-                  y1="1"
-                  x2="0"
-                  y2="0"
-                >
-                  <stop
-                    offset="0%"
-                    style={{
-                      stopColor: 'var(--fan-start)',
-                      stopOpacity: 'var(--fan-start-opacity)' as any,
-                    }}
-                  />
-                  <stop
-                    offset="100%"
-                    style={{
-                      stopColor: 'var(--fan-end)',
-                      stopOpacity: 'var(--fan-end-opacity)' as any,
-                    }}
-                  />
+                <linearGradient id="ctaFanGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="var(--fan-1)" />
+                  <stop offset="55%" stopColor="var(--fan-2)" />
+                  <stop offset="100%" stopColor="var(--fan-3)" />
                 </linearGradient>
               </defs>
-              <g>
-                {FAN_ANGLES.map((angle) => (
+              <g
+                fill="none"
+                stroke="url(#ctaFanGradient)"
+                strokeWidth="2"
+                strokeLinejoin="round"
+                opacity="0.75"
+              >
+                {FAN_ANGLES.map((deg) => (
                   <polygon
-                    key={angle}
-                    points="200,400 150,60 250,60"
-                    fill="url(#ctaFanGradient)"
-                    transform={`rotate(${angle} 200 400)`}
+                    key={deg}
+                    points="600,400 1150,355 1150,445"
+                    transform={`rotate(${deg} 600 400)`}
                   />
                 ))}
               </g>
             </svg>
           </div>
 
-          {/* Сама плашка */}
+          {/* Плашка */}
           <div className="relative overflow-hidden rounded-3xl cta-simple z-10">
             <div className="absolute inset-0 cta-simple-bg" />
             <div className="absolute inset-0 cta-simple-overlay" />

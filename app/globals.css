@@ -308,35 +308,66 @@ html:not(.dark) ::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb,
 
 /* ==========================================================
    CTA-СЕКЦИЯ — "Готов улучшить свои оценки?"
-   + веер треугольников позади плашки
+   + веер треугольников только контуром
+   + градиентная обводка плашки
    ========================================================== */
 
-/* --- Веер --- */
+/* --- Веер треугольников (общий контейнер) --- */
 .cta-fan {
   position: absolute;
-  inset: -90px -70px -90px -70px;
+  inset: -100px -120px -100px -120px;
   z-index: 0;
   pointer-events: none;
   overflow: visible;
 }
 
-/* Цвета веера — светлая тема */
+/* --- Цвета веера и обводки --- */
 html:not(.dark) {
-  --fan-start: #864A95;
-  --fan-end: #D0BEE8;
-  --fan-start-opacity: 0.55;
-  --fan-end-opacity: 0;
+  --fan-1: #864A95;
+  --fan-2: #A471CC;
+  --fan-3: #D0BEE8;
 }
 
-/* Цвета веера — тёмная тема */
 html.dark {
-  --fan-start: #a855f7;
-  --fan-end: #3b82f6;
-  --fan-start-opacity: 0.45;
-  --fan-end-opacity: 0;
+  --fan-1: #a855f7;
+  --fan-2: #7c3aed;
+  --fan-3: #3b82f6;
 }
 
-/* --- ТЁМНАЯ ТЕМА --- */
+/* ==========================================================
+   ТЁМНАЯ ТЕМА
+   ========================================================== */
+
+html.dark .cta-simple {
+  border: none;
+  position: relative;
+  box-shadow:
+    0 20px 50px -12px rgba(88, 28, 135, 0.5),
+    0 8px 20px -6px rgba(0, 0, 0, 0.3);
+}
+
+/* Градиентная обводка (тёмная тема) */
+html.dark .cta-simple::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 2px;
+  background: linear-gradient(
+    135deg,
+    rgba(168, 85, 247, 0.9) 0%,
+    rgba(124, 58, 237, 0.9) 55%,
+    rgba(59, 130, 246, 0.9) 100%
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  pointer-events: none;
+  z-index: 20;
+}
+
 html.dark .cta-simple-bg {
   background: linear-gradient(to bottom right, #9333ea, #a855f7, #2563eb);
 }
@@ -349,13 +380,9 @@ html.dark .cta-simple-overlay {
   );
 }
 
-html.dark .cta-simple-particle {
-  background: rgba(255, 255, 255, 0.4);
-}
+html.dark .cta-simple-particle { background: rgba(255, 255, 255, 0.4); }
 
-html.dark .cta-simple-badge {
-  background: rgba(255, 255, 255, 0.2);
-}
+html.dark .cta-simple-badge { background: rgba(255, 255, 255, 0.2); }
 html.dark .cta-simple-badge-icon { color: #fde047; }
 html.dark .cta-simple-badge-text { color: #ffffff; }
 
@@ -381,13 +408,38 @@ html.dark .cta-simple-btn-outline:hover {
   color: #ffffff;
 }
 
-/* --- СВЕТЛАЯ ТЕМА: однотонный лиловый + обводка --- */
+/* ==========================================================
+   СВЕТЛАЯ ТЕМА
+   ========================================================== */
 
 html:not(.dark) .cta-simple {
-  border: 2px solid #864A95;
+  border: none;
+  position: relative;
   box-shadow:
-    0 12px 32px -8px rgba(134, 74, 149, 0.25),
-    0 4px 12px -4px rgba(134, 74, 149, 0.15);
+    0 16px 40px -10px rgba(134, 74, 149, 0.28),
+    0 6px 16px -6px rgba(134, 74, 149, 0.15);
+}
+
+/* Градиентная обводка (светлая тема): тёмно-фиолетовый → светлый */
+html:not(.dark) .cta-simple::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 2px;
+  background: linear-gradient(
+    135deg,
+    #864A95 0%,
+    #A471CC 50%,
+    #D0BEE8 100%
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  pointer-events: none;
+  z-index: 20;
 }
 
 html:not(.dark) .cta-simple-bg {
@@ -406,7 +458,6 @@ html:not(.dark) .cta-simple-particle {
   background: rgba(134, 74, 149, 0.35);
 }
 
-/* Бейдж "Начни учиться сегодня" — не белый, полупрозрачный лиловый */
 html:not(.dark) .cta-simple-badge {
   background: rgba(134, 74, 149, 0.15);
   border: 1px solid rgba(134, 74, 149, 0.35);
@@ -417,7 +468,6 @@ html:not(.dark) .cta-simple-badge-text { color: #05071C; }
 html:not(.dark) .cta-simple-title { color: #05071C !important; }
 html:not(.dark) .cta-simple-text { color: #3f3850 !important; }
 
-/* Кнопка "Подать заявку" — тёмно-фиолетовая с лавандовым текстом */
 html:not(.dark) .cta-simple-btn-primary {
   background-color: #864A95 !important;
   color: #E1DFEB !important;
@@ -429,7 +479,6 @@ html:not(.dark) .cta-simple-btn-primary:hover {
   color: #E1DFEB !important;
 }
 
-/* Кнопка "Войти" — прозрачная с тёмной рамкой */
 html:not(.dark) .cta-simple-btn-outline {
   background: transparent !important;
   border: 1px solid rgba(5, 7, 28, 0.35) !important;
