@@ -40,9 +40,10 @@ body {
 }
 
 /* ==========================================================
-   ТЁМНАЯ ТЕМА — базовые переменные (классика)
+   ТЁМНАЯ ТЕМА — фиолетовая (как сейчас)
    ========================================================== */
 
+html.dark,
 html {
   --bg-1: #020617;
   --bg-2: rgba(88, 28, 135, 0.3);
@@ -56,33 +57,7 @@ html {
   --accent-secondary: #3b82f6;
 }
 
-html.dark[data-dark="dark-slate"] {
-  --bg-1: #020617;
-  --bg-2: rgba(30, 41, 59, 0.5);
-  --bg-3: #020617;
-  --blob-1: rgba(100, 116, 139, 0.4);
-  --blob-2: rgba(71, 85, 105, 0.4);
-  --blob-3: rgba(148, 163, 184, 0.35);
-  --grid-line: rgba(100, 116, 139, 0.25);
-  --particle: rgba(148, 163, 184, 0.6);
-  --accent-primary: #64748b;
-  --accent-secondary: #94a3b8;
-}
-
-html.dark[data-dark="dark-emerald"] {
-  --bg-1: #021410;
-  --bg-2: rgba(6, 78, 59, 0.4);
-  --bg-3: #021410;
-  --blob-1: rgba(16, 185, 129, 0.35);
-  --blob-2: rgba(20, 184, 166, 0.35);
-  --blob-3: rgba(52, 211, 153, 0.3);
-  --grid-line: rgba(16, 185, 129, 0.25);
-  --particle: rgba(52, 211, 153, 0.6);
-  --accent-primary: #10b981;
-  --accent-secondary: #14b8a6;
-}
-
-/* Ховер-иконки в тёмной теме: светлое состояние вместо чёрного */
+/* Тёмная тема — ховер иконок: светло-серый вместо чёрного */
 html.dark .theme-toggle-btn svg {
   color: #cbd5e1;
   transition: color 0.15s ease;
@@ -93,26 +68,37 @@ html.dark .theme-toggle-btn:hover {
 html.dark .theme-toggle-btn:hover svg {
   color: #e2e8f0 !important;
 }
-
-/* Общий фикс: ghost-кнопки в тёмной теме больше не становятся чёрными */
 html.dark .hover\:text-accent-foreground:hover {
   color: #cbd5e1 !important;
 }
 
 /* ==========================================================
-   СВЕТЛАЯ ТЕМА — базовые переменные (lavender-rose fallback)
+   СВЕТЛАЯ ТЕМА — единый вариант из палитры:
+   #E1DFEB #8B8BC7 #A471CC #864A95 #A9B9FE #05071C
    ========================================================== */
 
 html:not(.dark) {
-  --accent-bg: #f8f4fa;
-  --accent-soft: #ede2f2;
-  --accent-primary: #a04f9d;
-  --accent-secondary: #d68fb8;
-  --accent-blob-1: rgba(200, 168, 220, 0.5);
-  --accent-blob-2: rgba(228, 176, 200, 0.45);
-  --accent-blob-3: rgba(208, 180, 228, 0.4);
-  --accent-grid: rgba(160, 79, 157, 0.12);
-  --accent-particle: rgba(160, 79, 157, 0.5);
+  --pal-bg:        #E1DFEB;   /* фон страницы */
+  --pal-card:      #F2F0F7;   /* карточки (вместо белого) */
+  --pal-soft:      #D4D2E0;   /* секции */
+  --pal-text:      #05071C;   /* основной текст — тёмно-синий, не чёрный */
+  --pal-text-2:    #3f3850;   /* вторичный */
+  --pal-text-mute: #6b6480;   /* приглушённый */
+  --pal-primary:   #864A95;   /* тёмно-фиолетовый акцент */
+  --pal-secondary: #A471CC;   /* яркий фиолетовый */
+  --pal-tertiary:  #8B8BC7;   /* средний фиолетово-серый */
+  --pal-highlight: #A9B9FE;   /* нежно-голубой */
+  --pal-on-primary: #E1DFEB;  /* текст на тёмно-фиолетовом фоне */
+
+  --accent-bg: var(--pal-bg);
+  --accent-soft: var(--pal-soft);
+  --accent-primary: var(--pal-primary);
+  --accent-secondary: var(--pal-secondary);
+  --accent-blob-1: rgba(164, 113, 204, 0.35);  /* A471CC */
+  --accent-blob-2: rgba(169, 185, 254, 0.42);  /* A9B9FE */
+  --accent-blob-3: rgba(139, 139, 199, 0.38);  /* 8B8BC7 */
+  --accent-grid: rgba(134, 74, 149, 0.12);
+  --accent-particle: rgba(134, 74, 149, 0.45);
 
   --bg-1: var(--accent-bg);
   --bg-2: var(--accent-soft);
@@ -124,223 +110,193 @@ html:not(.dark) {
   --particle: var(--accent-particle);
 }
 
-/* --- Пресет 1: Лаванда и роза --- */
-html:not(.dark)[data-light="lavender-rose"] {
-  --accent-bg: #f8f4fa;
-  --accent-soft: #ede2f2;
-  --accent-primary: #a04f9d;
-  --accent-secondary: #d68fb8;
-  --accent-blob-1: rgba(200, 168, 220, 0.5);
-  --accent-blob-2: rgba(228, 176, 200, 0.45);
-  --accent-blob-3: rgba(208, 180, 228, 0.4);
-  --accent-grid: rgba(160, 79, 157, 0.12);
-  --accent-particle: rgba(160, 79, 157, 0.5);
-}
-
-/* --- Пресет 2: Песок и шалфей --- */
-html:not(.dark)[data-light="sand-sage"] {
-  --accent-bg: #f8f4ec;
-  --accent-soft: #ede3cf;
-  --accent-primary: #6b8e5a;
-  --accent-secondary: #c9a35a;
-  --accent-blob-1: rgba(180, 200, 160, 0.5);
-  --accent-blob-2: rgba(216, 196, 148, 0.45);
-  --accent-blob-3: rgba(196, 208, 168, 0.4);
-  --accent-grid: rgba(107, 142, 90, 0.12);
-  --accent-particle: rgba(107, 142, 90, 0.5);
-}
-
-/* --- Пресет 3: Мята и море --- */
-html:not(.dark)[data-light="mint-ocean"] {
-  --accent-bg: #f2f8f7;
-  --accent-soft: #ddeeec;
-  --accent-primary: #3a7e8a;
-  --accent-secondary: #6ab8b0;
-  --accent-blob-1: rgba(160, 208, 204, 0.5);
-  --accent-blob-2: rgba(140, 190, 200, 0.45);
-  --accent-blob-3: rgba(180, 216, 208, 0.4);
-  --accent-grid: rgba(58, 126, 138, 0.12);
-  --accent-particle: rgba(58, 126, 138, 0.5);
-}
-
-/* ==========================================================
-   СВЕТЛАЯ ТЕМА — перекраска Tailwind-классов
-   ========================================================== */
-
 html:not(.dark) body {
-  background-color: var(--accent-bg);
-  color: #2a2438;
+  background-color: var(--pal-bg);
+  color: var(--pal-text);
 }
 
-html:not(.dark) .bg-slate-950 { background-color: var(--accent-bg) !important; }
-html:not(.dark) .bg-slate-950\/50 { background-color: color-mix(in srgb, var(--accent-bg) 85%, transparent) !important; }
-html:not(.dark) .bg-slate-950\/60 { background-color: color-mix(in srgb, var(--accent-bg) 60%, white) !important; }
-html:not(.dark) .bg-slate-950\/70 { background-color: color-mix(in srgb, var(--accent-bg) 90%, transparent) !important; }
-html:not(.dark) .bg-slate-950\/80 { background-color: color-mix(in srgb, var(--accent-bg) 80%, white) !important; }
+/* --- ФОНЫ --- */
+html:not(.dark) .bg-slate-950 { background-color: var(--pal-bg) !important; }
+html:not(.dark) .bg-slate-950\/50 { background-color: color-mix(in srgb, var(--pal-bg) 85%, transparent) !important; }
+html:not(.dark) .bg-slate-950\/60 { background-color: color-mix(in srgb, var(--pal-bg) 60%, var(--pal-card)) !important; }
+html:not(.dark) .bg-slate-950\/70 { background-color: color-mix(in srgb, var(--pal-bg) 90%, transparent) !important; }
+html:not(.dark) .bg-slate-950\/80 { background-color: color-mix(in srgb, var(--pal-bg) 80%, var(--pal-card)) !important; }
 
-html:not(.dark) .bg-slate-900 { background-color: #ffffff !important; }
-html:not(.dark) .bg-slate-900\/50 { background-color: rgba(255, 255, 255, 0.75) !important; }
-html:not(.dark) .bg-slate-800 { background-color: #f1eff7 !important; }
-html:not(.dark) .bg-slate-700 { background-color: #e4e0ee !important; }
+html:not(.dark) .bg-slate-900 { background-color: var(--pal-card) !important; }
+html:not(.dark) .bg-slate-900\/50 { background-color: color-mix(in srgb, var(--pal-card) 75%, transparent) !important; }
+html:not(.dark) .bg-slate-800 { background-color: var(--pal-soft) !important; }
+html:not(.dark) .bg-slate-700 { background-color: color-mix(in srgb, var(--pal-soft) 85%, var(--pal-bg)) !important; }
 
-html:not(.dark) .bg-white\/5 { background-color: color-mix(in srgb, var(--accent-primary) 5%, transparent) !important; }
-html:not(.dark) .bg-white\/10 { background-color: color-mix(in srgb, var(--accent-primary) 8%, transparent) !important; }
-html:not(.dark) .bg-white\/20 { background-color: color-mix(in srgb, var(--accent-primary) 12%, transparent) !important; }
+/* Никаких чистых белых кнопок/плашек */
+html:not(.dark) .bg-white { background-color: var(--pal-card) !important; }
+html:not(.dark) .bg-white\/90 { background-color: color-mix(in srgb, var(--pal-card) 90%, transparent) !important; }
+html:not(.dark) .bg-white\/80 { background-color: color-mix(in srgb, var(--pal-card) 80%, transparent) !important; }
+html:not(.dark) .bg-white\/70 { background-color: color-mix(in srgb, var(--pal-card) 70%, transparent) !important; }
+html:not(.dark) .bg-white\/60 { background-color: color-mix(in srgb, var(--pal-card) 60%, transparent) !important; }
+html:not(.dark) .bg-white\/50 { background-color: color-mix(in srgb, var(--pal-card) 50%, transparent) !important; }
 
-html:not(.dark) .border-white\/5 { border-color: color-mix(in srgb, var(--accent-primary) 8%, transparent) !important; }
-html:not(.dark) .border-white\/10 { border-color: color-mix(in srgb, var(--accent-primary) 12%, transparent) !important; }
-html:not(.dark) .border-white\/20 { border-color: color-mix(in srgb, var(--accent-primary) 18%, transparent) !important; }
-html:not(.dark) .border-white\/30 { border-color: color-mix(in srgb, var(--accent-primary) 24%, transparent) !important; }
-html:not(.dark) .border-white\/40 { border-color: color-mix(in srgb, var(--accent-primary) 30%, transparent) !important; }
+html:not(.dark) .bg-white\/5 { background-color: color-mix(in srgb, var(--pal-primary) 5%, transparent) !important; }
+html:not(.dark) .bg-white\/10 { background-color: color-mix(in srgb, var(--pal-primary) 8%, transparent) !important; }
+html:not(.dark) .bg-white\/20 { background-color: color-mix(in srgb, var(--pal-primary) 12%, transparent) !important; }
 
-html:not(.dark) .text-white { color: #2a2438 !important; }
-html:not(.dark) .text-white\/60 { color: #6b647d !important; }
-html:not(.dark) .text-white\/90 { color: #3f3654 !important; }
-html:not(.dark) .text-slate-100 { color: #2a2438 !important; }
-html:not(.dark) .text-slate-200 { color: #3f3654 !important; }
-html:not(.dark) .text-slate-300 { color: #5b5373 !important; }
-html:not(.dark) .text-slate-400 { color: #7a7291 !important; }
-html:not(.dark) .text-slate-500 { color: #9a93ae !important; }
+/* --- ГРАНИЦЫ --- */
+html:not(.dark) .border-white\/5 { border-color: color-mix(in srgb, var(--pal-primary) 8%, transparent) !important; }
+html:not(.dark) .border-white\/10 { border-color: color-mix(in srgb, var(--pal-primary) 12%, transparent) !important; }
+html:not(.dark) .border-white\/20 { border-color: color-mix(in srgb, var(--pal-primary) 18%, transparent) !important; }
+html:not(.dark) .border-white\/30 { border-color: color-mix(in srgb, var(--pal-primary) 24%, transparent) !important; }
+html:not(.dark) .border-white\/40 { border-color: color-mix(in srgb, var(--pal-primary) 30%, transparent) !important; }
 
-html:not(.dark) .hover\:bg-white\/5:hover { background-color: color-mix(in srgb, var(--accent-primary) 6%, transparent) !important; }
-html:not(.dark) .hover\:bg-white\/10:hover { background-color: color-mix(in srgb, var(--accent-primary) 10%, transparent) !important; }
-html:not(.dark) .hover\:bg-white\/20:hover { background-color: color-mix(in srgb, var(--accent-primary) 14%, transparent) !important; }
-html:not(.dark) .hover\:text-white:hover { color: #2a2438 !important; }
+/* --- ТЕКСТ: белый → тёмно-синий #05071C --- */
+html:not(.dark) .text-white { color: var(--pal-text) !important; }
+html:not(.dark) .text-white\/90 { color: var(--pal-text-2) !important; }
+html:not(.dark) .text-white\/80 { color: var(--pal-text-2) !important; }
+html:not(.dark) .text-white\/70 { color: var(--pal-text-mute) !important; }
+html:not(.dark) .text-white\/60 { color: var(--pal-text-mute) !important; }
+html:not(.dark) .text-slate-100 { color: var(--pal-text) !important; }
+html:not(.dark) .text-slate-200 { color: var(--pal-text-2) !important; }
+html:not(.dark) .text-slate-300 { color: var(--pal-text-2) !important; }
+html:not(.dark) .text-slate-400 { color: var(--pal-text-mute) !important; }
+html:not(.dark) .text-slate-500 { color: color-mix(in srgb, var(--pal-text-mute) 70%, transparent) !important; }
+
+/* --- HOVER --- */
+html:not(.dark) .hover\:bg-white\/5:hover { background-color: color-mix(in srgb, var(--pal-primary) 6%, transparent) !important; }
+html:not(.dark) .hover\:bg-white\/10:hover { background-color: color-mix(in srgb, var(--pal-primary) 10%, transparent) !important; }
+html:not(.dark) .hover\:bg-white\/20:hover { background-color: color-mix(in srgb, var(--pal-primary) 14%, transparent) !important; }
+html:not(.dark) .hover\:text-white:hover { color: var(--pal-text) !important; }
+
+/* --- ЗАЩИТА светлого текста на тёмно-фиолетовых градиентных кнопках --- */
+html:not(.dark) :is(
+  [class*="from-purple-5"], [class*="from-purple-6"],
+  [class*="from-indigo-5"], [class*="from-indigo-6"],
+  [class*="from-blue-5"], [class*="from-blue-6"],
+  [class*="from-pink-5"], [class*="from-pink-6"]
+) :is(.text-white, .text-white\/90, .text-white\/80) {
+  color: var(--pal-on-primary) !important;
+}
 
 html:not(.dark) :is(
-  [class*="from-purple-5"] .text-white,
-  [class*="from-purple-6"] .text-white,
-  [class*="from-blue-5"] .text-white,
-  [class*="from-blue-6"] .text-white,
-  [class*="from-amber-5"] .text-white,
-  [class*="from-amber-6"] .text-white,
-  [class*="from-orange-5"] .text-white,
-  [class*="from-orange-6"] .text-white,
-  [class*="from-emerald-5"] .text-white,
-  [class*="from-emerald-6"] .text-white,
-  [class*="from-teal-5"] .text-white,
-  [class*="from-teal-6"] .text-white,
-  [class*="from-cyan-5"] .text-white,
-  [class*="from-cyan-6"] .text-white,
-  [class*="from-pink-5"] .text-white,
-  [class*="from-pink-6"] .text-white,
-  [class*="from-red-5"] .text-white,
-  [class*="from-red-6"] .text-white,
-  [class*="from-indigo-5"] .text-white,
-  [class*="from-indigo-6"] .text-white,
-  [class*="from-yellow-5"] .text-white
-) {
-  color: #ffffff !important;
+  [class*="from-purple-5"], [class*="from-purple-6"],
+  [class*="from-blue-5"], [class*="from-blue-6"],
+  [class*="from-indigo-5"], [class*="from-indigo-6"]
+) [class*="border-white"] {
+  border-color: color-mix(in srgb, var(--pal-on-primary) 40%, transparent) !important;
 }
 
-/* Пастельные градиенты */
-html:not(.dark) .from-purple-400 { --tw-gradient-from: var(--accent-primary) !important; }
-html:not(.dark) .via-pink-400 { --tw-gradient-via: var(--accent-secondary) !important; }
-html:not(.dark) .to-blue-400 { --tw-gradient-to: var(--accent-primary) !important; }
-html:not(.dark) .to-blue-500 { --tw-gradient-to: var(--accent-secondary) !important; }
-html:not(.dark) .from-purple-500 { --tw-gradient-from: var(--accent-primary) !important; }
-html:not(.dark) .from-purple-600 { --tw-gradient-from: var(--accent-primary) !important; }
-html:not(.dark) .via-purple-500 { --tw-gradient-via: var(--accent-secondary) !important; }
-html:not(.dark) .to-blue-600 { --tw-gradient-to: var(--accent-secondary) !important; }
+/* --- ГРАДИЕНТЫ: акцентные → наша палитра --- */
+html:not(.dark) .from-purple-400 { --tw-gradient-from: var(--pal-primary) !important; }
+html:not(.dark) .via-pink-400 { --tw-gradient-via: var(--pal-secondary) !important; }
+html:not(.dark) .to-blue-400 { --tw-gradient-to: var(--pal-tertiary) !important; }
+html:not(.dark) .to-blue-500 { --tw-gradient-to: var(--pal-tertiary) !important; }
+html:not(.dark) .from-purple-500 { --tw-gradient-from: var(--pal-secondary) !important; }
+html:not(.dark) .from-purple-600 { --tw-gradient-from: var(--pal-primary) !important; }
+html:not(.dark) .via-purple-500 { --tw-gradient-via: var(--pal-primary) !important; }
+html:not(.dark) .to-blue-600 { --tw-gradient-to: var(--pal-secondary) !important; }
 
-html:not(.dark) .from-purple-500\/10 { --tw-gradient-from: color-mix(in srgb, var(--accent-primary) 10%, transparent) !important; }
-html:not(.dark) .to-blue-500\/10 { --tw-gradient-to: color-mix(in srgb, var(--accent-secondary) 10%, transparent) !important; }
-html:not(.dark) .from-purple-500\/20 { --tw-gradient-from: color-mix(in srgb, var(--accent-primary) 15%, transparent) !important; }
-html:not(.dark) .to-blue-500\/20 { --tw-gradient-to: color-mix(in srgb, var(--accent-secondary) 15%, transparent) !important; }
-html:not(.dark) .from-purple-500\/40 { --tw-gradient-from: color-mix(in srgb, var(--accent-primary) 25%, transparent) !important; }
-html:not(.dark) .to-blue-500\/40 { --tw-gradient-to: color-mix(in srgb, var(--accent-secondary) 25%, transparent) !important; }
+html:not(.dark) .from-purple-500\/10 { --tw-gradient-from: color-mix(in srgb, var(--pal-primary) 10%, transparent) !important; }
+html:not(.dark) .to-blue-500\/10 { --tw-gradient-to: color-mix(in srgb, var(--pal-secondary) 10%, transparent) !important; }
+html:not(.dark) .from-purple-500\/20 { --tw-gradient-from: color-mix(in srgb, var(--pal-primary) 15%, transparent) !important; }
+html:not(.dark) .to-blue-500\/20 { --tw-gradient-to: color-mix(in srgb, var(--pal-secondary) 15%, transparent) !important; }
+html:not(.dark) .from-purple-500\/40 { --tw-gradient-from: color-mix(in srgb, var(--pal-primary) 25%, transparent) !important; }
+html:not(.dark) .to-blue-500\/40 { --tw-gradient-to: color-mix(in srgb, var(--pal-secondary) 25%, transparent) !important; }
 
-html:not(.dark) .border-purple-500\/30 { border-color: color-mix(in srgb, var(--accent-primary) 35%, transparent) !important; }
-html:not(.dark) .border-purple-500\/50 { border-color: color-mix(in srgb, var(--accent-primary) 50%, transparent) !important; }
-html:not(.dark) .bg-purple-500\/10 { background-color: color-mix(in srgb, var(--accent-primary) 10%, transparent) !important; }
-html:not(.dark) .bg-purple-500\/20 { background-color: color-mix(in srgb, var(--accent-primary) 15%, transparent) !important; }
+html:not(.dark) .border-purple-500\/30 { border-color: color-mix(in srgb, var(--pal-primary) 35%, transparent) !important; }
+html:not(.dark) .border-purple-500\/50 { border-color: color-mix(in srgb, var(--pal-primary) 50%, transparent) !important; }
+html:not(.dark) .bg-purple-500\/10 { background-color: color-mix(in srgb, var(--pal-primary) 10%, transparent) !important; }
+html:not(.dark) .bg-purple-500\/20 { background-color: color-mix(in srgb, var(--pal-primary) 15%, transparent) !important; }
 
+/* Акцентные текстовые цвета — тянутся к палитре */
 html:not(.dark) .text-purple-200,
 html:not(.dark) .text-purple-300,
 html:not(.dark) .text-purple-400,
 html:not(.dark) .text-purple-500,
-html:not(.dark) .text-purple-600 { color: var(--accent-primary) !important; }
+html:not(.dark) .text-purple-600 { color: var(--pal-primary) !important; }
+
+html:not(.dark) .text-indigo-300,
+html:not(.dark) .text-indigo-400 { color: var(--pal-primary) !important; }
 
 html:not(.dark) .text-blue-200,
 html:not(.dark) .text-blue-300,
 html:not(.dark) .text-blue-400,
-html:not(.dark) .text-blue-500 { color: color-mix(in srgb, var(--accent-secondary) 80%, #1e40af) !important; }
+html:not(.dark) .text-blue-500 { color: var(--pal-primary) !important; }
 
 html:not(.dark) .text-pink-300,
 html:not(.dark) .text-pink-400,
-html:not(.dark) .text-pink-500 { color: color-mix(in srgb, var(--accent-secondary) 70%, #9d174d) !important; }
+html:not(.dark) .text-pink-500 { color: var(--pal-secondary) !important; }
 
 html:not(.dark) .text-emerald-200,
 html:not(.dark) .text-emerald-300,
 html:not(.dark) .text-emerald-400,
-html:not(.dark) .text-emerald-500 { color: #4a9276 !important; }
+html:not(.dark) .text-emerald-500 { color: #4a7a68 !important; }
 
 html:not(.dark) .text-amber-200,
 html:not(.dark) .text-amber-300,
 html:not(.dark) .text-amber-400,
-html:not(.dark) .text-amber-500 { color: #b38140 !important; }
+html:not(.dark) .text-amber-500 { color: #8a6b3a !important; }
 
 html:not(.dark) .text-orange-300,
 html:not(.dark) .text-orange-400,
-html:not(.dark) .text-orange-500 { color: #b56540 !important; }
+html:not(.dark) .text-orange-500 { color: #8a583a !important; }
 
 html:not(.dark) .text-red-300,
 html:not(.dark) .text-red-400,
-html:not(.dark) .text-red-500 { color: #b65555 !important; }
+html:not(.dark) .text-red-500 { color: #8a4a4a !important; }
 
 html:not(.dark) .text-teal-300,
 html:not(.dark) .text-teal-400,
-html:not(.dark) .text-teal-500 { color: #4a9192 !important; }
+html:not(.dark) .text-teal-500 { color: #3f6f75 !important; }
 
 html:not(.dark) .text-cyan-300,
 html:not(.dark) .text-cyan-400,
-html:not(.dark) .text-cyan-500 { color: #4a8fad !important; }
+html:not(.dark) .text-cyan-500 { color: #3f6f85 !important; }
 
-html:not(.dark) .text-yellow-300 { color: #b38140 !important; }
+html:not(.dark) .text-yellow-300 { color: #8a6b3a !important; }
 
-/* Subjects — разнообразие пастели */
+/* Subjects — фиолетово-голубые градиенты в тон палитры */
 html:not(.dark) .from-purple-500.to-pink-500 {
-  --tw-gradient-from: #b8a4d8 !important;
-  --tw-gradient-to: #e0b8d0 !important;
+  --tw-gradient-from: var(--pal-primary) !important;
+  --tw-gradient-to: var(--pal-secondary) !important;
 }
 html:not(.dark) .from-blue-500.to-cyan-500 {
-  --tw-gradient-from: #a4b8d8 !important;
-  --tw-gradient-to: #a8d0d8 !important;
+  --tw-gradient-from: var(--pal-tertiary) !important;
+  --tw-gradient-to: var(--pal-highlight) !important;
 }
 html:not(.dark) .from-emerald-500.to-teal-500 {
-  --tw-gradient-from: #a4d8c4 !important;
-  --tw-gradient-to: #a8d8d4 !important;
+  --tw-gradient-from: #9cb8a8 !important;
+  --tw-gradient-to: #8bb0a8 !important;
 }
 html:not(.dark) .from-orange-500.to-red-500 {
-  --tw-gradient-from: #e8c4a4 !important;
-  --tw-gradient-to: #e0b0a8 !important;
+  --tw-gradient-from: #c8a898 !important;
+  --tw-gradient-to: #b89898 !important;
 }
 html:not(.dark) .from-yellow-500.to-orange-500 {
-  --tw-gradient-from: #e8d8a4 !important;
-  --tw-gradient-to: #e8c4a4 !important;
+  --tw-gradient-from: #c8b898 !important;
+  --tw-gradient-to: #c8a898 !important;
 }
 html:not(.dark) .from-indigo-500.to-purple-500 {
-  --tw-gradient-from: #a8a8d8 !important;
-  --tw-gradient-to: #b8a4d8 !important;
+  --tw-gradient-from: var(--pal-tertiary) !important;
+  --tw-gradient-to: var(--pal-primary) !important;
 }
 
-html:not(.dark) .border-emerald-500\/30 { border-color: rgba(140, 190, 170, 0.4) !important; }
-html:not(.dark) .bg-emerald-500\/20 { background-color: rgba(140, 190, 170, 0.25) !important; }
+html:not(.dark) .border-emerald-500\/30 { border-color: rgba(140, 175, 160, 0.4) !important; }
+html:not(.dark) .bg-emerald-500\/20 { background-color: rgba(140, 175, 160, 0.25) !important; }
 html:not(.dark) .from-emerald-500\/10 { --tw-gradient-from: color-mix(in srgb, #a4d8c4 20%, transparent) !important; }
 html:not(.dark) .via-emerald-500\/5 { --tw-gradient-via: color-mix(in srgb, #a4d8c4 10%, transparent) !important; }
 
-/* Inputs */
+/* --- INPUTS --- */
 html:not(.dark) input,
 html:not(.dark) textarea,
-html:not(.dark) select { color: #2a2438 !important; }
+html:not(.dark) select {
+  color: var(--pal-text) !important;
+  background-color: var(--pal-card) !important;
+}
 
 html:not(.dark) input::placeholder,
-html:not(.dark) textarea::placeholder { color: #a49db8 !important; }
+html:not(.dark) textarea::placeholder { color: var(--pal-text-mute) !important; }
 
-/* Скроллбар */
-html:not(.dark) ::-webkit-scrollbar-track { background: color-mix(in srgb, var(--accent-primary) 8%, #eceae9); }
-html:not(.dark) ::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--accent-primary) 30%, #d0cbd6); border-radius: 4px; }
-html:not(.dark) ::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, var(--accent-primary) 45%, #b8b2c0); }
+/* --- СКРОЛЛБАР --- */
+html:not(.dark) ::-webkit-scrollbar-track { background: var(--pal-soft); }
+html:not(.dark) ::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--pal-primary) 35%, var(--pal-soft)); border-radius: 4px; }
+html:not(.dark) ::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, var(--pal-primary) 55%, var(--pal-soft)); }
 
 /* ==========================================================
    FULLCALENDAR — без изменений
