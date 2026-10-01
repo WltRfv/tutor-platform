@@ -14,6 +14,7 @@ import {
   Layers,
   Menu,
   X,
+  Settings,
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/shared/ThemeToggle';
 import { NotificationBell } from '@/components/shared/NotificationBell';
@@ -27,6 +28,7 @@ const items = [
   { href: '/student/homework', label: 'Домашние задания', icon: ClipboardList },
   { href: '/student/compiler', label: 'Компилятор', icon: Code2 },
   { href: '/student/calendar', label: 'Расписание', icon: Calendar },
+  { href: '/student/settings', label: 'Настройки', icon: Settings },
 ];
 
 export default function StudentLayout({ children }: { children: React.ReactNode }) {
@@ -34,14 +36,12 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
   const [mobileOpen, setMobileOpen] = useState(false);
   useActivityTracker();
 
-  // Закрываем мобильное меню при смене страницы
   useEffect(() => {
     setMobileOpen(false);
   }, [pathname]);
 
   return (
     <div className="min-h-screen flex bg-slate-950 text-white">
-      {/* Кнопка-гамбургер */}
       <button
         onClick={() => setMobileOpen(true)}
         className="lg:hidden fixed top-3 left-3 z-[60] p-2.5 rounded-xl bg-slate-900/90 border border-white/10 backdrop-blur-xl text-white shadow-lg"
@@ -50,7 +50,6 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
         <Menu className="h-5 w-5" />
       </button>
 
-      {/* Затемнение */}
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
@@ -63,7 +62,6 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
         )}
       </AnimatePresence>
 
-      {/* Сайдбар */}
       <aside
         className={cn(
           'fixed lg:sticky lg:top-0 lg:h-screen inset-y-0 left-0 z-50 w-72 border-r border-white/5 bg-slate-900 flex flex-col transition-transform duration-300',
@@ -134,7 +132,6 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
         </div>
       </aside>
 
-      {/* Основной контент */}
       <main className="flex-1 overflow-y-auto lg:pl-0 pt-16 lg:pt-0 min-w-0">
         {children}
       </main>

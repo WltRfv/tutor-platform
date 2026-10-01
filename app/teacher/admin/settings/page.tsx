@@ -11,6 +11,7 @@ import {
   Shield,
   ClipboardList,
 } from 'lucide-react';
+import { AppearanceSettings } from '@/components/shared/AppearanceSettings';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -51,6 +52,11 @@ export default async function SettingsPage() {
           <h1 className="text-3xl font-bold text-white">Настройки системы</h1>
           <p className="text-slate-400 text-sm">Информация о платформе</p>
         </div>
+      </div>
+
+      {/* Внешний вид */}
+      <div className="mb-8">
+        <AppearanceSettings />
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-3 mb-8">
