@@ -20,11 +20,11 @@ export function CTASection() {
 
   useEffect(() => {
     setParticles(
-      Array.from({ length: 18 }, (_, i) => ({
+      Array.from({ length: 14 }, (_, i) => ({
         id: i,
         left: Math.random() * 100,
         top: Math.random() * 100,
-        duration: 5 + Math.random() * 5,
+        duration: 6 + Math.random() * 5,
         delay: Math.random() * 4,
       }))
     );
@@ -39,19 +39,12 @@ export function CTASection() {
           transition={{ duration: 0.8 }}
           className="relative cta-block"
         >
-          {/* Многослойный фон: центр светлый, края тёмные */}
-          <div className="absolute inset-0 cta-block-bg" />
-
-          {/* Лёгкий блик сверху */}
-          <div className="absolute inset-0 cta-block-sheen" />
-
-          {/* Плавающие частицы — дают глубину */}
           {particles.map((p) => (
             <motion.div
               key={p.id}
               className="absolute w-1 h-1 rounded-full cta-particle"
               style={{ left: `${p.left}%`, top: `${p.top}%` }}
-              animate={{ y: [0, -25, 0], opacity: [0, 1, 0] }}
+              animate={{ y: [0, -20, 0], opacity: [0, 0.8, 0] }}
               transition={{
                 duration: p.duration,
                 repeat: Infinity,
@@ -61,7 +54,7 @@ export function CTASection() {
           ))}
 
           <div className="relative px-8 py-16 md:py-20 text-center">
-            {/* Бейдж без плашки — иконка + текст + подчёркивание */}
+            {/* Бейдж: иконка + текст + тонкая линия под ними. Никакого фона. */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}
@@ -69,7 +62,7 @@ export function CTASection() {
               className="inline-flex items-center gap-2 mb-6 cta-badge"
             >
               <Sparkles className="h-4 w-4 cta-badge-icon" />
-              <span className="text-sm font-semibold tracking-wide uppercase cta-badge-text">
+              <span className="text-xs font-bold tracking-[0.2em] uppercase cta-badge-text">
                 Начни учиться сегодня
               </span>
             </motion.div>
