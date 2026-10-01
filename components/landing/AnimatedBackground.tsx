@@ -11,7 +11,6 @@ type Particle = {
 };
 
 export function AnimatedBackground() {
-  // Частицы генерируются ТОЛЬКО на клиенте после hydration
   const [particles, setParticles] = useState<Particle[]>([]);
 
   useEffect(() => {
@@ -28,16 +27,22 @@ export function AnimatedBackground() {
 
   return (
     <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-      {/* Базовый градиент */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-purple-950/30 to-slate-950" />
+      {/* Базовый градиент — цвета из CSS-переменных */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            'linear-gradient(to bottom right, var(--bg-1), var(--bg-2), var(--bg-3))',
+        }}
+      />
 
       {/* Сетка */}
       <div
         className="absolute inset-0 opacity-[0.15]"
         style={{
           backgroundImage: `
-            linear-gradient(to right, rgb(168 85 247 / 0.3) 1px, transparent 1px),
-            linear-gradient(to bottom, rgb(168 85 247 / 0.3) 1px, transparent 1px)
+            linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+            linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px)
           `,
           backgroundSize: '60px 60px',
           maskImage:
@@ -51,8 +56,7 @@ export function AnimatedBackground() {
       <motion.div
         className="absolute top-[10%] left-[15%] w-[500px] h-[500px] rounded-full blur-[120px]"
         style={{
-          background:
-            'radial-gradient(circle, rgba(168,85,247,0.4), transparent 70%)',
+          background: 'radial-gradient(circle, var(--blob-1), transparent 70%)',
         }}
         animate={{ x: [0, 100, 0], y: [0, 50, 0], scale: [1, 1.2, 1] }}
         transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
@@ -60,8 +64,7 @@ export function AnimatedBackground() {
       <motion.div
         className="absolute top-[40%] right-[10%] w-[600px] h-[600px] rounded-full blur-[140px]"
         style={{
-          background:
-            'radial-gradient(circle, rgba(59,130,246,0.4), transparent 70%)',
+          background: 'radial-gradient(circle, var(--blob-2), transparent 70%)',
         }}
         animate={{ x: [0, -80, 0], y: [0, 80, 0], scale: [1, 1.15, 1] }}
         transition={{ duration: 25, repeat: Infinity, ease: 'easeInOut' }}
@@ -69,19 +72,22 @@ export function AnimatedBackground() {
       <motion.div
         className="absolute bottom-[10%] left-[30%] w-[450px] h-[450px] rounded-full blur-[100px]"
         style={{
-          background:
-            'radial-gradient(circle, rgba(236,72,153,0.35), transparent 70%)',
+          background: 'radial-gradient(circle, var(--blob-3), transparent 70%)',
         }}
         animate={{ x: [0, 60, 0], y: [0, -60, 0] }}
         transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
       />
 
-      {/* Плавающие частицы — рендерятся только когда массив не пустой */}
+      {/* Частицы */}
       {particles.map((p) => (
         <motion.div
           key={p.id}
-          className="absolute w-1 h-1 rounded-full bg-purple-400/60"
-          style={{ left: `${p.left}%`, top: `${p.top}%` }}
+          className="absolute w-1 h-1 rounded-full"
+          style={{
+            left: `${p.left}%`,
+            top: `${p.top}%`,
+            background: 'var(--particle)',
+          }}
           animate={{ y: [0, -100, 0], opacity: [0, 1, 0] }}
           transition={{
             duration: p.duration,

@@ -18,7 +18,6 @@ export function CTASection() {
   const { ref, inView } = useInView({ threshold: 0.2, triggerOnce: true });
   const [particles, setParticles] = useState<Particle[]>([]);
 
-  // Частицы генерируются только на клиенте
   useEffect(() => {
     setParticles(
       Array.from({ length: 15 }, (_, i) => ({
@@ -40,7 +39,14 @@ export function CTASection() {
           transition={{ duration: 0.8 }}
           className="relative overflow-hidden rounded-3xl"
         >
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-600 via-purple-500 to-blue-600" />
+          {/* Фон: в тёмной теме яркий фиолетово-синий, в светлой — пастельный */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                'linear-gradient(to bottom right, var(--accent-primary), var(--accent-secondary))',
+            }}
+          />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.15),transparent_50%)]" />
 
           {particles.map((p) => (
@@ -65,14 +71,16 @@ export function CTASection() {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm mb-6"
             >
               <Sparkles className="h-4 w-4 text-yellow-300" />
-              <span className="text-white text-sm font-medium">Начни учиться сегодня</span>
+              <span className="text-white text-sm font-medium">
+                Начни учиться сегодня
+              </span>
             </motion.div>
 
             <h2 className="text-4xl md:text-6xl font-bold text-white mb-6 max-w-3xl mx-auto">
               Готов улучшить свои оценки?
             </h2>
             <p className="text-white/90 text-lg max-w-2xl mx-auto mb-10">
-              Оставь заявку — я свяжусь с тобой и подберу удобное время для первого занятия.
+              Оставь заявку - я свяжусь с тобой и подберу удобное время для первого занятия.
             </p>
 
             <div className="flex gap-4 justify-center flex-wrap">

@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight, Sparkles, Code2, Sigma, TrendingUp } from 'lucide-react';
 
 const floatingIcons = [
-  { Icon: Sigma, x: '10%', y: '20%', delay: 0, color: 'text-purple-400' },
-  { Icon: Code2, x: '85%', y: '30%', delay: 1, color: 'text-blue-400' },
-  { Icon: TrendingUp, x: '15%', y: '70%', delay: 2, color: 'text-pink-400' },
+  { Icon: Sigma, x: '10%', y: '20%', delay: 0, color: 'var(--accent-primary)' },
+  { Icon: Code2, x: '85%', y: '30%', delay: 1, color: 'var(--accent-secondary)' },
+  { Icon: TrendingUp, x: '15%', y: '70%', delay: 2, color: 'var(--accent-primary)' },
 ];
 
 export function Hero() {
@@ -17,8 +17,8 @@ export function Hero() {
       {floatingIcons.map(({ Icon, x, y, delay, color }, i) => (
         <motion.div
           key={i}
-          className={`absolute hidden md:block ${color} opacity-30`}
-          style={{ left: x, top: y }}
+          className="absolute hidden md:block opacity-30"
+          style={{ left: x, top: y, color }}
           animate={{
             y: [0, -20, 0],
             rotate: [0, 10, -10, 0],
