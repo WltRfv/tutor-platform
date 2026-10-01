@@ -31,27 +31,22 @@ export function CTASection() {
   }, []);
 
   return (
-    <section ref={ref} className="relative py-24 cta-dark-zone">
+    <section ref={ref} className="relative py-24 cta-section">
       <div className="container mx-auto px-6">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8 }}
-          className="relative overflow-hidden rounded-3xl"
+          className="relative overflow-hidden rounded-3xl cta-block"
         >
-          <div
-            className="absolute inset-0"
-            style={{
-              background:
-                'linear-gradient(to bottom right, var(--accent-primary), var(--accent-secondary))',
-            }}
-          />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.15),transparent_50%)]" />
+          {/* Фон плашки — управляется через CSS-переменную */}
+          <div className="absolute inset-0 cta-block-bg" />
+          <div className="absolute inset-0 cta-block-overlay" />
 
           {particles.map((p) => (
             <motion.div
               key={p.id}
-              className="absolute w-1.5 h-1.5 rounded-full bg-white/40"
+              className="absolute w-1.5 h-1.5 rounded-full cta-particle"
               style={{ left: `${p.left}%`, top: `${p.top}%` }}
               animate={{ y: [0, -30, 0], opacity: [0, 1, 0] }}
               transition={{
@@ -67,18 +62,18 @@ export function CTASection() {
               initial={{ scale: 0 }}
               animate={inView ? { scale: 1 } : {}}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm mb-6"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full backdrop-blur-sm mb-6 cta-badge"
             >
-              <Sparkles className="h-4 w-4 text-yellow-300" />
-              <span className="text-white text-sm font-medium">
+              <Sparkles className="h-4 w-4 cta-badge-icon" />
+              <span className="text-sm font-medium cta-badge-text">
                 Начни учиться сегодня
               </span>
             </motion.div>
 
-            <h2 className="text-4xl md:text-6xl font-bold text-white mb-6 max-w-3xl mx-auto">
+            <h2 className="text-4xl md:text-6xl font-bold mb-6 max-w-3xl mx-auto cta-title">
               Готов улучшить свои оценки?
             </h2>
-            <p className="text-white/90 text-lg max-w-2xl mx-auto mb-10">
+            <p className="text-lg max-w-2xl mx-auto mb-10 cta-text">
               Оставь заявку - я свяжусь с тобой и подберу удобное время для первого занятия.
             </p>
 

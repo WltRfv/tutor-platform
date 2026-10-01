@@ -307,51 +307,132 @@ html:not(.dark) ::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(-
 html:not(.dark) ::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, var(--pal-primary) 55%, var(--pal-soft)); }
 
 /* ==========================================================
-   CTA-СЕКЦИЯ (тёмный фиолетовый градиент)
-   В светлой теме используем ЛИЛОВЫЙ текст и кнопки — не белые
+   CTA-СЕКЦИЯ (нижний блок "Готов улучшить свои оценки?")
+   Тёмная тема: яркий фиолетовый градиент как было.
+   Светлая тема: светлый фиолетовый фон + тёмный текст.
    ========================================================== */
 
-/* Заголовок, абзац — светло-лиловый из палитры (#D0BEE8), не белый */
-html:not(.dark) .cta-dark-zone h2,
-html:not(.dark) .cta-dark-zone p {
-  color: #D0BEE8 !important;
+/* --- ТЁМНАЯ ТЕМА --- */
+html.dark .cta-block-bg,
+html:not(.dark) .cta-block-bg {
+  background: linear-gradient(
+    to bottom right,
+    var(--accent-primary),
+    var(--accent-secondary)
+  );
 }
 
-html:not(.dark) .cta-dark-zone .text-white {
-  color: #D0BEE8 !important;
-}
-html:not(.dark) .cta-dark-zone .text-white\/90 {
-  color: #C4ADE0 !important;
-}
-html:not(.dark) .cta-dark-zone .text-white\/80,
-html:not(.dark) .cta-dark-zone .text-white\/70 {
-  color: #B9A0D6 !important;
+html.dark .cta-block-overlay,
+html:not(.dark) .cta-block-overlay {
+  background: radial-gradient(
+    circle at 30% 20%,
+    rgba(255, 255, 255, 0.15),
+    transparent 50%
+  );
 }
 
-/* Кнопка "Подать заявку" — лиловый фон + тёмно-фиолетовый текст */
-html:not(.dark) .cta-dark-zone .cta-btn-primary {
-  background-color: #D0BEE8 !important;
+html.dark .cta-particle,
+html:not(.dark) .cta-particle {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+html.dark .cta-title,
+html.dark .cta-text {
+  color: #ffffff;
+}
+
+html.dark .cta-badge {
+  background: rgba(255, 255, 255, 0.2);
+}
+html.dark .cta-badge-text {
+  color: #ffffff;
+}
+html.dark .cta-badge-icon {
+  color: #fde047;
+}
+
+html.dark .cta-btn-primary {
+  background-color: #ffffff;
+  color: #7c3aed;
+}
+html.dark .cta-btn-primary:hover {
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
+html.dark .cta-btn-outline {
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #ffffff;
+}
+html.dark .cta-btn-outline:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* --- СВЕТЛАЯ ТЕМА: светлый фиолетовый фон + тёмный текст --- */
+
+/* Фон плашки — светлый фиолетовый */
+html:not(.dark) .cta-block-bg {
+  background: #A471CC !important;
+}
+
+/* Оверлей — мягкий светлый блик */
+html:not(.dark) .cta-block-overlay {
+  background: radial-gradient(
+    circle at 30% 20%,
+    rgba(225, 223, 235, 0.25),
+    transparent 55%
+  ) !important;
+}
+
+/* Рамка вокруг всей плашки */
+html:not(.dark) .cta-block {
+  border: 2px solid #864A95 !important;
+}
+
+/* Частицы — чуть темнее, чтобы были видны на светлом фоне */
+html:not(.dark) .cta-particle {
+  background: rgba(5, 7, 28, 0.25) !important;
+}
+
+/* Весь текст на плашке — самый тёмный из палитры #05071C */
+html:not(.dark) .cta-title,
+html:not(.dark) .cta-text,
+html:not(.dark) .cta-section h2,
+html:not(.dark) .cta-section p {
+  color: #05071C !important;
+}
+
+/* Бейдж "Начни учиться сегодня" — светлый фон + тёмный текст (инверсия) */
+html:not(.dark) .cta-badge {
+  background-color: #E1DFEB !important;
+  backdrop-filter: blur(6px);
+}
+html:not(.dark) .cta-badge-text {
+  color: #05071C !important;
+}
+html:not(.dark) .cta-badge-icon {
   color: #864A95 !important;
 }
-html:not(.dark) .cta-dark-zone .cta-btn-primary:hover {
-  background-color: #E1DFEB !important;
-  color: #6b3d7a !important;
-}
 
-/* Кнопка "Войти" — прозрачная с лиловой рамкой и текстом */
-html:not(.dark) .cta-dark-zone .cta-btn-outline {
-  background-color: transparent !important;
-  border-color: #D0BEE8 !important;
-  color: #D0BEE8 !important;
+/* Кнопка "Подать заявку" — тёмно-фиолетовая с лавандовым текстом */
+html:not(.dark) .cta-btn-primary {
+  background-color: #864A95 !important;
+  color: #E1DFEB !important;
+  border: 2px solid #864A95 !important;
 }
-html:not(.dark) .cta-dark-zone .cta-btn-outline:hover {
-  background-color: rgba(208, 190, 232, 0.15) !important;
+html:not(.dark) .cta-btn-primary:hover {
+  background-color: #6b3d7a !important;
   color: #E1DFEB !important;
 }
 
-/* Бейдж "Начни учиться сегодня" — прозрачный лиловый фон */
-html:not(.dark) .cta-dark-zone .bg-white\/20 {
-  background-color: rgba(208, 190, 232, 0.22) !important;
+/* Кнопка "Войти" — прозрачная, рамка и текст тёмно-фиолетовые */
+html:not(.dark) .cta-btn-outline {
+  background-color: transparent !important;
+  border: 2px solid #864A95 !important;
+  color: #864A95 !important;
+}
+html:not(.dark) .cta-btn-outline:hover {
+  background-color: rgba(134, 74, 149, 0.1) !important;
+  color: #6b3d7a !important;
 }
 
 /* ==========================================================
