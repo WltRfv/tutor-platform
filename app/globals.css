@@ -308,18 +308,37 @@ html:not(.dark) ::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb,
 
 /* ==========================================================
    CTA-СЕКЦИЯ — "Готов улучшить свои оценки?"
-   Тёмная тема: яркий фиолетово-синий градиент (как было).
-   Светлая тема: однотонный светло-лиловый фон + тёмный текст.
+   + веер треугольников позади плашки
    ========================================================== */
 
-/* ---------- ТЁМНАЯ ТЕМА ---------- */
+/* --- Веер --- */
+.cta-fan {
+  position: absolute;
+  inset: -90px -70px -90px -70px;
+  z-index: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+/* Цвета веера — светлая тема */
+html:not(.dark) {
+  --fan-start: #864A95;
+  --fan-end: #D0BEE8;
+  --fan-start-opacity: 0.55;
+  --fan-end-opacity: 0;
+}
+
+/* Цвета веера — тёмная тема */
+html.dark {
+  --fan-start: #a855f7;
+  --fan-end: #3b82f6;
+  --fan-start-opacity: 0.45;
+  --fan-end-opacity: 0;
+}
+
+/* --- ТЁМНАЯ ТЕМА --- */
 html.dark .cta-simple-bg {
-  background: linear-gradient(
-    to bottom right,
-    #9333ea,
-    #a855f7,
-    #2563eb
-  );
+  background: linear-gradient(to bottom right, #9333ea, #a855f7, #2563eb);
 }
 
 html.dark .cta-simple-overlay {
@@ -362,7 +381,14 @@ html.dark .cta-simple-btn-outline:hover {
   color: #ffffff;
 }
 
-/* ---------- СВЕТЛАЯ ТЕМА: однотонный светло-лиловый ---------- */
+/* --- СВЕТЛАЯ ТЕМА: однотонный лиловый + обводка --- */
+
+html:not(.dark) .cta-simple {
+  border: 2px solid #864A95;
+  box-shadow:
+    0 12px 32px -8px rgba(134, 74, 149, 0.25),
+    0 4px 12px -4px rgba(134, 74, 149, 0.15);
+}
 
 html:not(.dark) .cta-simple-bg {
   background: #D0BEE8 !important;
@@ -380,7 +406,7 @@ html:not(.dark) .cta-simple-particle {
   background: rgba(134, 74, 149, 0.35);
 }
 
-/* Бейдж "Начни учиться сегодня" — не белый, полупрозрачный лиловый с рамкой */
+/* Бейдж "Начни учиться сегодня" — не белый, полупрозрачный лиловый */
 html:not(.dark) .cta-simple-badge {
   background: rgba(134, 74, 149, 0.15);
   border: 1px solid rgba(134, 74, 149, 0.35);
@@ -388,7 +414,6 @@ html:not(.dark) .cta-simple-badge {
 html:not(.dark) .cta-simple-badge-icon { color: #864A95; }
 html:not(.dark) .cta-simple-badge-text { color: #05071C; }
 
-/* Заголовок и абзац — тёмные */
 html:not(.dark) .cta-simple-title { color: #05071C !important; }
 html:not(.dark) .cta-simple-text { color: #3f3850 !important; }
 
@@ -404,7 +429,7 @@ html:not(.dark) .cta-simple-btn-primary:hover {
   color: #E1DFEB !important;
 }
 
-/* Кнопка "Войти" — прозрачная с тёмной рамкой и тёмным текстом */
+/* Кнопка "Войти" — прозрачная с тёмной рамкой */
 html:not(.dark) .cta-simple-btn-outline {
   background: transparent !important;
   border: 1px solid rgba(5, 7, 28, 0.35) !important;
