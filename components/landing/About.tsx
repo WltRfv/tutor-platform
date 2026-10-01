@@ -86,7 +86,7 @@ export function About() {
                 priority
                 />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-6">
+              <div className="absolute bottom-0 left-0 right-0 p-6 photo-caption">
                 <p className="text-white text-xl font-bold">Снежана</p>
                 <p className="text-purple-200 text-sm">Репетитор по математике и информатике</p>
               </div>

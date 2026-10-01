@@ -31,7 +31,7 @@ export function CTASection() {
   }, []);
 
   return (
-    <section ref={ref} className="relative py-24">
+    <section ref={ref} className="relative py-24 cta-dark-zone">
       <div className="container mx-auto px-6">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
@@ -39,7 +39,6 @@ export function CTASection() {
           transition={{ duration: 0.8 }}
           className="relative overflow-hidden rounded-3xl"
         >
-          {/* Фон: в тёмной теме яркий фиолетово-синий, в светлой — пастельный */}
           <div
             className="absolute inset-0"
             style={{
@@ -87,7 +86,7 @@ export function CTASection() {
               <Link href="/register">
                 <Button
                   size="lg"
-                  className="bg-white text-purple-600 hover:bg-white/90 gap-2 font-semibold h-12 px-8"
+                  className="cta-btn-primary gap-2 font-semibold h-12 px-8"
                 >
                   Подать заявку <ArrowRight className="h-4 w-4" />
                 </Button>
@@ -96,7 +95,7 @@ export function CTASection() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="bg-transparent border-white/40 text-white hover:bg-white/10 h-12 px-8"
+                  className="cta-btn-outline h-12 px-8 bg-transparent"
                 >
                   Войти
                 </Button>

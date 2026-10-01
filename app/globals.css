@@ -61,9 +61,9 @@ html {
   --particle: rgba(168, 85, 247, 0.6);
   --accent-primary: #a855f7;
   --accent-secondary: #3b82f6;
+  --pal-on-primary: #ffffff;
 }
 
-/* Тёмная тема — ховер иконок: светло-серый вместо чёрного */
 html.dark .theme-toggle-btn svg {
   color: #cbd5e1;
   transition: color 0.15s ease;
@@ -115,7 +115,6 @@ html:not(.dark) {
   --grid-line: var(--accent-grid);
   --particle: var(--accent-particle);
 
-  /* Светлые края → тёмный центр (из фиолетового #864A95) */
   --bg-center: radial-gradient(
     ellipse 70% 60% at 50% 50%,
     rgba(134, 74, 149, 0.28) 0%,
@@ -142,7 +141,7 @@ html:not(.dark) .bg-slate-900\/50 { background-color: color-mix(in srgb, var(--p
 html:not(.dark) .bg-slate-800 { background-color: var(--pal-soft) !important; }
 html:not(.dark) .bg-slate-700 { background-color: color-mix(in srgb, var(--pal-soft) 85%, var(--pal-bg)) !important; }
 
-/* Никаких чистых белых плашек */
+/* Никаких чистых белых плашек (кроме CTA — там отдельно) */
 html:not(.dark) .bg-white { background-color: var(--pal-card) !important; }
 html:not(.dark) .bg-white\/90 { background-color: color-mix(in srgb, var(--pal-card) 90%, transparent) !important; }
 html:not(.dark) .bg-white\/80 { background-color: color-mix(in srgb, var(--pal-card) 80%, transparent) !important; }
@@ -180,21 +179,19 @@ html:not(.dark) .hover\:bg-white\/20:hover { background-color: color-mix(in srgb
 html:not(.dark) .hover\:text-white:hover { color: var(--pal-text) !important; }
 
 /* Защита светлого текста на тёмно-фиолетовых градиентных кнопках */
-html:not(.dark) :is(
-  [class*="from-purple-5"], [class*="from-purple-6"],
-  [class*="from-indigo-5"], [class*="from-indigo-6"],
-  [class*="from-blue-5"], [class*="from-blue-6"],
-  [class*="from-pink-5"], [class*="from-pink-6"]
-) :is(.text-white, .text-white\/90, .text-white\/80) {
+html:not(.dark) [class*="from-purple-5"].text-white,
+html:not(.dark) [class*="from-purple-6"].text-white,
+html:not(.dark) [class*="from-blue-5"].text-white,
+html:not(.dark) [class*="from-blue-6"].text-white,
+html:not(.dark) [class*="from-indigo-5"].text-white,
+html:not(.dark) [class*="from-indigo-6"].text-white,
+html:not(.dark) [class*="from-purple-5"] .text-white,
+html:not(.dark) [class*="from-purple-6"] .text-white,
+html:not(.dark) [class*="from-blue-5"] .text-white,
+html:not(.dark) [class*="from-blue-6"] .text-white,
+html:not(.dark) [class*="from-indigo-5"] .text-white,
+html:not(.dark) [class*="from-indigo-6"] .text-white {
   color: var(--pal-on-primary) !important;
-}
-
-html:not(.dark) :is(
-  [class*="from-purple-5"], [class*="from-purple-6"],
-  [class*="from-blue-5"], [class*="from-blue-6"],
-  [class*="from-indigo-5"], [class*="from-indigo-6"]
-) [class*="border-white"] {
-  border-color: color-mix(in srgb, var(--pal-on-primary) 40%, transparent) !important;
 }
 
 /* --- ГРАДИЕНТЫ --- */
@@ -266,7 +263,7 @@ html:not(.dark) .text-cyan-500 { color: #3f6f85 !important; }
 
 html:not(.dark) .text-yellow-300 { color: #8a6b3a !important; }
 
-/* Subjects — в тон палитры */
+/* Subjects */
 html:not(.dark) .from-purple-500.to-pink-500 {
   --tw-gradient-from: var(--pal-primary) !important;
   --tw-gradient-to: var(--pal-secondary) !important;
@@ -312,6 +309,68 @@ html:not(.dark) textarea::placeholder { color: var(--pal-text-mute) !important; 
 html:not(.dark) ::-webkit-scrollbar-track { background: var(--pal-soft); }
 html:not(.dark) ::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--pal-primary) 35%, var(--pal-soft)); border-radius: 4px; }
 html:not(.dark) ::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, var(--pal-primary) 55%, var(--pal-soft)); }
+
+/* ==========================================================
+   CTA-СЕКЦИЯ (тёмный градиент) — перекраска белого
+   ========================================================== */
+
+/* Текст на тёмном фоне должен быть светлым (лаванда), не тёмно-синим */
+html:not(.dark) .cta-dark-zone .text-white,
+html:not(.dark) .cta-dark-zone .text-white\/90,
+html:not(.dark) .cta-dark-zone .text-white\/80,
+html:not(.dark) .cta-dark-zone .text-white\/70 {
+  color: var(--pal-on-primary) !important;
+}
+
+/* Кнопка "Подать заявку" (основная) — светлая лаванда + тёмно-фиолетовый текст */
+html:not(.dark) .cta-dark-zone .cta-btn-primary {
+  background-color: var(--pal-bg) !important;
+  color: var(--pal-primary) !important;
+}
+html:not(.dark) .cta-dark-zone .cta-btn-primary:hover {
+  background-color: var(--pal-card) !important;
+  color: var(--pal-primary) !important;
+}
+
+/* Кнопка "Войти" (outline) */
+html:not(.dark) .cta-dark-zone .cta-btn-outline {
+  background-color: transparent !important;
+  border-color: color-mix(in srgb, var(--pal-on-primary) 50%, transparent) !important;
+  color: var(--pal-on-primary) !important;
+}
+html:not(.dark) .cta-dark-zone .cta-btn-outline:hover {
+  background-color: color-mix(in srgb, var(--pal-on-primary) 12%, transparent) !important;
+  color: var(--pal-on-primary) !important;
+}
+
+/* Заголовок и абзац внутри CTA — светлый текст */
+html:not(.dark) .cta-dark-zone h2,
+html:not(.dark) .cta-dark-zone p {
+  color: var(--pal-on-primary) !important;
+}
+
+/* Бейдж "Начни учиться сегодня" — прозрачный светлый фон, светлый текст */
+html:not(.dark) .cta-dark-zone .bg-white\/20 {
+  background-color: color-mix(in srgb, var(--pal-on-primary) 20%, transparent) !important;
+}
+
+/* ==========================================================
+   ФОТО-ПОДПИСЬ (About) — всегда светлая, на фото тёмный оверлей
+   ========================================================== */
+
+/* Светлая тема: белый текст из Tailwind заменяем на лаванду из палитры */
+html:not(.dark) .photo-caption .text-white {
+  color: var(--pal-on-primary) !important;
+}
+html:not(.dark) .photo-caption .text-purple-200,
+html:not(.dark) .photo-caption .text-purple-300 {
+  color: var(--pal-highlight) !important;
+}
+
+/* На всякий случай — добавим лёгкую тень для читаемости */
+html:not(.dark) .photo-caption {
+  text-shadow: 0 1px 3px rgba(5, 7, 28, 0.45);
+}
 
 /* ==========================================================
    FULLCALENDAR — без изменений
