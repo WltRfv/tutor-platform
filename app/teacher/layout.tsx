@@ -205,7 +205,7 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
 
         {/* Низ */}
         <div className="p-3 border-t border-white/5 flex items-center justify-between">
-          <ThemeToggle />
+          <ThemeToggle direction="up" />
           <button
             onClick={() => signOut({ callbackUrl: '/' })}
             className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition"

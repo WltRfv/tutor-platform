@@ -30,13 +30,9 @@ body {
   50% { background-position: 100% 50%; }
 }
 
-.animate-gradient {
-  animation: gradient 4s ease infinite;
-}
+.animate-gradient { animation: gradient 4s ease infinite; }
 
-html {
-  scroll-behavior: smooth;
-}
+html { scroll-behavior: smooth; }
 
 body {
   background-color: rgb(2 6 23);
@@ -44,7 +40,7 @@ body {
 }
 
 /* ==========================================================
-   ТЁМНАЯ ТЕМА (по умолчанию) — яркая и броская, без изменений
+   ТЁМНАЯ ТЕМА — базовые переменные (классика)
    ========================================================== */
 
 html {
@@ -56,25 +52,50 @@ html {
   --blob-3: rgba(236, 72, 153, 0.35);
   --grid-line: rgba(168, 85, 247, 0.3);
   --particle: rgba(168, 85, 247, 0.6);
-
   --accent-primary: #a855f7;
   --accent-secondary: #3b82f6;
 }
 
+html.dark[data-dark="dark-slate"] {
+  --bg-1: #020617;
+  --bg-2: rgba(30, 41, 59, 0.5);
+  --bg-3: #020617;
+  --blob-1: rgba(100, 116, 139, 0.4);
+  --blob-2: rgba(71, 85, 105, 0.4);
+  --blob-3: rgba(148, 163, 184, 0.35);
+  --grid-line: rgba(100, 116, 139, 0.25);
+  --particle: rgba(148, 163, 184, 0.6);
+  --accent-primary: #64748b;
+  --accent-secondary: #94a3b8;
+}
+
+html.dark[data-dark="dark-emerald"] {
+  --bg-1: #021410;
+  --bg-2: rgba(6, 78, 59, 0.4);
+  --bg-3: #021410;
+  --blob-1: rgba(16, 185, 129, 0.35);
+  --blob-2: rgba(20, 184, 166, 0.35);
+  --blob-3: rgba(52, 211, 153, 0.3);
+  --grid-line: rgba(16, 185, 129, 0.25);
+  --particle: rgba(52, 211, 153, 0.6);
+  --accent-primary: #10b981;
+  --accent-secondary: #14b8a6;
+}
+
 /* ==========================================================
-   СВЕТЛАЯ ТЕМА — пастель. Три пресета через data-accent.
+   СВЕТЛАЯ ТЕМА — базовые переменные (lavender)
    ========================================================== */
 
 html:not(.dark) {
-  --accent-bg: #f7f5fb;
-  --accent-soft: #ede7f6;
-  --accent-primary: #7a5eb6;
-  --accent-secondary: #a991d8;
-  --accent-blob-1: rgba(184, 164, 216, 0.45);
-  --accent-blob-2: rgba(164, 184, 216, 0.45);
-  --accent-blob-3: rgba(216, 176, 208, 0.4);
-  --accent-grid: rgba(122, 94, 182, 0.14);
-  --accent-particle: rgba(122, 94, 182, 0.5);
+  --accent-bg: #faf8fd;
+  --accent-soft: #f0eaf9;
+  --accent-primary: #8b6db8;
+  --accent-secondary: #b8a4d8;
+  --accent-blob-1: rgba(200, 184, 232, 0.55);
+  --accent-blob-2: rgba(196, 200, 232, 0.5);
+  --accent-blob-3: rgba(216, 200, 232, 0.45);
+  --accent-grid: rgba(139, 109, 184, 0.12);
+  --accent-particle: rgba(139, 109, 184, 0.5);
 
   --bg-1: var(--accent-bg);
   --bg-2: var(--accent-soft);
@@ -86,36 +107,87 @@ html:not(.dark) {
   --particle: var(--accent-particle);
 }
 
-html:not(.dark)[data-accent="warm"] {
-  --accent-bg: #faf6f0;
-  --accent-soft: #f2e8d8;
-  --accent-primary: #b38140;
-  --accent-secondary: #d8b98a;
-  --accent-blob-1: rgba(224, 200, 164, 0.5);
-  --accent-blob-2: rgba(224, 190, 164, 0.45);
-  --accent-blob-3: rgba(232, 208, 184, 0.4);
-  --accent-grid: rgba(179, 129, 64, 0.12);
-  --accent-particle: rgba(179, 129, 64, 0.45);
+/* Лаванда */
+html:not(.dark)[data-light="lavender-soft"] {
+  --accent-bg: #fcfbfe;
+  --accent-soft: #f4eefa;
+  --accent-primary: #9b82c4;
+  --accent-secondary: #c9b9df;
+  --accent-blob-1: rgba(220, 208, 240, 0.55);
+  --accent-blob-2: rgba(216, 212, 240, 0.45);
+  --accent-blob-3: rgba(228, 216, 240, 0.45);
+  --accent-grid: rgba(155, 130, 196, 0.1);
+  --accent-particle: rgba(155, 130, 196, 0.4);
+}
+html:not(.dark)[data-light="lavender-rich"] {
+  --accent-bg: #f2ecf9;
+  --accent-soft: #e4d6f2;
+  --accent-primary: #6b4d9e;
+  --accent-secondary: #9b7dd4;
+  --accent-blob-1: rgba(170, 148, 216, 0.6);
+  --accent-blob-2: rgba(168, 160, 216, 0.55);
+  --accent-blob-3: rgba(196, 168, 216, 0.5);
+  --accent-grid: rgba(107, 77, 158, 0.16);
+  --accent-particle: rgba(107, 77, 158, 0.55);
 }
 
-html:not(.dark)[data-accent="mint"] {
-  --accent-bg: #f0f7f3;
-  --accent-soft: #e2efe8;
-  --accent-primary: #4a9276;
-  --accent-secondary: #8ec9b0;
-  --accent-blob-1: rgba(164, 208, 188, 0.5);
-  --accent-blob-2: rgba(160, 208, 200, 0.45);
-  --accent-blob-3: rgba(184, 216, 196, 0.4);
-  --accent-grid: rgba(74, 146, 118, 0.12);
-  --accent-particle: rgba(74, 146, 118, 0.45);
+/* Тёплые */
+html:not(.dark)[data-light="warm-soft"] {
+  --accent-bg: #fdfbf7;
+  --accent-soft: #f8f1e6;
+  --accent-primary: #bfa070;
+  --accent-secondary: #e0c9a0;
+  --accent-blob-1: rgba(240, 220, 190, 0.55);
+  --accent-blob-2: rgba(240, 220, 200, 0.45);
+  --accent-blob-3: rgba(240, 224, 200, 0.45);
+  --accent-grid: rgba(191, 160, 112, 0.1);
+  --accent-particle: rgba(191, 160, 112, 0.4);
 }
+html:not(.dark)[data-light="warm-rich"] {
+  --accent-bg: #f7efe6;
+  --accent-soft: #ecdcc8;
+  --accent-primary: #a8632f;
+  --accent-secondary: #c08552;
+  --accent-blob-1: rgba(216, 180, 140, 0.6);
+  --accent-blob-2: rgba(216, 172, 140, 0.55);
+  --accent-blob-3: rgba(224, 188, 160, 0.5);
+  --accent-grid: rgba(168, 99, 47, 0.16);
+  --accent-particle: rgba(168, 99, 47, 0.5);
+}
+
+/* Мятные */
+html:not(.dark)[data-light="mint-soft"] {
+  --accent-bg: #f7fcf9;
+  --accent-soft: #e8f5ee;
+  --accent-primary: #6db090;
+  --accent-secondary: #b0dcc4;
+  --accent-blob-1: rgba(190, 232, 210, 0.55);
+  --accent-blob-2: rgba(184, 228, 216, 0.45);
+  --accent-blob-3: rgba(200, 232, 210, 0.45);
+  --accent-grid: rgba(109, 176, 144, 0.1);
+  --accent-particle: rgba(109, 176, 144, 0.4);
+}
+html:not(.dark)[data-light="mint-rich"] {
+  --accent-bg: #e8f3ec;
+  --accent-soft: #d3e8da;
+  --accent-primary: #3a7d5f;
+  --accent-secondary: #5a9b7b;
+  --accent-blob-1: rgba(140, 196, 168, 0.6);
+  --accent-blob-2: rgba(136, 192, 180, 0.55);
+  --accent-blob-3: rgba(160, 200, 176, 0.5);
+  --accent-grid: rgba(58, 125, 95, 0.16);
+  --accent-particle: rgba(58, 125, 95, 0.5);
+}
+
+/* ==========================================================
+   СВЕТЛАЯ ТЕМА — перекраска Tailwind-классов
+   ========================================================== */
 
 html:not(.dark) body {
   background-color: var(--accent-bg);
   color: #2a2438;
 }
 
-/* Фоны — мягкие */
 html:not(.dark) .bg-slate-950 { background-color: var(--accent-bg) !important; }
 html:not(.dark) .bg-slate-950\/50 { background-color: color-mix(in srgb, var(--accent-bg) 85%, transparent) !important; }
 html:not(.dark) .bg-slate-950\/60 { background-color: color-mix(in srgb, var(--accent-bg) 60%, white) !important; }
@@ -137,7 +209,6 @@ html:not(.dark) .border-white\/20 { border-color: color-mix(in srgb, var(--accen
 html:not(.dark) .border-white\/30 { border-color: color-mix(in srgb, var(--accent-primary) 24%, transparent) !important; }
 html:not(.dark) .border-white\/40 { border-color: color-mix(in srgb, var(--accent-primary) 30%, transparent) !important; }
 
-/* Текст */
 html:not(.dark) .text-white { color: #2a2438 !important; }
 html:not(.dark) .text-white\/60 { color: #6b647d !important; }
 html:not(.dark) .text-white\/90 { color: #3f3654 !important; }
@@ -147,13 +218,11 @@ html:not(.dark) .text-slate-300 { color: #5b5373 !important; }
 html:not(.dark) .text-slate-400 { color: #7a7291 !important; }
 html:not(.dark) .text-slate-500 { color: #9a93ae !important; }
 
-/* Hover */
 html:not(.dark) .hover\:bg-white\/5:hover { background-color: color-mix(in srgb, var(--accent-primary) 6%, transparent) !important; }
 html:not(.dark) .hover\:bg-white\/10:hover { background-color: color-mix(in srgb, var(--accent-primary) 10%, transparent) !important; }
 html:not(.dark) .hover\:bg-white\/20:hover { background-color: color-mix(in srgb, var(--accent-primary) 14%, transparent) !important; }
 html:not(.dark) .hover\:text-white:hover { color: #2a2438 !important; }
 
-/* Защита белых иконок на цветных градиентных плашках */
 html:not(.dark) :is(
   [class*="from-purple-5"] .text-white,
   [class*="from-purple-6"] .text-white,
@@ -180,12 +249,7 @@ html:not(.dark) :is(
   color: #ffffff !important;
 }
 
-/* ==========================================================
-   ПАСТЕЛЬНЫЕ ГРАДИЕНТЫ ДЛЯ ЛЕНДИНГА
-   Заменяем яркие Tailwind-градиенты на мягкие версии.
-   ========================================================== */
-
-/* Hero и заголовки */
+/* Пастельные градиенты для лендинга */
 html:not(.dark) .from-purple-400 { --tw-gradient-from: var(--accent-primary) !important; }
 html:not(.dark) .via-pink-400 { --tw-gradient-via: var(--accent-secondary) !important; }
 html:not(.dark) .to-blue-400 { --tw-gradient-to: var(--accent-primary) !important; }
@@ -194,6 +258,62 @@ html:not(.dark) .from-purple-500 { --tw-gradient-from: var(--accent-primary) !im
 html:not(.dark) .from-purple-600 { --tw-gradient-from: var(--accent-primary) !important; }
 html:not(.dark) .via-purple-500 { --tw-gradient-via: var(--accent-secondary) !important; }
 html:not(.dark) .to-blue-600 { --tw-gradient-to: var(--accent-secondary) !important; }
+
+html:not(.dark) .from-purple-500\/10 { --tw-gradient-from: color-mix(in srgb, var(--accent-primary) 10%, transparent) !important; }
+html:not(.dark) .to-blue-500\/10 { --tw-gradient-to: color-mix(in srgb, var(--accent-secondary) 10%, transparent) !important; }
+html:not(.dark) .from-purple-500\/20 { --tw-gradient-from: color-mix(in srgb, var(--accent-primary) 15%, transparent) !important; }
+html:not(.dark) .to-blue-500\/20 { --tw-gradient-to: color-mix(in srgb, var(--accent-secondary) 15%, transparent) !important; }
+html:not(.dark) .from-purple-500\/40 { --tw-gradient-from: color-mix(in srgb, var(--accent-primary) 25%, transparent) !important; }
+html:not(.dark) .to-blue-500\/40 { --tw-gradient-to: color-mix(in srgb, var(--accent-secondary) 25%, transparent) !important; }
+
+html:not(.dark) .border-purple-500\/30 { border-color: color-mix(in srgb, var(--accent-primary) 35%, transparent) !important; }
+html:not(.dark) .border-purple-500\/50 { border-color: color-mix(in srgb, var(--accent-primary) 50%, transparent) !important; }
+html:not(.dark) .bg-purple-500\/10 { background-color: color-mix(in srgb, var(--accent-primary) 10%, transparent) !important; }
+html:not(.dark) .bg-purple-500\/20 { background-color: color-mix(in srgb, var(--accent-primary) 15%, transparent) !important; }
+
+/* Акцентный текст — следует за выбранным пресетом */
+html:not(.dark) .text-purple-200,
+html:not(.dark) .text-purple-300,
+html:not(.dark) .text-purple-400,
+html:not(.dark) .text-purple-500,
+html:not(.dark) .text-purple-600 { color: var(--accent-primary) !important; }
+
+html:not(.dark) .text-blue-200,
+html:not(.dark) .text-blue-300,
+html:not(.dark) .text-blue-400,
+html:not(.dark) .text-blue-500 { color: color-mix(in srgb, var(--accent-secondary) 80%, #1e40af) !important; }
+
+html:not(.dark) .text-pink-300,
+html:not(.dark) .text-pink-400,
+html:not(.dark) .text-pink-500 { color: color-mix(in srgb, var(--accent-secondary) 70%, #9d174d) !important; }
+
+html:not(.dark) .text-emerald-200,
+html:not(.dark) .text-emerald-300,
+html:not(.dark) .text-emerald-400,
+html:not(.dark) .text-emerald-500 { color: #4a9276 !important; }
+
+html:not(.dark) .text-amber-200,
+html:not(.dark) .text-amber-300,
+html:not(.dark) .text-amber-400,
+html:not(.dark) .text-amber-500 { color: #b38140 !important; }
+
+html:not(.dark) .text-orange-300,
+html:not(.dark) .text-orange-400,
+html:not(.dark) .text-orange-500 { color: #b56540 !important; }
+
+html:not(.dark) .text-red-300,
+html:not(.dark) .text-red-400,
+html:not(.dark) .text-red-500 { color: #b65555 !important; }
+
+html:not(.dark) .text-teal-300,
+html:not(.dark) .text-teal-400,
+html:not(.dark) .text-teal-500 { color: #4a9192 !important; }
+
+html:not(.dark) .text-cyan-300,
+html:not(.dark) .text-cyan-400,
+html:not(.dark) .text-cyan-500 { color: #4a8fad !important; }
+
+html:not(.dark) .text-yellow-300 { color: #b38140 !important; }
 
 /* Subjects — разнообразие пастельных оттенков */
 html:not(.dark) .from-purple-500.to-pink-500 {
@@ -221,49 +341,10 @@ html:not(.dark) .from-indigo-500.to-purple-500 {
   --tw-gradient-to: #b8a4d8 !important;
 }
 
-/* Прозрачные версии для свечений и бэкграундов */
-html:not(.dark) .from-purple-500\/10 { --tw-gradient-from: color-mix(in srgb, var(--accent-primary) 10%, transparent) !important; }
-html:not(.dark) .to-blue-500\/10 { --tw-gradient-to: color-mix(in srgb, var(--accent-secondary) 10%, transparent) !important; }
-html:not(.dark) .from-purple-500\/20 { --tw-gradient-from: color-mix(in srgb, var(--accent-primary) 15%, transparent) !important; }
-html:not(.dark) .to-blue-500\/20 { --tw-gradient-to: color-mix(in srgb, var(--accent-secondary) 15%, transparent) !important; }
-html:not(.dark) .from-purple-500\/40 { --tw-gradient-from: color-mix(in srgb, var(--accent-primary) 25%, transparent) !important; }
-html:not(.dark) .to-blue-500\/40 { --tw-gradient-to: color-mix(in srgb, var(--accent-secondary) 25%, transparent) !important; }
-
-/* Emerald / teal (бесплатное занятие) */
+html:not(.dark) .border-emerald-500\/30 { border-color: rgba(140, 190, 170, 0.4) !important; }
+html:not(.dark) .bg-emerald-500\/20 { background-color: rgba(140, 190, 170, 0.25) !important; }
 html:not(.dark) .from-emerald-500\/10 { --tw-gradient-from: color-mix(in srgb, #a4d8c4 20%, transparent) !important; }
 html:not(.dark) .via-emerald-500\/5 { --tw-gradient-via: color-mix(in srgb, #a4d8c4 10%, transparent) !important; }
-html:not(.dark) .border-emerald-500\/30 { border-color: rgba(140, 190, 170, 0.4) !important; }
-html:not(.dark) .text-emerald-300 { color: #4a9276 !important; }
-html:not(.dark) .bg-emerald-500\/20 { background-color: rgba(140, 190, 170, 0.25) !important; }
-
-/* Рамки акцентных блоков */
-html:not(.dark) .border-purple-500\/30 { border-color: color-mix(in srgb, var(--accent-primary) 35%, transparent) !important; }
-html:not(.dark) .border-purple-500\/50 { border-color: color-mix(in srgb, var(--accent-primary) 50%, transparent) !important; }
-html:not(.dark) .bg-purple-500\/10 { background-color: color-mix(in srgb, var(--accent-primary) 10%, transparent) !important; }
-html:not(.dark) .bg-purple-500\/20 { background-color: color-mix(in srgb, var(--accent-primary) 15%, transparent) !important; }
-
-/* Акцентный текст */
-html:not(.dark) .text-purple-200,
-html:not(.dark) .text-purple-300,
-html:not(.dark) .text-purple-400,
-html:not(.dark) .text-purple-500,
-html:not(.dark) .text-purple-600 { color: var(--accent-primary) !important; }
-
-html:not(.dark) .text-blue-200,
-html:not(.dark) .text-blue-300,
-html:not(.dark) .text-blue-400,
-html:not(.dark) .text-blue-500 { color: #4a76ad !important; }
-
-html:not(.dark) .text-pink-300,
-html:not(.dark) .text-pink-400,
-html:not(.dark) .text-pink-500 { color: #b3558a !important; }
-
-html:not(.dark) .text-yellow-300 { color: #b38140 !important; }
-
-/* Сетка фона */
-html:not(.dark) [style*="linear-gradient(to right, rgb(168 85 247"] {
-  opacity: 0.4 !important;
-}
 
 /* Inputs */
 html:not(.dark) input,
@@ -274,9 +355,9 @@ html:not(.dark) input::placeholder,
 html:not(.dark) textarea::placeholder { color: #a49db8 !important; }
 
 /* Скроллбар */
-html:not(.dark) ::-webkit-scrollbar-track { background: #ece8f3; }
-html:not(.dark) ::-webkit-scrollbar-thumb { background: #cdc6dd; border-radius: 4px; }
-html:not(.dark) ::-webkit-scrollbar-thumb:hover { background: #b3aac9; }
+html:not(.dark) ::-webkit-scrollbar-track { background: color-mix(in srgb, var(--accent-primary) 8%, #eceae9); }
+html:not(.dark) ::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--accent-primary) 30%, #d0cbd6); border-radius: 4px; }
+html:not(.dark) ::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, var(--accent-primary) 45%, #b8b2c0); }
 
 /* ==========================================================
    FULLCALENDAR — без изменений
@@ -309,9 +390,7 @@ html:not(.dark) ::-webkit-scrollbar-thumb:hover { background: #b3aac9; }
 .fc-theme-standard td,
 .fc-theme-standard th { border-color: rgba(255, 255, 255, 0.08) !important; }
 
-.fc-theme-standard .fc-scrollgrid {
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-}
+.fc-theme-standard .fc-scrollgrid { border: 1px solid rgba(255, 255, 255, 0.1) !important; }
 
 .fc .fc-col-header-cell {
   background: rgba(255, 255, 255, 0.03) !important;
