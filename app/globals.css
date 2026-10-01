@@ -309,7 +309,7 @@ html:not(.dark) ::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb,
 /* ==========================================================
    CTA-СЕКЦИЯ — "Готов улучшить свои оценки?"
    Тёмная тема: яркий фиолетово-синий градиент (как было).
-   Светлая тема: светло-лиловый фон + тёмный текст.
+   Светлая тема: однотонный светло-лиловый фон + тёмный текст.
    ========================================================== */
 
 /* ---------- ТЁМНАЯ ТЕМА ---------- */
@@ -362,16 +362,16 @@ html.dark .cta-simple-btn-outline:hover {
   color: #ffffff;
 }
 
-/* ---------- СВЕТЛАЯ ТЕМА: светло-лиловый фон, тёмный текст ---------- */
+/* ---------- СВЕТЛАЯ ТЕМА: однотонный светло-лиловый ---------- */
 
 html:not(.dark) .cta-simple-bg {
-  background: linear-gradient(135deg, #E1DFEB 0%, #D0BEE8 100%);
+  background: #D0BEE8 !important;
 }
 
 html:not(.dark) .cta-simple-overlay {
   background: radial-gradient(
     circle at 30% 20%,
-    rgba(255, 255, 255, 0.4),
+    rgba(255, 255, 255, 0.22),
     transparent 55%
   );
 }
@@ -380,10 +380,10 @@ html:not(.dark) .cta-simple-particle {
   background: rgba(134, 74, 149, 0.35);
 }
 
-/* Бейдж "Начни учиться сегодня" — светлая капсула */
+/* Бейдж "Начни учиться сегодня" — не белый, полупрозрачный лиловый с рамкой */
 html:not(.dark) .cta-simple-badge {
-  background: rgba(255, 255, 255, 0.55);
-  border: 1px solid rgba(134, 74, 149, 0.2);
+  background: rgba(134, 74, 149, 0.15);
+  border: 1px solid rgba(134, 74, 149, 0.35);
 }
 html:not(.dark) .cta-simple-badge-icon { color: #864A95; }
 html:not(.dark) .cta-simple-badge-text { color: #05071C; }
