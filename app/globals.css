@@ -82,20 +82,37 @@ html.dark[data-dark="dark-emerald"] {
   --accent-secondary: #14b8a6;
 }
 
+/* Ховер-иконки в тёмной теме: светлое состояние вместо чёрного */
+html.dark .theme-toggle-btn svg {
+  color: #cbd5e1;
+  transition: color 0.15s ease;
+}
+html.dark .theme-toggle-btn:hover {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+}
+html.dark .theme-toggle-btn:hover svg {
+  color: #e2e8f0 !important;
+}
+
+/* Общий фикс: ghost-кнопки в тёмной теме больше не становятся чёрными */
+html.dark .hover\:text-accent-foreground:hover {
+  color: #cbd5e1 !important;
+}
+
 /* ==========================================================
-   СВЕТЛАЯ ТЕМА — базовые переменные (lavender)
+   СВЕТЛАЯ ТЕМА — базовые переменные (lavender-rose fallback)
    ========================================================== */
 
 html:not(.dark) {
-  --accent-bg: #faf8fd;
-  --accent-soft: #f0eaf9;
-  --accent-primary: #8b6db8;
-  --accent-secondary: #b8a4d8;
-  --accent-blob-1: rgba(200, 184, 232, 0.55);
-  --accent-blob-2: rgba(196, 200, 232, 0.5);
-  --accent-blob-3: rgba(216, 200, 232, 0.45);
-  --accent-grid: rgba(139, 109, 184, 0.12);
-  --accent-particle: rgba(139, 109, 184, 0.5);
+  --accent-bg: #f8f4fa;
+  --accent-soft: #ede2f2;
+  --accent-primary: #a04f9d;
+  --accent-secondary: #d68fb8;
+  --accent-blob-1: rgba(200, 168, 220, 0.5);
+  --accent-blob-2: rgba(228, 176, 200, 0.45);
+  --accent-blob-3: rgba(208, 180, 228, 0.4);
+  --accent-grid: rgba(160, 79, 157, 0.12);
+  --accent-particle: rgba(160, 79, 157, 0.5);
 
   --bg-1: var(--accent-bg);
   --bg-2: var(--accent-soft);
@@ -107,76 +124,43 @@ html:not(.dark) {
   --particle: var(--accent-particle);
 }
 
-/* Лаванда */
-html:not(.dark)[data-light="lavender-soft"] {
-  --accent-bg: #fcfbfe;
-  --accent-soft: #f4eefa;
-  --accent-primary: #9b82c4;
-  --accent-secondary: #c9b9df;
-  --accent-blob-1: rgba(220, 208, 240, 0.55);
-  --accent-blob-2: rgba(216, 212, 240, 0.45);
-  --accent-blob-3: rgba(228, 216, 240, 0.45);
-  --accent-grid: rgba(155, 130, 196, 0.1);
-  --accent-particle: rgba(155, 130, 196, 0.4);
-}
-html:not(.dark)[data-light="lavender-rich"] {
-  --accent-bg: #f2ecf9;
-  --accent-soft: #e4d6f2;
-  --accent-primary: #6b4d9e;
-  --accent-secondary: #9b7dd4;
-  --accent-blob-1: rgba(170, 148, 216, 0.6);
-  --accent-blob-2: rgba(168, 160, 216, 0.55);
-  --accent-blob-3: rgba(196, 168, 216, 0.5);
-  --accent-grid: rgba(107, 77, 158, 0.16);
-  --accent-particle: rgba(107, 77, 158, 0.55);
+/* --- Пресет 1: Лаванда и роза --- */
+html:not(.dark)[data-light="lavender-rose"] {
+  --accent-bg: #f8f4fa;
+  --accent-soft: #ede2f2;
+  --accent-primary: #a04f9d;
+  --accent-secondary: #d68fb8;
+  --accent-blob-1: rgba(200, 168, 220, 0.5);
+  --accent-blob-2: rgba(228, 176, 200, 0.45);
+  --accent-blob-3: rgba(208, 180, 228, 0.4);
+  --accent-grid: rgba(160, 79, 157, 0.12);
+  --accent-particle: rgba(160, 79, 157, 0.5);
 }
 
-/* Тёплые */
-html:not(.dark)[data-light="warm-soft"] {
-  --accent-bg: #fdfbf7;
-  --accent-soft: #f8f1e6;
-  --accent-primary: #bfa070;
-  --accent-secondary: #e0c9a0;
-  --accent-blob-1: rgba(240, 220, 190, 0.55);
-  --accent-blob-2: rgba(240, 220, 200, 0.45);
-  --accent-blob-3: rgba(240, 224, 200, 0.45);
-  --accent-grid: rgba(191, 160, 112, 0.1);
-  --accent-particle: rgba(191, 160, 112, 0.4);
-}
-html:not(.dark)[data-light="warm-rich"] {
-  --accent-bg: #f7efe6;
-  --accent-soft: #ecdcc8;
-  --accent-primary: #a8632f;
-  --accent-secondary: #c08552;
-  --accent-blob-1: rgba(216, 180, 140, 0.6);
-  --accent-blob-2: rgba(216, 172, 140, 0.55);
-  --accent-blob-3: rgba(224, 188, 160, 0.5);
-  --accent-grid: rgba(168, 99, 47, 0.16);
-  --accent-particle: rgba(168, 99, 47, 0.5);
+/* --- Пресет 2: Песок и шалфей --- */
+html:not(.dark)[data-light="sand-sage"] {
+  --accent-bg: #f8f4ec;
+  --accent-soft: #ede3cf;
+  --accent-primary: #6b8e5a;
+  --accent-secondary: #c9a35a;
+  --accent-blob-1: rgba(180, 200, 160, 0.5);
+  --accent-blob-2: rgba(216, 196, 148, 0.45);
+  --accent-blob-3: rgba(196, 208, 168, 0.4);
+  --accent-grid: rgba(107, 142, 90, 0.12);
+  --accent-particle: rgba(107, 142, 90, 0.5);
 }
 
-/* Мятные */
-html:not(.dark)[data-light="mint-soft"] {
-  --accent-bg: #f7fcf9;
-  --accent-soft: #e8f5ee;
-  --accent-primary: #6db090;
-  --accent-secondary: #b0dcc4;
-  --accent-blob-1: rgba(190, 232, 210, 0.55);
-  --accent-blob-2: rgba(184, 228, 216, 0.45);
-  --accent-blob-3: rgba(200, 232, 210, 0.45);
-  --accent-grid: rgba(109, 176, 144, 0.1);
-  --accent-particle: rgba(109, 176, 144, 0.4);
-}
-html:not(.dark)[data-light="mint-rich"] {
-  --accent-bg: #e8f3ec;
-  --accent-soft: #d3e8da;
-  --accent-primary: #3a7d5f;
-  --accent-secondary: #5a9b7b;
-  --accent-blob-1: rgba(140, 196, 168, 0.6);
-  --accent-blob-2: rgba(136, 192, 180, 0.55);
-  --accent-blob-3: rgba(160, 200, 176, 0.5);
-  --accent-grid: rgba(58, 125, 95, 0.16);
-  --accent-particle: rgba(58, 125, 95, 0.5);
+/* --- Пресет 3: Мята и море --- */
+html:not(.dark)[data-light="mint-ocean"] {
+  --accent-bg: #f2f8f7;
+  --accent-soft: #ddeeec;
+  --accent-primary: #3a7e8a;
+  --accent-secondary: #6ab8b0;
+  --accent-blob-1: rgba(160, 208, 204, 0.5);
+  --accent-blob-2: rgba(140, 190, 200, 0.45);
+  --accent-blob-3: rgba(180, 216, 208, 0.4);
+  --accent-grid: rgba(58, 126, 138, 0.12);
+  --accent-particle: rgba(58, 126, 138, 0.5);
 }
 
 /* ==========================================================
@@ -249,7 +233,7 @@ html:not(.dark) :is(
   color: #ffffff !important;
 }
 
-/* Пастельные градиенты для лендинга */
+/* Пастельные градиенты */
 html:not(.dark) .from-purple-400 { --tw-gradient-from: var(--accent-primary) !important; }
 html:not(.dark) .via-pink-400 { --tw-gradient-via: var(--accent-secondary) !important; }
 html:not(.dark) .to-blue-400 { --tw-gradient-to: var(--accent-primary) !important; }
@@ -271,7 +255,6 @@ html:not(.dark) .border-purple-500\/50 { border-color: color-mix(in srgb, var(--
 html:not(.dark) .bg-purple-500\/10 { background-color: color-mix(in srgb, var(--accent-primary) 10%, transparent) !important; }
 html:not(.dark) .bg-purple-500\/20 { background-color: color-mix(in srgb, var(--accent-primary) 15%, transparent) !important; }
 
-/* Акцентный текст — следует за выбранным пресетом */
 html:not(.dark) .text-purple-200,
 html:not(.dark) .text-purple-300,
 html:not(.dark) .text-purple-400,
@@ -315,7 +298,7 @@ html:not(.dark) .text-cyan-500 { color: #4a8fad !important; }
 
 html:not(.dark) .text-yellow-300 { color: #b38140 !important; }
 
-/* Subjects — разнообразие пастельных оттенков */
+/* Subjects — разнообразие пастели */
 html:not(.dark) .from-purple-500.to-pink-500 {
   --tw-gradient-from: #b8a4d8 !important;
   --tw-gradient-to: #e0b8d0 !important;

@@ -3,29 +3,34 @@ import { createContext, useContext, useEffect, useState } from 'react';
 
 export type Theme = 'light' | 'dark';
 
-export type LightAccent =
-  | 'lavender-soft' | 'lavender' | 'lavender-rich'
-  | 'warm-soft' | 'warm' | 'warm-rich'
-  | 'mint-soft' | 'mint' | 'mint-rich';
-
+export type LightAccent = 'lavender-rose' | 'sand-sage' | 'mint-ocean';
 export type DarkAccent = 'dark-classic' | 'dark-slate' | 'dark-emerald';
 
 export const LIGHT_ACCENTS = [
-  { id: 'lavender-soft', family: 'lavender', label: 'Лаванда — нежная',   color: '#e6dcf2' },
-  { id: 'lavender',      family: 'lavender', label: 'Лаванда',             color: '#b8a4d8' },
-  { id: 'lavender-rich', family: 'lavender', label: 'Лаванда — глубокая',  color: '#8b6db8' },
-  { id: 'warm-soft',     family: 'warm',     label: 'Крем — нежный',       color: '#f5ead8' },
-  { id: 'warm',          family: 'warm',     label: 'Тёплый крем',         color: '#d8b98a' },
-  { id: 'warm-rich',     family: 'warm',     label: 'Терракота',           color: '#c08552' },
-  { id: 'mint-soft',     family: 'mint',     label: 'Мята — нежная',       color: '#d8efe4' },
-  { id: 'mint',          family: 'mint',     label: 'Мята',                color: '#8ec9b0' },
-  { id: 'mint-rich',     family: 'mint',     label: 'Шалфей',              color: '#5a9b7b' },
+  {
+    id: 'lavender-rose',
+    label: 'Лаванда и роза',
+    color: '#a04f9d',
+    hint: 'Сиреневая база, розовый акцент',
+  },
+  {
+    id: 'sand-sage',
+    label: 'Песок и шалфей',
+    color: '#6b8e5a',
+    hint: 'Тёплая песочная база, зелёный акцент',
+  },
+  {
+    id: 'mint-ocean',
+    label: 'Мята и море',
+    color: '#3a7e8a',
+    hint: 'Мятная база, морской акцент',
+  },
 ] as const;
 
 export const DARK_ACCENTS = [
   { id: 'dark-classic', label: 'Классика (фиолет)', color: '#a855f7' },
-  { id: 'dark-slate',   label: 'Графит',             color: '#64748b' },
-  { id: 'dark-emerald', label: 'Изумруд',            color: '#10b981' },
+  { id: 'dark-slate', label: 'Графит', color: '#64748b' },
+  { id: 'dark-emerald', label: 'Изумруд', color: '#10b981' },
 ] as const;
 
 type ThemeContextType = {
@@ -41,7 +46,7 @@ type ThemeContextType = {
 
 const ThemeContext = createContext<ThemeContextType>({
   theme: 'dark',
-  accentLight: 'lavender',
+  accentLight: 'lavender-rose',
   accentDark: 'dark-classic',
   setTheme: () => {},
   setAccentLight: () => {},
@@ -55,7 +60,7 @@ const VALID_DARK: readonly DarkAccent[] = DARK_ACCENTS.map((a) => a.id);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>('dark');
-  const [accentLight, setAccentLightState] = useState<LightAccent>('lavender');
+  const [accentLight, setAccentLightState] = useState<LightAccent>('lavender-rose');
   const [accentDark, setAccentDarkState] = useState<DarkAccent>('dark-classic');
   const [mounted, setMounted] = useState(false);
 
@@ -80,9 +85,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const storedLight = localStorage.getItem('accentLight') as LightAccent | null;
     const storedDark = localStorage.getItem('accentDark') as DarkAccent | null;
 
-    const t: Theme = storedTheme === 'light' || storedTheme === 'dark' ? storedTheme : 'dark';
+    const t: Theme =
+      storedTheme === 'light' || storedTheme === 'dark' ? storedTheme : 'dark';
     const l: LightAccent =
-      storedLight && VALID_LIGHT.includes(storedLight) ? storedLight : 'lavender';
+      storedLight && VALID_LIGHT.includes(storedLight) ? storedLight : 'lavender-rose';
     const d: DarkAccent =
       storedDark && VALID_DARK.includes(storedDark) ? storedDark : 'dark-classic';
 

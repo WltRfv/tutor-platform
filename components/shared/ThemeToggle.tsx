@@ -39,15 +39,12 @@ export function ThemeToggle({ direction = 'down' }: Props) {
   const isLight = theme === 'light';
   const isUp = direction === 'up';
 
-  const activeLabel = isLight
-    ? LIGHT_ACCENTS.find((a) => a.id === accentLight)?.label
-    : DARK_ACCENTS.find((a) => a.id === accentDark)?.label;
-
   return (
     <div className="flex items-center gap-1">
       <Button
         variant="ghost"
         size="icon"
+        className="theme-toggle-btn"
         onClick={toggleTheme}
         title={theme === 'dark' ? 'Светлая тема' : 'Тёмная тема'}
       >
@@ -58,6 +55,7 @@ export function ThemeToggle({ direction = 'down' }: Props) {
         <Button
           variant="ghost"
           size="icon"
+          className="theme-toggle-btn"
           onClick={() => setOpen(!open)}
           title="Оттенок темы"
         >
@@ -70,8 +68,8 @@ export function ThemeToggle({ direction = 'down' }: Props) {
               'absolute right-0 p-3 rounded-xl shadow-2xl z-50 border',
               isUp ? 'bottom-full mb-2' : 'top-full mt-2',
               isLight
-                ? 'bg-white border-black/10 w-60'
-                : 'bg-slate-800 border-white/10 w-52'
+                ? 'bg-white border-black/10 w-64'
+                : 'bg-slate-800 border-white/10 w-60'
             )}
           >
             <div
@@ -84,27 +82,37 @@ export function ThemeToggle({ direction = 'down' }: Props) {
             </div>
 
             {isLight ? (
-              <div className="space-y-2">
-                {(['lavender', 'warm', 'mint'] as const).map((family) => (
-                  <div key={family} className="flex gap-2">
-                    {LIGHT_ACCENTS.filter((a) => a.family === family).map((a) => (
-                      <button
-                        key={a.id}
-                        onClick={() => {
-                          setAccentLight(a.id as LightAccent);
-                          setOpen(false);
-                        }}
-                        title={a.label}
-                        className={cn(
-                          'flex-1 h-9 rounded-lg border-2 transition',
-                          accentLight === a.id
-                            ? 'border-slate-800 scale-105 shadow-md'
-                            : 'border-black/5 hover:scale-105'
-                        )}
-                        style={{ background: a.color }}
-                      />
-                    ))}
-                  </div>
+              <div className="space-y-1.5">
+                {LIGHT_ACCENTS.map((a) => (
+                  <button
+                    key={a.id}
+                    onClick={() => {
+                      setAccentLight(a.id as LightAccent);
+                      setOpen(false);
+                    }}
+                    className={cn(
+                      'w-full flex items-center gap-3 p-2 rounded-lg border transition text-left',
+                      accentLight === a.id
+                        ? 'border-slate-800 bg-slate-100'
+                        : 'border-black/5 hover:bg-slate-50'
+                    )}
+                  >
+                    <span
+                      className="w-6 h-6 rounded-full flex-shrink-0"
+                      style={{ background: a.color }}
+                    />
+                    <span className="flex-1 min-w-0">
+                      <span className="block text-xs font-medium text-slate-800">
+                        {a.label}
+                      </span>
+                      <span className="block text-[10px] text-slate-500 truncate">
+                        {a.hint}
+                      </span>
+                    </span>
+                    {accentLight === a.id && (
+                      <span className="text-slate-800 text-xs">✓</span>
+                    )}
+                  </button>
                 ))}
               </div>
             ) : (
@@ -128,15 +136,6 @@ export function ThemeToggle({ direction = 'down' }: Props) {
                 ))}
               </div>
             )}
-
-            <div
-              className={cn(
-                'mt-2 text-[10px] text-center',
-                isLight ? 'text-slate-400' : 'text-slate-400'
-              )}
-            >
-              {activeLabel}
-            </div>
           </div>
         )}
       </div>
