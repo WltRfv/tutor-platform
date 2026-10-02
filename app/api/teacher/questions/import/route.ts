@@ -44,159 +44,151 @@ const SUBJECT_MAP: Record<string, string> = {
   'огэ': 'OGE_9',
 };
 
-function parseDoc(text: string): ParsedQuestion[] {
-  const blocks = text
-    .split(/━+\s*ВОПРОС\s*━+/i)
-    .map((b) => b.trim())
-    .filter((b) => b.length > 0);
+/**
+ * Разбивает входной текст на блоки-вопросы.
+ * Пробует по очереди:
+ * 1. ━━━ ВОПРОС ━━━
+ * 2. "Вопрос N:", "Задача N.", "№ N"
+ * 3. "N)" или "N." в начале строки (минимум 2 блока)
+ * 4. Весь текст как один вопрос
+ */
+function splitQuestions(text: string): string[] {
+  const explicit = text.split(/━+\s*ВОПРОС\s*━+/i);
+  if (explicit.length > 1) return explicit.map((s) => s.trim()).filter(Boolean);
 
-  const questions: ParsedQuestion[] = [];
+  const labeled = text.split(/\n(?=\s*(?:Вопрос|Задача|№|Task)\s*\d+[\s:.)]*)/i);
+  if (labeled.length > 1) return labeled.map((s) => s.trim()).filter(Boolean);
 
-  for (const block of blocks) {
-    const lines = block.split('\n').map((l) => l.trim());
+  const numbered = text.split(/\n(?=\s*\d{1,3}[).]\s)/);
+  if (numbered.length >= 2) return numbered.map((s) => s.trim()).filter(Boolean);
 
-    const q: Partial<ParsedQuestion> = {
-      type: 'SINGLE_CHOICE',
-      difficulty: 2,
-      points: 1,
-      tolerance: 0.01,
-      matchMode: 'CONTAINS',
-    };
+  return [text.trim()];
+}
 
-    let currentField: string | null = null;
-    let textLines: string[] = [];
-    let explanationLines: string[] = [];
-    let options: string[] = [];
-    let correctLetters: string[] = [];
+/** Убирает служебный префикс "Вопрос N:", "Задача N.", "N)" из блока */
+function stripPrefix(block: string): string {
+  return block
+    .replace(/^\s*(?:Вопрос|Задача|№|Task)\s*\d+[\s:.)]*/i, '')
+    .replace(/^\s*\d{1,3}[).]\s+/, '')
+    .trim();
+}
 
-    for (const line of lines) {
-      if (!line) continue;
+function parseBlock(block: string): ParsedQuestion | null {
+  const lines = block.split('\n').map((l) => l.trim());
+  const q: Partial<ParsedQuestion> = {
+    type: 'SINGLE_CHOICE',
+    difficulty: 2,
+    points: 1,
+    tolerance: 0.01,
+    matchMode: 'CONTAINS',
+  };
 
-      if (line.startsWith('Текст:')) {
-        if (currentField === 'explanation') {
-          q.explanation = explanationLines.join(' ').trim();
-          explanationLines = [];
-        }
-        currentField = 'text';
-        textLines = [line.replace(/^Текст:\s*/, '')];
-        continue;
-      }
-      if (line.startsWith('Пояснение:')) {
-        if (currentField === 'text') {
-          q.text = textLines.join('\n').trim();
-          textLines = [];
-        }
-        currentField = 'explanation';
-        explanationLines = [line.replace(/^Пояснение:\s*/, '')];
-        continue;
-      }
+  const plainLines: string[] = [];
+  const options: string[] = [];
+  let correctLetters: string[] = [];
+  let explanationLines: string[] = [];
+  let inExplanation = false;
 
-      if (currentField === 'text' && !line.match(/^[А-Яа-яЁё\s]+:/)) {
-        textLines.push(line);
-        continue;
-      }
-      if (currentField === 'explanation' && !line.match(/^[А-Яа-яЁё\s]+:/)) {
-        explanationLines.push(line);
-        continue;
-      }
-      currentField = null;
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) continue;
 
-      if (line.startsWith('Класс:')) {
-        q.class = line.replace(/^Класс:\s*/, '');
-      } else if (line.startsWith('Предмет:')) {
-        q.subject = line.replace(/^Предмет:\s*/, '').trim();
-      } else if (line.startsWith('Тема:')) {
-        q.topic = line.replace(/^Тема:\s*/, '').trim();
-      } else if (line.startsWith('Подтема:')) {
-        q.subtopic = line.replace(/^Подтема:\s*/, '').trim();
-      } else if (line.startsWith('Сложность:')) {
-        const val = parseInt(line.replace(/^Сложность:\s*/, ''));
-        if (val >= 1 && val <= 3) q.difficulty = val;
-      } else if (line.startsWith('Тип:')) {
-        const raw = line
-          .replace(/^Тип:\s*/, '')
-          .trim()
-          .toUpperCase();
-        if (
-          [
-            'SINGLE_CHOICE',
-            'MULTI_CHOICE',
-            'TEXT',
-            'NUMBER',
-            'TRUE_FALSE',
-          ].includes(raw)
-        ) {
-          q.type = raw;
-        }
-      } else if (line.startsWith('Баллов:')) {
-        q.points = parseInt(line.replace(/^Баллов:\s*/, '')) || 1;
-      } else if (line.match(/^[A-ЯA-Z]\)/)) {
-        const optText = line.replace(/^[A-ЯA-Z]\)\s*/, '');
-        options.push(optText);
-      } else if (line.startsWith('Правильный:')) {
-        const val = line.replace(/^Правильный:\s*/, '').trim();
-        correctLetters = val.split(/[,\s]+/).filter(Boolean);
-      } else if (line.startsWith('Правильные:')) {
-        const val = line.replace(/^Правильные:\s*/, '').trim();
-        correctLetters = val.split(/[,\s]+/).filter(Boolean);
-      } else if (line.startsWith('Правильный ответ:')) {
-        const val = line.replace(/^Правильный ответ:\s*/, '').trim();
-        if (val.toUpperCase() === 'ПРАВДА' || val.toUpperCase() === 'TRUE') {
-          q.correctBool = true;
-        } else if (
-          val.toUpperCase() === 'ЛОЖЬ' ||
-          val.toUpperCase() === 'FALSE'
-        ) {
-          q.correctBool = false;
-        } else {
-          q.correctText = val;
-        }
-      } else if (line.startsWith('Правильное число:')) {
-        const val = parseFloat(
-          line.replace(/^Правильное число:\s*/, '').replace(',', '.')
-        );
-        if (!isNaN(val)) q.correctNumber = val;
-      } else if (line.startsWith('Погрешность:')) {
-        const val = parseFloat(
-          line.replace(/^Погрешность:\s*/, '').replace(',', '.')
-        );
-        if (!isNaN(val)) q.tolerance = val;
-      } else if (line.startsWith('Режим проверки:')) {
-        const val = line
-          .replace(/^Режим проверки:\s*/, '')
-          .trim()
-          .toUpperCase();
-        if (val === 'EXACT' || val === 'CONTAINS') {
-          q.matchMode = val as 'CONTAINS' | 'EXACT';
-        }
-      } else if (line.startsWith('Картинка:')) {
-        const val = line.replace(/^Картинка:\s*/, '').trim();
-        if (val.startsWith('http')) q.imageUrl = val;
-      }
+    if (line.startsWith('Пояснение:')) {
+      inExplanation = true;
+      explanationLines.push(line.replace(/^Пояснение:\s*/, ''));
+      continue;
     }
-
-    if (currentField === 'text') q.text = textLines.join('\n').trim();
-    if (currentField === 'explanation')
-      q.explanation = explanationLines.join(' ').trim();
-
-    if (!q.text) continue;
-
-    if (q.type === 'SINGLE_CHOICE' && options.length > 0) {
-      q.options = options;
-      const letter = correctLetters[0]?.toUpperCase();
-      q.correct = letter ? letter.charCodeAt(0) - 65 : 0;
+    if (inExplanation && !/^[А-Яа-яA-Za-zЁё\s]+:/.test(line)) {
+      explanationLines.push(line);
+      continue;
     }
-    if (q.type === 'MULTI_CHOICE' && options.length > 0) {
-      q.options = options;
-      q.correctMulti = correctLetters.map(
-        (l) => l.toUpperCase().charCodeAt(0) - 65
-      );
-    }
+    inExplanation = false;
 
-    questions.push(q as ParsedQuestion);
+    if (line.startsWith('Класс:')) q.class = line.replace(/^Класс:\s*/, '');
+    else if (line.startsWith('Предмет:')) q.subject = line.replace(/^Предмет:\s*/, '').trim();
+    else if (line.startsWith('Тема:')) q.topic = line.replace(/^Тема:\s*/, '').trim();
+    else if (line.startsWith('Подтема:')) q.subtopic = line.replace(/^Подтема:\s*/, '').trim();
+    else if (line.startsWith('Сложность:')) {
+      const val = parseInt(line.replace(/^Сложность:\s*/, ''));
+      if (val >= 1 && val <= 3) q.difficulty = val;
+    } else if (line.startsWith('Тип:')) {
+      const raw = line.replace(/^Тип:\s*/, '').trim().toUpperCase();
+      if (['SINGLE_CHOICE', 'MULTI_CHOICE', 'TEXT', 'NUMBER', 'TRUE_FALSE'].includes(raw)) {
+        q.type = raw;
+      }
+    } else if (line.startsWith('Баллов:')) {
+      q.points = parseInt(line.replace(/^Баллов:\s*/, '')) || 1;
+    } else if (line.startsWith('Текст:')) {
+      plainLines.push(line.replace(/^Текст:\s*/, ''));
+    } else if (/^[A-ЯA-Z]\)/.test(line)) {
+      options.push(line.replace(/^[A-ЯA-Z]\)\s*/, ''));
+    } else if (line.startsWith('Правильный:') || line.startsWith('Правильные:')) {
+      correctLetters = line.replace(/^Правильн[ые]{0,2}:\s*/, '').trim().split(/[,\s]+/).filter(Boolean);
+    } else if (line.startsWith('Правильный ответ:')) {
+      const val = line.replace(/^Правильный ответ:\s*/, '').trim();
+      const up = val.toUpperCase();
+      if (up === 'ПРАВДА' || up === 'TRUE') q.correctBool = true;
+      else if (up === 'ЛОЖЬ' || up === 'FALSE') q.correctBool = false;
+      else q.correctText = val;
+    } else if (line.startsWith('Правильное число:')) {
+      const val = parseFloat(line.replace(/^Правильное число:\s*/, '').replace(',', '.'));
+      if (!isNaN(val)) q.correctNumber = val;
+    } else if (line.startsWith('Погрешность:')) {
+      const val = parseFloat(line.replace(/^Погрешность:\s*/, '').replace(',', '.'));
+      if (!isNaN(val)) q.tolerance = val;
+    } else if (line.startsWith('Режим проверки:')) {
+      const val = line.replace(/^Режим проверки:\s*/, '').trim().toUpperCase();
+      if (val === 'EXACT' || val === 'CONTAINS') q.matchMode = val as any;
+    } else if (line.startsWith('Картинка:')) {
+      const val = line.replace(/^Картинка:\s*/, '').trim();
+      if (val.startsWith('http')) q.imageUrl = val;
+    } else {
+      plainLines.push(line);
+    }
   }
 
-  return questions;
+  if (explanationLines.length > 0) {
+    q.explanation = explanationLines.join(' ').trim();
+  }
+
+  // Если явного "Текст:" не было — весь plain-текст это вопрос
+  const questionText = plainLines.join('\n').trim();
+  if (!questionText) return null;
+
+  // Автодетект типа, если не задан явно
+  if (!q.type || q.type === 'SINGLE_CHOICE') {
+    if (options.length > 0 && correctLetters.length > 1) q.type = 'MULTI_CHOICE';
+    else if (options.length > 0) q.type = 'SINGLE_CHOICE';
+    else if (q.correctBool !== undefined) q.type = 'TRUE_FALSE';
+    else if (q.correctNumber !== undefined) q.type = 'NUMBER';
+    else if (q.correctText) q.type = 'TEXT';
+  }
+
+  q.text = questionText;
+
+  if ((q.type === 'SINGLE_CHOICE' || q.type === 'MULTI_CHOICE') && options.length > 0) {
+    q.options = options;
+    if (q.type === 'SINGLE_CHOICE') {
+      const letter = correctLetters[0]?.toUpperCase();
+      q.correct = letter ? letter.charCodeAt(0) - 65 : 0;
+    } else {
+      q.correctMulti = correctLetters.map((l) => l.toUpperCase().charCodeAt(0) - 65);
+    }
+  }
+
+  return q as ParsedQuestion;
+}
+
+function parseDoc(text: string): ParsedQuestion[] {
+  const blocks = splitQuestions(text);
+  const result: ParsedQuestion[] = [];
+  for (const raw of blocks) {
+    const cleaned = stripPrefix(raw);
+    if (!cleaned) continue;
+    const q = parseBlock(cleaned);
+    if (q) result.push(q);
+  }
+  return result;
 }
 
 export async function POST(req: Request) {
@@ -215,20 +207,13 @@ export async function POST(req: Request) {
 
   if (parsed.length === 0) {
     return NextResponse.json(
-      {
-        error:
-          'Не найдено ни одного вопроса. Проверь разделитель «━━━ ВОПРОС ━━━»',
-      },
+      { error: 'Не найдено ни одного вопроса. Проверь формат текста.' },
       { status: 400 }
     );
   }
 
   if (dryRun) {
-    return NextResponse.json({
-      ok: true,
-      questions: parsed,
-      total: parsed.length,
-    });
+    return NextResponse.json({ ok: true, questions: parsed, total: parsed.length });
   }
 
   const subjects = await prisma.subjects.findMany({
@@ -242,67 +227,26 @@ export async function POST(req: Request) {
 
   for (let i = 0; i < parsed.length; i++) {
     const q = parsed[i];
-
     try {
       let subjectId: string | null = null;
 
       if (q.subject) {
         const key = q.subject.toLowerCase().trim();
         const code = SUBJECT_MAP[key];
-        if (code && subjectByCode.has(code)) {
-          subjectId = subjectByCode.get(code)!.id;
-        }
+        if (code && subjectByCode.has(code)) subjectId = subjectByCode.get(code)!.id;
       }
-      if (!subjectId && q.class === '5')
-        subjectId = subjectByCode.get('MATH_5')?.id || null;
-      if (!subjectId && q.class === '6')
-        subjectId = subjectByCode.get('MATH_6')?.id || null;
+      if (!subjectId && q.class === '5') subjectId = subjectByCode.get('MATH_5')?.id || null;
+      if (!subjectId && q.class === '6') subjectId = subjectByCode.get('MATH_6')?.id || null;
 
       if (!subjectId) {
-        results.push({
-          ok: false,
-          index: i,
-          error: `Не найден предмет: ${q.subject || '—'}`,
-        });
+        results.push({ ok: false, index: i, error: `Не найден предмет: ${q.subject || '-'}` });
         skipped++;
         continue;
       }
 
-      const existing = await prisma.question.findFirst({
-        where: { subjectId, text: q.text },
-      });
+      const existing = await prisma.question.findFirst({ where: { subjectId, text: q.text } });
       if (existing) {
         results.push({ ok: false, index: i, error: 'Дубликат по тексту' });
-        skipped++;
-        continue;
-      }
-
-      if (q.type === 'SINGLE_CHOICE') {
-        if (!q.options || q.options.length < 2 || q.correct === undefined) {
-          results.push({ ok: false, index: i, error: 'Не хватает вариантов' });
-          skipped++;
-          continue;
-        }
-      }
-      if (q.type === 'MULTI_CHOICE') {
-        if (!q.options || q.options.length < 2 || !q.correctMulti?.length) {
-          results.push({ ok: false, index: i, error: 'Не хватает вариантов' });
-          skipped++;
-          continue;
-        }
-      }
-      if (q.type === 'TEXT' && !q.correctText) {
-        results.push({ ok: false, index: i, error: 'Нет правильного текста' });
-        skipped++;
-        continue;
-      }
-      if (q.type === 'NUMBER' && q.correctNumber === undefined) {
-        results.push({ ok: false, index: i, error: 'Нет числа' });
-        skipped++;
-        continue;
-      }
-      if (q.type === 'TRUE_FALSE' && typeof q.correctBool !== 'boolean') {
-        results.push({ ok: false, index: i, error: 'Нет Правда/Ложь' });
         skipped++;
         continue;
       }
@@ -317,11 +261,9 @@ export async function POST(req: Request) {
           imageUrl: q.imageUrl || null,
           options: q.options || undefined,
           correct: q.type === 'SINGLE_CHOICE' ? q.correct ?? 0 : undefined,
-          correctMulti:
-            q.type === 'MULTI_CHOICE' ? q.correctMulti : undefined,
+          correctMulti: q.type === 'MULTI_CHOICE' ? q.correctMulti : undefined,
           correctText: q.type === 'TEXT' ? q.correctText : null,
-          matchMode:
-            q.type === 'TEXT' ? q.matchMode || 'CONTAINS' : null,
+          matchMode: q.type === 'TEXT' ? q.matchMode || 'CONTAINS' : null,
           correctNumber: q.type === 'NUMBER' ? q.correctNumber : null,
           tolerance: q.type === 'NUMBER' ? q.tolerance ?? 0.01 : null,
           correctBool: q.type === 'TRUE_FALSE' ? q.correctBool : null,
