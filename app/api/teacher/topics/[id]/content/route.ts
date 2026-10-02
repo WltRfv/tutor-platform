@@ -27,7 +27,7 @@ export async function GET(
     return NextResponse.json({ error: 'Тема не найдена' }, { status: 404 });
   }
 
-  const [notes, tests, homeworks, unlock] = await Promise.all([
+  const [notes, tests, homeworks, presentations, unlock] = await Promise.all([
     prisma.note.findMany({
       where: { topicId: id, published: true },
       select: { id: true, title: true },
@@ -40,6 +40,11 @@ export async function GET(
     }),
     prisma.homework.findMany({
       where: { topicId: id },
+      select: { id: true, title: true },
+      orderBy: { createdAt: 'desc' },
+    }),
+    prisma.presentation.findMany({
+      where: { topicId: id, published: true },
       select: { id: true, title: true },
       orderBy: { createdAt: 'desc' },
     }),
@@ -60,5 +65,6 @@ export async function GET(
     notes,
     tests,
     homeworks,
+    presentations,
   });
 }

@@ -69,6 +69,10 @@ export default async function StudentTopicsPage({
         },
         select: { id: true, title: true },
       },
+      presentations: {
+        where: { published: true },
+        select: { id: true, title: true },
+      },
     },
   });
 
@@ -78,7 +82,7 @@ export default async function StudentTopicsPage({
     const raw = (unlock?.contentIds as unknown) as string[] | null | undefined;
     const selectedContent = Array.isArray(raw) ? new Set(raw) : null;
 
-    // Фильтрация: если selectedContent === null — показываем всё (старая логика или null)
+    // Фильтрация: selectedContent === null означает "всё доступно"
     const notes = selectedContent
       ? t.notes.filter((n) => selectedContent.has(`note:${n.id}`))
       : t.notes;
@@ -88,6 +92,9 @@ export default async function StudentTopicsPage({
     const homeworks = selectedContent
       ? t.homeworks.filter((h) => selectedContent.has(`homework:${h.id}`))
       : t.homeworks;
+    const presentations = selectedContent
+      ? t.presentations.filter((p) => selectedContent.has(`presentation:${p.id}`))
+      : t.presentations;
 
     return {
       id: t.id,
@@ -100,6 +107,7 @@ export default async function StudentTopicsPage({
       notes,
       tests,
       homeworks,
+      presentations,
     };
   });
 

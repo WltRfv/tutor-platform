@@ -9,6 +9,7 @@ import {
   BookOpen,
   FileText,
   ClipboardList,
+  Presentation as PresentationIcon,
   ArrowRight,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -24,6 +25,7 @@ type Topic = {
   notes: { id: string; title: string }[];
   tests: { id: string; title: string }[];
   homeworks: { id: string; title: string }[];
+  presentations: { id: string; title: string }[];
 };
 
 export function StudentTopicsView({ topics }: { topics: Topic[] }) {
@@ -64,7 +66,10 @@ export function StudentTopicsView({ topics }: { topics: Topic[] }) {
               {group.topics.map((topic) => {
                 const isOpen = openId === topic.id;
                 const totalItems =
-                  topic.notes.length + topic.tests.length + topic.homeworks.length;
+                  topic.notes.length +
+                  topic.tests.length +
+                  topic.homeworks.length +
+                  (topic.presentations?.length || 0);
 
                 return (
                   <motion.div
@@ -116,7 +121,7 @@ export function StudentTopicsView({ topics }: { topics: Topic[] }) {
                           </p>
                         )}
                         {topic.isUnlocked && totalItems > 0 && (
-                          <div className="flex items-center gap-3 text-xs text-slate-500 mt-1">
+                          <div className="flex items-center gap-3 text-xs text-slate-500 mt-1 flex-wrap">
                             {topic.notes.length > 0 && (
                               <span>{topic.notes.length} конспектов</span>
                             )}
@@ -125,6 +130,9 @@ export function StudentTopicsView({ topics }: { topics: Topic[] }) {
                             )}
                             {topic.homeworks.length > 0 && (
                               <span>{topic.homeworks.length} ДЗ</span>
+                            )}
+                            {topic.presentations?.length > 0 && (
+                              <span>{topic.presentations.length} презентаций</span>
                             )}
                           </div>
                         )}
@@ -153,7 +161,7 @@ export function StudentTopicsView({ topics }: { topics: Topic[] }) {
                             {topic.notes.map((n) => (
                               <Link
                                 key={n.id}
-                                href="/student/notes"
+                                href={`/student/notes/${n.id}`}
                                 className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-emerald-500/30 transition"
                               >
                                 <BookOpen className="h-4 w-4 text-emerald-400" />
@@ -185,6 +193,19 @@ export function StudentTopicsView({ topics }: { topics: Topic[] }) {
                                 <ClipboardList className="h-4 w-4 text-amber-400" />
                                 <span className="text-sm text-slate-200 flex-1 truncate">
                                   {h.title}
+                                </span>
+                                <ArrowRight className="h-3 w-3 text-slate-500" />
+                              </Link>
+                            ))}
+                            {topic.presentations?.map((p) => (
+                              <Link
+                                key={p.id}
+                                href={`/student/presentations/${p.id}`}
+                                className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-pink-500/30 transition"
+                              >
+                                <PresentationIcon className="h-4 w-4 text-pink-400" />
+                                <span className="text-sm text-slate-200 flex-1 truncate">
+                                  {p.title}
                                 </span>
                                 <ArrowRight className="h-3 w-3 text-slate-500" />
                               </Link>

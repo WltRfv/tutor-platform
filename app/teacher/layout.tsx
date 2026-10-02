@@ -25,6 +25,7 @@ import {
   X,
   BookMarked,
   RefreshCw,
+  Presentation,
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/shared/ThemeToggle';
 import { NotificationBell } from '@/components/shared/NotificationBell';
@@ -42,6 +43,7 @@ const teacherMenu = [
   { href: '/teacher/homework', label: 'Домашние задания', icon: ClipboardList },
   { href: '/teacher/content', label: 'Конспекты и тесты', icon: BookOpen },
   { href: '/teacher/lesson-plans', label: 'Методички', icon: BookMarked },
+  { href: '/teacher/presentations', label: 'Презентации', icon: Presentation },
   { href: '/teacher/calendar', label: 'Расписание', icon: Calendar },
   { href: '/teacher/retakes', label: 'Пересдачи', icon: RefreshCw },
 ];

@@ -7,7 +7,7 @@ function normalizeContentIds(input: unknown): string[] | null {
   const cleaned = input
     .map((v) => (typeof v === 'string' ? v.trim() : ''))
     .filter((v) => v.length > 0)
-    .filter((v) => /^(note|test|homework):/.test(v));
+    .filter((v) => /^(note|test|homework|presentation):/.test(v));
   return Array.from(new Set(cleaned));
 }
 

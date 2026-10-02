@@ -8,6 +8,7 @@ import {
   BookOpen,
   FileText,
   ClipboardList,
+  Presentation as PresentationIcon,
   Lock,
   Unlock,
   CheckSquare,
@@ -45,9 +46,9 @@ export function TopicContentPicker({
   const [notes, setNotes] = useState<Item[]>([]);
   const [tests, setTests] = useState<Item[]>([]);
   const [homeworks, setHomeworks] = useState<Item[]>([]);
+  const [presentations, setPresentations] = useState<Item[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [wasUnlocked, setWasUnlocked] = useState(false);
-  const [wasAll, setWasAll] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -58,19 +59,21 @@ export function TopicContentPicker({
         setNotes(data.notes || []);
         setTests(data.tests || []);
         setHomeworks(data.homeworks || []);
+        setPresentations(data.presentations || []);
         setWasUnlocked(!!data.isUnlocked);
 
         const selectedFromServer = data.selectedContentIds as string[] | null;
         if (selectedFromServer === null) {
           // всё доступно
-          setWasAll(true);
           const all = new Set<string>();
           (data.notes || []).forEach((n: Item) => all.add(`note:${n.id}`));
           (data.tests || []).forEach((t: Item) => all.add(`test:${t.id}`));
           (data.homeworks || []).forEach((h: Item) => all.add(`homework:${h.id}`));
+          (data.presentations || []).forEach((p: Item) =>
+            all.add(`presentation:${p.id}`)
+          );
           setSelected(all);
         } else {
-          setWasAll(false);
           setSelected(new Set(selectedFromServer));
         }
       })
@@ -91,13 +94,13 @@ export function TopicContentPicker({
     notes.forEach((n) => all.add(`note:${n.id}`));
     tests.forEach((t) => all.add(`test:${t.id}`));
     homeworks.forEach((h) => all.add(`homework:${h.id}`));
+    presentations.forEach((p) => all.add(`presentation:${p.id}`));
     setSelected(all);
   };
 
   const clearAll = () => setSelected(new Set());
 
   const save = async () => {
-    // Если тема уже была открыта как «всё доступно» и учитель ничего не менял — оставляем null
     const contentIds = Array.from(selected);
 
     setSaving(true);
@@ -128,7 +131,8 @@ export function TopicContentPicker({
     }
   };
 
-  const totalAvailable = notes.length + tests.length + homeworks.length;
+  const totalAvailable =
+    notes.length + tests.length + homeworks.length + presentations.length;
 
   return (
     <AnimatePresence>
@@ -192,15 +196,14 @@ export function TopicContentPicker({
                 <AlertCircle className="h-10 w-10 mx-auto mb-3 opacity-40" />
                 <p className="text-sm">В этой теме пока нет материалов</p>
                 <p className="text-xs mt-1">
-                  Добавь конспекты, тесты или ДЗ — и привяжи их к этой теме
+                  Добавь конспекты, тесты, ДЗ или презентации и привяжи их к теме
                 </p>
               </div>
             ) : (
               <>
                 <div className="flex items-center justify-between mb-4">
                   <p className="text-xs text-slate-400">
-                    Отметь, что именно показывать ученику. Неотмеченное будет
-                    скрыто, пока тему не переоткроют.
+                    Отметь, что показывать ученику. Неотмеченное будет скрыто.
                   </p>
                   <div className="flex gap-2 flex-shrink-0">
                     <button
@@ -220,7 +223,6 @@ export function TopicContentPicker({
                 </div>
 
                 <div className="space-y-5">
-                  {/* Конспекты */}
                   {notes.length > 0 && (
                     <Section
                       icon={<BookOpen className="h-4 w-4 text-emerald-400" />}
@@ -237,7 +239,6 @@ export function TopicContentPicker({
                     </Section>
                   )}
 
-                  {/* Тесты */}
                   {tests.length > 0 && (
                     <Section
                       icon={<FileText className="h-4 w-4 text-blue-400" />}
@@ -254,7 +255,6 @@ export function TopicContentPicker({
                     </Section>
                   )}
 
-                  {/* ДЗ */}
                   {homeworks.length > 0 && (
                     <Section
                       icon={<ClipboardList className="h-4 w-4 text-amber-400" />}
@@ -270,6 +270,22 @@ export function TopicContentPicker({
                       ))}
                     </Section>
                   )}
+
+                  {presentations.length > 0 && (
+                    <Section
+                      icon={<PresentationIcon className="h-4 w-4 text-pink-400" />}
+                      title={`Презентации (${presentations.length})`}
+                    >
+                      {presentations.map((p) => (
+                        <Row
+                          key={p.id}
+                          label={p.title}
+                          checked={selected.has(`presentation:${p.id}`)}
+                          onToggle={() => toggle(`presentation:${p.id}`)}
+                        />
+                      ))}
+                    </Section>
+                  )}
                 </div>
               </>
             )}
@@ -278,7 +294,7 @@ export function TopicContentPicker({
           {/* Футер */}
           <div className="p-6 border-t border-white/5 flex items-center justify-between gap-3 flex-wrap">
             <div className="text-xs text-slate-400">
-              Отмечено материалов:{' '}
+              Отмечено:{' '}
               <span className="text-white font-semibold">{selected.size}</span>
               {totalAvailable > 0 ? ` из ${totalAvailable}` : ''}
             </div>

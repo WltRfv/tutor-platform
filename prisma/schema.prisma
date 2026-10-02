@@ -63,6 +63,7 @@ model User {
   homeworkStarts    HomeworkStart[]
   selfWorkStatuses  SelfWorkStatus[]
   lessonPlans       LessonPlan[]         @relation("TeacherLessonPlans")
+  presentationsCreated Presentation[] @relation("TeacherPresentations")
 }
 
 // ============================================
@@ -89,6 +90,7 @@ model Subjects {
   questions   Question[]
   topics      Topic[]
   lessonPlans LessonPlan[]
+  presentations Presentation[]
 
   @@map("Subjects")
 }
@@ -127,6 +129,7 @@ model Topic {
   homeworks   Homework[]
   unlocks     TopicUnlock[]
   lessonPlans LessonPlan[]
+  presentations Presentation[]
 
   @@index([subjectId, order])
 }
@@ -541,4 +544,39 @@ model SelfWorkStatus {
   @@unique([noteId, userId])
   @@index([userId])
   @@index([noteId])
+}
+model Presentation {
+  id        String   @id @default(cuid())
+  title     String
+  subjectId String
+  subject   Subjects @relation(fields: [subjectId], references: [id])
+  topicId   String?
+  topic     Topic?   @relation(fields: [topicId], references: [id])
+  topicName String?
+  imageUrl  String?
+  published Boolean  @default(false)
+  authorId  String
+  author    User     @relation("TeacherPresentations", fields: [authorId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  slides Slide[]
+
+  @@index([subjectId])
+  @@index([topicId])
+  @@index([authorId])
+}
+
+model Slide {
+  id             String       @id @default(cuid())
+  presentationId String
+  presentation   Presentation @relation(fields: [presentationId], references: [id], onDelete: Cascade)
+  order          Int          @default(0)
+  title          String?
+  content        String
+  imageUrl       String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([presentationId])
 }
