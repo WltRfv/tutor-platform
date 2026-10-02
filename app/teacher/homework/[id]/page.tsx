@@ -9,6 +9,7 @@ import {
   Globe,
   User as UserIcon,
   CheckCircle2,
+  Pencil,
 } from 'lucide-react';
 import { SubmissionsList } from '@/components/teacher/SubmissionsList';
 
@@ -83,6 +84,13 @@ export default async function HomeworkViewPage({
               )}
             </div>
           </div>
+          <Link
+            href={`/teacher/homework/${homework.id}/edit`}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-white/10 text-slate-300 hover:text-white hover:bg-white/5 transition text-sm flex-shrink-0"
+          >
+            <Pencil className="h-4 w-4" />
+            Редактировать
+          </Link>
         </div>
 
         {homework.description && (

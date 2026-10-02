@@ -1,44 +1,22 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Loader2,
-  Save,
-  ArrowLeft,
-  Table2,
-  Sigma,
-  SquareFunction,
-  Upload,
-  BookMarked,
-} from 'lucide-react';
+import { Loader2, Save, ArrowLeft, BookMarked } from 'lucide-react';
 import Link from 'next/link';
+import { MarkdownEditor } from '@/components/shared/MarkdownEditor';
 
-type Subject = {
-  id: string;
-  code: string;
-  name: string;
-  category: string;
-  grade: number | null;
-};
-
-type Topic = {
-  id: string;
-  title: string;
-  subjectId: string;
-};
+type Subject = { id: string; code: string; name: string; category: string; grade: number | null };
+type Topic = { id: string; title: string; subjectId: string };
 
 export default function NewLessonPlanPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [topics, setTopics] = useState<Topic[]>([]);
-  const [uploadingInline, setUploadingInline] = useState(false);
-  const contentRef = useRef<HTMLTextAreaElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
     title: '',
@@ -66,48 +44,6 @@ export default function NewLessonPlanPage() {
   }, []);
 
   const availableTopics = topics.filter((t) => t.subjectId === form.subjectId);
-
-  const insertAtCursor = (text: string) => {
-    const el = contentRef.current;
-    if (!el) {
-      setForm((f) => ({ ...f, content: f.content + text }));
-      return;
-    }
-    const start = el.selectionStart;
-    const end = el.selectionEnd;
-    const next = form.content.slice(0, start) + text + form.content.slice(end);
-    setForm((f) => ({ ...f, content: next }));
-    requestAnimationFrame(() => {
-      el.focus();
-      el.selectionStart = el.selectionEnd = start + text.length;
-    });
-  };
-
-  const handleInlineUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) return toast.error('Файл больше 5 МБ');
-    if (!file.type.startsWith('image/')) return toast.error('Только изображения');
-
-    setUploadingInline(true);
-    try {
-      const fd = new FormData();
-      fd.append('file', file);
-      const res = await fetch('/api/teacher/upload-image', {
-        method: 'POST',
-        body: fd,
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      insertAtCursor(`\n![${file.name}](${data.url})\n`);
-      toast.success('Картинка вставлена');
-    } catch (e: any) {
-      toast.error(e.message);
-    } finally {
-      setUploadingInline(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
-  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -142,7 +78,7 @@ export default function NewLessonPlanPage() {
   };
 
   return (
-    <div className="p-8 max-w-4xl">
+    <div className="p-8 max-w-5xl">
       <Link
         href="/teacher/lesson-plans"
         className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white mb-6"
@@ -179,17 +115,13 @@ export default function NewLessonPlanPage() {
             <Label className="text-slate-300">Предмет</Label>
             <select
               value={form.subjectId}
-              onChange={(e) =>
-                setForm({ ...form, subjectId: e.target.value, topicId: '' })
-              }
+              onChange={(e) => setForm({ ...form, subjectId: e.target.value, topicId: '' })}
               className="mt-2 w-full bg-slate-900 border border-white/10 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:border-purple-500/50"
               required
             >
               <option value="">— Выбери предмет —</option>
               {subjects.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
+                <option key={s.id} value={s.id}>{s.name}</option>
               ))}
             </select>
           </div>
@@ -200,9 +132,7 @@ export default function NewLessonPlanPage() {
               min={15}
               max={180}
               value={form.duration}
-              onChange={(e) =>
-                setForm({ ...form, duration: Number(e.target.value) })
-              }
+              onChange={(e) => setForm({ ...form, duration: Number(e.target.value) })}
               className="mt-2 bg-white/5 border-white/10 text-white"
             />
           </div>
@@ -217,78 +147,18 @@ export default function NewLessonPlanPage() {
           >
             <option value="">— Без темы —</option>
             {availableTopics.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.title}
-              </option>
+              <option key={t.id} value={t.id}>{t.title}</option>
             ))}
           </select>
         </div>
 
         <div>
-          <Label className="text-slate-300">Содержание методички</Label>
-
-          <div className="mt-2 flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploadingInline}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/30 text-xs text-slate-300 hover:text-white transition disabled:opacity-50"
-            >
-              {uploadingInline ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <Upload className="h-3.5 w-3.5" />
-              )}
-              Картинка
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleInlineUpload}
-              className="hidden"
-            />
-
-            <button
-              type="button"
-              onClick={() =>
-                insertAtCursor(
-                  '\n| Этап | Время | Что делает учитель |\n|---|---|---|\n|  |  |  |\n'
-                )
-              }
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/30 text-xs text-slate-300 hover:text-white transition"
-            >
-              <Table2 className="h-3.5 w-3.5" />
-              Таблица
-            </button>
-
-            <button
-              type="button"
-              onClick={() => insertAtCursor('$x^2$')}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/30 text-xs text-slate-300 hover:text-white transition"
-            >
-              <Sigma className="h-3.5 w-3.5" />
-              Формула
-            </button>
-
-            <button
-              type="button"
-              onClick={() => insertAtCursor('\n$$\n\n$$\n')}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/30 text-xs text-slate-300 hover:text-white transition"
-            >
-              <SquareFunction className="h-3.5 w-3.5" />
-              Блок формулы
-            </button>
-          </div>
-
-          <textarea
-            ref={contentRef}
+          <Label className="text-slate-300 mb-2 block">Содержание методички</Label>
+          <MarkdownEditor
             value={form.content}
-            onChange={(e) => setForm({ ...form, content: e.target.value })}
+            onChange={(v) => setForm({ ...form, content: v })}
             placeholder="План урока, этапы, вопросы, разбор ошибок, домашка..."
             rows={22}
-            className="mt-2 w-full bg-white/5 border border-white/10 text-white rounded-xl p-4 text-sm resize-y focus:outline-none focus:border-purple-500/50 leading-relaxed"
-            required
           />
         </div>
 
@@ -309,11 +179,7 @@ export default function NewLessonPlanPage() {
           disabled={loading}
           className="w-full h-12 gap-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white"
         >
-          {loading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Save className="h-4 w-4" />
-          )}
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
           {loading ? 'Сохранение...' : 'Сохранить методичку'}
         </Button>
       </form>
