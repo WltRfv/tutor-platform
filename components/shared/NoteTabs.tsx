@@ -1,23 +1,48 @@
 'use client';
 import { useState } from 'react';
 import { MathText } from './MathText';
-import { BookOpen, Wrench, ClipboardCheck } from 'lucide-react';
+import { SlideViewer } from './SlideViewer';
+import { BookOpen, Wrench, ClipboardCheck, Presentation as PresentationIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type Tab = 'theory' | 'practice' | 'selfwork';
+
+type Slide = {
+  id: string;
+  title: string;
+  content: string;
+  imageUrl: string;
+};
 
 type Props = {
   theory: string;
   practice: string | null;
   selfWork: string | null;
   selfWorkExtra?: React.ReactNode;
+  presentation?: {
+    title: string;
+    slides: Slide[];
+  };
 };
 
-export function NoteTabs({ theory, practice, selfWork, selfWorkExtra }: Props) {
+export function NoteTabs({
+  theory,
+  practice,
+  selfWork,
+  selfWorkExtra,
+  presentation,
+}: Props) {
   const [tab, setTab] = useState<Tab>('theory');
 
+  const hasPresentation = !!(presentation && presentation.slides.length > 0);
+
   const tabs: { id: Tab; label: string; icon: any; hasContent: boolean }[] = [
-    { id: 'theory', label: 'Теория', icon: BookOpen, hasContent: !!theory?.trim() },
+    {
+      id: 'theory',
+      label: hasPresentation ? 'Презентация' : 'Теория',
+      icon: hasPresentation ? PresentationIcon : BookOpen,
+      hasContent: hasPresentation || !!theory?.trim(),
+    },
     {
       id: 'practice',
       label: 'Практика на занятии',
@@ -63,13 +88,24 @@ export function NoteTabs({ theory, practice, selfWork, selfWorkExtra }: Props) {
 
       {/* Контент вкладки */}
       {tab === 'theory' && (
-        <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8">
-          {theory?.trim() ? (
-            <MathText className="text-slate-300 leading-relaxed">{theory}</MathText>
+        <>
+          {hasPresentation ? (
+            <SlideViewer
+              presentationTitle={presentation!.title}
+              slides={presentation!.slides}
+            />
           ) : (
-            <p className="text-slate-500 text-center py-8">Пока ничего нет</p>
+            <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8">
+              {theory?.trim() ? (
+                <MathText className="text-slate-300 leading-relaxed">
+                  {theory}
+                </MathText>
+              ) : (
+                <p className="text-slate-500 text-center py-8">Пока ничего нет</p>
+              )}
+            </div>
           )}
-        </div>
+        </>
       )}
 
       {tab === 'practice' && (

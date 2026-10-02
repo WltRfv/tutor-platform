@@ -25,21 +25,24 @@ export default async function NoteViewPage({
   const { id } = await params;
   const note = await prisma.note.findUnique({
     where: { id },
-    include: { subject: { select: { name: true } } },
+    include: {
+      subject: { select: { name: true } },
+      presentation: {
+        include: { slides: { orderBy: { order: 'asc' } } },
+      },
+    },
   });
 
   if (!note) notFound();
 
-  // Список учеников, у которых тема разблокирована и конспект им доступен
+  // Ученики, которым доступен этот конспект
   let eligible: { id: string; name: string; email: string }[] = [];
 
   if (note.topicId) {
     const unlocks = await prisma.topicUnlock.findMany({
       where: { topicId: note.topicId },
       include: {
-        user: {
-          select: { id: true, name: true, email: true, role: true },
-        },
+        user: { select: { id: true, name: true, email: true, role: true } },
       },
     });
 
@@ -54,7 +57,6 @@ export default async function NoteViewPage({
       .map((u) => u.user);
   }
 
-  // Статусы самостоятельных работ
   const statuses = await prisma.selfWorkStatus.findMany({
     where: { noteId: id },
   });
@@ -87,6 +89,19 @@ export default async function NoteViewPage({
         </p>
       </div>
     );
+
+  // Если у конспекта привязана презентация — готовим для NoteTabs
+  const presentation = note.presentation
+    ? {
+        title: note.presentation.title,
+        slides: note.presentation.slides.map((s) => ({
+          id: s.id,
+          title: s.title || '',
+          content: s.content,
+          imageUrl: s.imageUrl || '',
+        })),
+      }
+    : undefined;
 
   return (
     <div className="p-8 max-w-5xl">
@@ -159,10 +174,11 @@ export default async function NoteViewPage({
         practice={note.practiceContent}
         selfWork={note.selfWorkContent}
         selfWorkExtra={selfWorkPanel}
+        presentation={presentation}
       />
 
       <p className="text-xs text-slate-500 mt-6 text-center">
-        👁 Так этот конспект видят ученики. Практику и самостоятельную тоже.
+        👁 Так этот конспект видят ученики
       </p>
     </div>
   );

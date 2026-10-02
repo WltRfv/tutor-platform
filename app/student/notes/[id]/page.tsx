@@ -22,12 +22,16 @@ export default async function StudentNotePage({
 
   const note = await prisma.note.findUnique({
     where: { id },
-    include: { subject: { select: { name: true } } },
+    include: {
+      subject: { select: { name: true } },
+      presentation: {
+        include: { slides: { orderBy: { order: 'asc' } } },
+      },
+    },
   });
 
   if (!note || !note.published) notFound();
 
-  // Проверка доступа
   const userSub = await prisma.userSubject.findFirst({
     where: { userId, subjectId: note.subjectId },
   });
@@ -55,6 +59,18 @@ export default async function StudentNotePage({
         teacherComment={status?.teacherComment || null}
       />
     ) : null;
+
+  const presentation = note.presentation
+    ? {
+        title: note.presentation.title,
+        slides: note.presentation.slides.map((s) => ({
+          id: s.id,
+          title: s.title || '',
+          content: s.content,
+          imageUrl: s.imageUrl || '',
+        })),
+      }
+    : undefined;
 
   return (
     <div className="p-8 max-w-5xl">
@@ -100,6 +116,7 @@ export default async function StudentNotePage({
         practice={note.practiceContent}
         selfWork={note.selfWorkContent}
         selfWorkExtra={selfWorkPanel}
+        presentation={presentation}
       />
     </div>
   );

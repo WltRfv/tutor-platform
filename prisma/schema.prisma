@@ -43,27 +43,26 @@ model User {
   accentDark      String?
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
-  
 
-  activities        Activity[]
-  submissions       Submission[]
-  notes             Note[]               @relation("TeacherNotes")
-  codeRuns          CodeRun[]
-  lessons           Lesson[]             @relation("UserLessons")
-  taughtLessons     Lesson[]             @relation("TeacherLessons")
-  homeworkCreated   Homework[]           @relation("TeacherHomework")
-  homeworkTargeted  Homework[]           @relation("UserHomeworkTarget")
-  homeworkSubmitted HomeworkSubmission[]
-  userSubjects      UserSubject[]
-  testsCreated      Test[]               @relation("TeacherTests")
-  questions         Question[]
-  retakeRequests    RetakeRequest[]
-  topicUnlocks      TopicUnlock[]
-  notificationReads NotificationRead[]
-  homeworkStarts    HomeworkStart[]
-  selfWorkStatuses  SelfWorkStatus[]
-  lessonPlans       LessonPlan[]         @relation("TeacherLessonPlans")
-  presentationsCreated Presentation[] @relation("TeacherPresentations")
+  activities           Activity[]
+  submissions          Submission[]
+  notes                Note[]               @relation("TeacherNotes")
+  codeRuns             CodeRun[]
+  lessons              Lesson[]             @relation("UserLessons")
+  taughtLessons        Lesson[]             @relation("TeacherLessons")
+  homeworkCreated      Homework[]           @relation("TeacherHomework")
+  homeworkTargeted     Homework[]           @relation("UserHomeworkTarget")
+  homeworkSubmitted    HomeworkSubmission[]
+  userSubjects         UserSubject[]
+  testsCreated         Test[]               @relation("TeacherTests")
+  questions            Question[]
+  retakeRequests       RetakeRequest[]
+  topicUnlocks         TopicUnlock[]
+  notificationReads    NotificationRead[]
+  homeworkStarts       HomeworkStart[]
+  selfWorkStatuses     SelfWorkStatus[]
+  lessonPlans          LessonPlan[]         @relation("TeacherLessonPlans")
+  presentationsCreated Presentation[]       @relation("TeacherPresentations")
 }
 
 // ============================================
@@ -82,14 +81,14 @@ model Subjects {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  users       UserSubject[]
-  notes       Note[]
-  tests       Test[]
-  homeworks   Homework[]
-  lessons     Lesson[]
-  questions   Question[]
-  topics      Topic[]
-  lessonPlans LessonPlan[]
+  users         UserSubject[]
+  notes         Note[]
+  tests         Test[]
+  homeworks     Homework[]
+  lessons       Lesson[]
+  questions     Question[]
+  topics        Topic[]
+  lessonPlans   LessonPlan[]
   presentations Presentation[]
 
   @@map("Subjects")
@@ -124,11 +123,11 @@ model Topic {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  notes       Note[]
-  tests       Test[]
-  homeworks   Homework[]
-  unlocks     TopicUnlock[]
-  lessonPlans LessonPlan[]
+  notes         Note[]
+  tests         Test[]
+  homeworks     Homework[]
+  unlocks       TopicUnlock[]
+  lessonPlans   LessonPlan[]
   presentations Presentation[]
 
   @@index([subjectId, order])
@@ -169,6 +168,8 @@ model Note {
   createdAt       DateTime @default(now())
 
   selfWorkStatuses SelfWorkStatus[]
+  presentation     Presentation?    @relation(fields: [presentationId], references: [id])
+  presentationId   String?
 }
 
 model LessonPlan {
@@ -208,13 +209,13 @@ model Question {
   text     String
   imageUrl String?
 
-  options      Json?
-  correct      Int?
-  correctMulti Json?
-  correctText  String?
-  matchMode    String?
+  options       Json?
+  correct       Int?
+  correctMulti  Json?
+  correctText   String?
+  matchMode     String?
   correctNumber Float?
-  tolerance     Float?  @default(0.01)
+  tolerance     Float?   @default(0.01)
   correctBool   Boolean?
 
   explanation String?
@@ -385,10 +386,10 @@ model HomeworkSubmission {
 
   version Int @default(1)
 
-  boardData  Json?
-  previewUrl String?
-  files      Json?
-  textAnswer String?
+  boardData   Json?
+  previewUrl  String?
+  files       Json?
+  textAnswer  String?
   taskAnswers Json?
 
   autoCheckPassed  Boolean?
@@ -403,11 +404,11 @@ model HomeworkSubmission {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  aiReview       String?
-  aiReviewScore  Int?
-  aiReviewedAt   DateTime?
-  taskCodes      Json?
-  timeSpent      Int?
+  aiReview         String?
+  aiReviewScore    Int?
+  aiReviewedAt     DateTime?
+  taskCodes        Json?
+  timeSpent        Int?
   taskCodesMetrics Json?
 
   @@index([homeworkId, userId, version])
@@ -509,6 +510,7 @@ model HomeworkStart {
   @@unique([homeworkId, userId])
   @@index([userId])
 }
+
 model Attachment {
   id           String   @id @default(cuid())
   ownerId      String
@@ -528,6 +530,7 @@ model Attachment {
   @@index([homeworkId])
   @@index([lessonPlanId])
 }
+
 model SelfWorkStatus {
   id             String    @id @default(cuid())
   noteId         String
@@ -545,6 +548,7 @@ model SelfWorkStatus {
   @@index([userId])
   @@index([noteId])
 }
+
 model Presentation {
   id        String   @id @default(cuid())
   title     String
@@ -561,6 +565,7 @@ model Presentation {
   updatedAt DateTime @updatedAt
 
   slides Slide[]
+  notes  Note[]
 
   @@index([subjectId])
   @@index([topicId])

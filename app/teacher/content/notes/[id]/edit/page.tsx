@@ -5,13 +5,30 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, Save, ArrowLeft, Image as ImageIcon } from 'lucide-react';
+import {
+  Loader2,
+  Save,
+  ArrowLeft,
+  Image as ImageIcon,
+  FileText,
+  Presentation as PresentationIcon,
+  ExternalLink,
+} from 'lucide-react';
 import Link from 'next/link';
 import { ImageUploader } from '@/components/shared/ImageUploader';
 import { MarkdownEditor } from '@/components/shared/MarkdownEditor';
+import { cn } from '@/lib/utils';
 
 type Subject = { id: string; code: string; name: string; category: string; grade: number | null };
 type Topic = { id: string; title: string; subjectId: string };
+type Presentation = {
+  id: string;
+  title: string;
+  subjectId: string;
+  slidesCount: number;
+};
+
+type Mode = 'TEXT' | 'PRESENTATION';
 
 export default function EditNotePage() {
   const router = useRouter();
@@ -22,6 +39,8 @@ export default function EditNotePage() {
   const [fetching, setFetching] = useState(true);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [topics, setTopics] = useState<Topic[]>([]);
+  const [presentations, setPresentations] = useState<Presentation[]>([]);
+  const [mode, setMode] = useState<Mode>('TEXT');
 
   const [form, setForm] = useState({
     title: '',
@@ -32,18 +51,21 @@ export default function EditNotePage() {
     topicId: '',
     imageUrl: '',
     published: true,
+    presentationId: '',
   });
 
   useEffect(() => {
     Promise.all([
       fetch('/api/teacher/subjects').then((r) => r.json()),
       fetch('/api/teacher/topics').then((r) => r.json()),
+      fetch('/api/teacher/presentations').then((r) => r.json()),
       fetch(`/api/teacher/notes/${id}`).then((r) => r.json()),
     ])
-      .then(([subjectsData, topicsData, noteData]) => {
+      .then(([subjectsData, topicsData, presentationsData, noteData]) => {
         if (noteData.error) throw new Error(noteData.error);
         setSubjects(subjectsData);
         setTopics(topicsData);
+        setPresentations(presentationsData);
         setForm({
           title: noteData.title || '',
           content: noteData.content || '',
@@ -53,30 +75,39 @@ export default function EditNotePage() {
           topicId: noteData.topicId || '',
           imageUrl: noteData.imageUrl || '',
           published: !!noteData.published,
+          presentationId: noteData.presentationId || '',
         });
+        setMode(noteData.presentationId ? 'PRESENTATION' : 'TEXT');
       })
       .catch((e) => toast.error(e.message))
       .finally(() => setFetching(false));
   }, [id]);
 
   const availableTopics = topics.filter((t) => t.subjectId === form.subjectId);
+  const availablePresentations = presentations.filter(
+    (p) => p.subjectId === form.subjectId
+  );
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.title.trim() || !form.content.trim()) {
-      return toast.error('Заполни заголовок и основной текст');
-    }
+    if (!form.title.trim()) return toast.error('Введи заголовок');
     if (!form.subjectId) return toast.error('Выбери предмет');
+    if (mode === 'TEXT' && !form.content.trim()) {
+      return toast.error('Заполни содержание');
+    }
+    if (mode === 'PRESENTATION' && !form.presentationId) {
+      return toast.error('Выбери презентацию');
+    }
 
     setLoading(true);
     try {
-      // Основные поля
+      // 1) основной PATCH
       const res = await fetch(`/api/teacher/notes/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: form.title,
-          content: form.content,
+          content: mode === 'TEXT' ? form.content : form.content || ' ',
           subjectId: form.subjectId,
           topicId: form.topicId || null,
           imageUrl: form.imageUrl || null,
@@ -85,7 +116,7 @@ export default function EditNotePage() {
       });
       if (!res.ok) throw new Error('Ошибка при сохранении');
 
-      // Практика + самостоятельная
+      // 2) практика + самостоятельная
       const res2 = await fetch(`/api/teacher/notes/${id}/content`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -94,7 +125,18 @@ export default function EditNotePage() {
           selfWorkContent: form.selfWorkContent,
         }),
       });
-      if (!res2.ok) throw new Error('Ошибка при сохранении практики/самостоятельной');
+      if (!res2.ok) throw new Error('Ошибка сохранения практики/самостоятельной');
+
+      // 3) презентация
+      const res3 = await fetch(`/api/teacher/notes/${id}/presentation`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          presentationId:
+            mode === 'PRESENTATION' ? form.presentationId : null,
+        }),
+      });
+      if (!res3.ok) throw new Error('Ошибка сохранения презентации');
 
       toast.success('Конспект обновлён');
       router.push(`/teacher/content/notes/${id}`);
@@ -128,7 +170,39 @@ export default function EditNotePage() {
       </Link>
 
       <h1 className="text-3xl font-bold text-white mb-1">Редактирование</h1>
-      <p className="text-slate-400 mb-8">Три части: теория, практика на занятии, самостоятельная</p>
+      <p className="text-slate-400 mb-6">
+        Тип можно менять: текст ↔ презентация
+      </p>
+
+      {/* Переключатель типа */}
+      <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-white/5 border border-white/10 mb-6">
+        <button
+          type="button"
+          onClick={() => setMode('TEXT')}
+          className={cn(
+            'flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition',
+            mode === 'TEXT'
+              ? 'bg-gradient-to-r from-purple-500/30 to-blue-500/30 text-white'
+              : 'text-slate-400 hover:text-white'
+          )}
+        >
+          <FileText className="h-4 w-4" />
+          📄 Текстовый конспект
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode('PRESENTATION')}
+          className={cn(
+            'flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition',
+            mode === 'PRESENTATION'
+              ? 'bg-gradient-to-r from-pink-500/30 to-purple-500/30 text-white'
+              : 'text-slate-400 hover:text-white'
+          )}
+        >
+          <PresentationIcon className="h-4 w-4" />
+          🎞 Из презентации
+        </button>
+      </div>
 
       <form onSubmit={submit} className="space-y-5">
         <div>
@@ -146,7 +220,14 @@ export default function EditNotePage() {
             <Label className="text-slate-300">Предмет</Label>
             <select
               value={form.subjectId}
-              onChange={(e) => setForm({ ...form, subjectId: e.target.value, topicId: '' })}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  subjectId: e.target.value,
+                  topicId: '',
+                  presentationId: '',
+                })
+              }
               className="mt-2 w-full bg-slate-900 border border-white/10 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:border-purple-500/50"
               required
             >
@@ -168,24 +249,106 @@ export default function EditNotePage() {
                 <option key={t.id} value={t.id}>{t.title}</option>
               ))}
             </select>
-            {availableTopics.length === 0 && form.subjectId && (
-              <p className="text-xs text-amber-400 mt-2">
-                ⚠️ По этому предмету нет тем. Создай их в разделе "Темы"
-              </p>
-            )}
           </div>
         </div>
 
-        <div>
-          <Label className="text-slate-300 mb-2 block">📖 Теория</Label>
-          <MarkdownEditor
-            value={form.content}
-            onChange={(v) => setForm({ ...form, content: v })}
-            placeholder="Основной текст конспекта — правила, определения, разбор"
-            rows={16}
-            noteId={id}
-          />
-        </div>
+        {/* Основной контент по режиму */}
+        {mode === 'TEXT' ? (
+          <div>
+            <Label className="text-slate-300 mb-2 block">📖 Теория</Label>
+            <MarkdownEditor
+              value={form.content}
+              onChange={(v) => setForm({ ...form, content: v })}
+              placeholder="Основной текст конспекта — правила, определения, разбор"
+              rows={16}
+              noteId={id}
+            />
+          </div>
+        ) : (
+          <div className="backdrop-blur-xl bg-white/5 border border-pink-500/20 rounded-2xl p-5 space-y-4">
+            <div className="flex items-start gap-3">
+              <PresentationIcon className="h-5 w-5 text-pink-400 flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-slate-300">
+                <div className="font-semibold text-white mb-1">
+                  Выбрана презентация
+                </div>
+                <div className="text-xs text-slate-400">
+                  На вкладке «Теория» ученик увидит плеер слайдов вместо
+                  текста. Практика и самостоятельная работа — отдельно ниже.
+                </div>
+              </div>
+            </div>
+
+            {availablePresentations.length === 0 ? (
+              <div className="text-center py-6 border-2 border-dashed border-white/10 rounded-xl">
+                <p className="text-sm text-slate-400 mb-3">
+                  Нет презентаций по выбранному предмету
+                </p>
+                <Link
+                  href="/teacher/presentations/new"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white text-sm font-medium"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  Создать презентацию
+                </Link>
+              </div>
+            ) : (
+              <>
+                <div className="grid gap-2 max-h-72 overflow-y-auto">
+                  {availablePresentations.map((p) => {
+                    const active = form.presentationId === p.id;
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() =>
+                          setForm({ ...form, presentationId: p.id })
+                        }
+                        className={cn(
+                          'flex items-center gap-3 p-3 rounded-xl border text-left transition',
+                          active
+                            ? 'bg-pink-500/15 border-pink-500/50'
+                            : 'bg-white/5 border-white/10 hover:bg-white/10'
+                        )}
+                      >
+                        <div
+                          className={cn(
+                            'p-2 rounded-lg flex-shrink-0',
+                            active
+                              ? 'bg-gradient-to-br from-pink-500 to-purple-500'
+                              : 'bg-white/10'
+                          )}
+                        >
+                          <PresentationIcon className="h-4 w-4 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm text-white font-medium truncate">
+                            {p.title}
+                          </div>
+                          <div className="text-xs text-slate-500">
+                            {p.slidesCount} слайдов
+                          </div>
+                        </div>
+                        {active && (
+                          <span className="text-xs text-pink-300 font-semibold">
+                            ✓
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+                <Link
+                  href="/teacher/presentations/new"
+                  className="inline-flex items-center gap-1.5 text-xs text-pink-400 hover:text-pink-300"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  Создать ещё одну презентацию
+                </Link>
+              </>
+            )}
+          </div>
+        )}
 
         <div>
           <Label className="text-slate-300 mb-2 block">
@@ -194,7 +357,7 @@ export default function EditNotePage() {
           <MarkdownEditor
             value={form.practiceContent}
             onChange={(v) => setForm({ ...form, practiceContent: v })}
-            placeholder="Задания, которые разбирали вместе на уроке"
+            placeholder="Задания, которые разбирали вместе"
             rows={12}
           />
         </div>
@@ -206,7 +369,7 @@ export default function EditNotePage() {
           <MarkdownEditor
             value={form.selfWorkContent}
             onChange={(v) => setForm({ ...form, selfWorkContent: v })}
-            placeholder="Что нужно сделать самому. Ученик отправит сюда ответ, ты поставишь зачёт"
+            placeholder="Что ученик делает сам"
             rows={12}
           />
         </div>
@@ -230,7 +393,7 @@ export default function EditNotePage() {
             onChange={(e) => setForm({ ...form, published: e.target.checked })}
             className="w-4 h-4 accent-purple-500"
           />
-          <span className="text-sm text-slate-200">Опубликован (ученики видят)</span>
+          <span className="text-sm text-slate-200">Опубликован</span>
         </label>
 
         <Button
