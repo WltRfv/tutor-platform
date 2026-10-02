@@ -135,6 +135,7 @@ model TopicUnlock {
   topic      Topic    @relation(fields: [topicId], references: [id], onDelete: Cascade)
   userId     String
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contentIds Json?
   unlockedAt DateTime @default(now())
 
   @@unique([topicId, userId])

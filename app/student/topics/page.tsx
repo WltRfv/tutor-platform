@@ -54,7 +54,10 @@ export default async function StudentTopicsPage({
     orderBy: [{ subjectId: 'asc' }, { order: 'asc' }],
     include: {
       subject: { select: { id: true, name: true } },
-      unlocks: { where: { userId }, select: { id: true } },
+      unlocks: {
+        where: { userId },
+        select: { id: true, contentIds: true },
+      },
       notes: { where: { published: true }, select: { id: true, title: true } },
       tests: { where: { published: true }, select: { id: true, title: true } },
       homeworks: {
@@ -69,18 +72,36 @@ export default async function StudentTopicsPage({
     },
   });
 
-  const topicsData = topics.map((t) => ({
-    id: t.id,
-    title: t.title,
-    description: t.description,
-    order: t.order,
-    subjectId: t.subjectId,
-    subjectName: t.subject.name,
-    isUnlocked: t.unlocks.length > 0,
-    notes: t.notes,
-    tests: t.tests,
-    homeworks: t.homeworks,
-  }));
+  const topicsData = topics.map((t) => {
+    const unlock = t.unlocks[0];
+    const isUnlocked = !!unlock;
+    const raw = (unlock?.contentIds as unknown) as string[] | null | undefined;
+    const selectedContent = Array.isArray(raw) ? new Set(raw) : null;
+
+    // Фильтрация: если selectedContent === null — показываем всё (старая логика или null)
+    const notes = selectedContent
+      ? t.notes.filter((n) => selectedContent.has(`note:${n.id}`))
+      : t.notes;
+    const tests = selectedContent
+      ? t.tests.filter((x) => selectedContent.has(`test:${x.id}`))
+      : t.tests;
+    const homeworks = selectedContent
+      ? t.homeworks.filter((h) => selectedContent.has(`homework:${h.id}`))
+      : t.homeworks;
+
+    return {
+      id: t.id,
+      title: t.title,
+      description: t.description,
+      order: t.order,
+      subjectId: t.subjectId,
+      subjectName: t.subject.name,
+      isUnlocked,
+      notes,
+      tests,
+      homeworks,
+    };
+  });
 
   // Если предмет не выбран
   if (!currentSubjectId) {

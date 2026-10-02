@@ -79,22 +79,33 @@ export default async function StudentDetailPage({
     orderBy: [{ subjectId: 'asc' }, { order: 'asc' }],
     include: {
       subject: { select: { id: true, name: true } },
-      unlocks: { where: { userId: id }, select: { id: true, unlockedAt: true } },
+      unlocks: {
+        where: { userId: id },
+        select: { id: true, unlockedAt: true, contentIds: true },
+      },
       _count: { select: { notes: true, tests: true, homeworks: true } },
     },
   });
 
-  const topicsData = topics.map((t) => ({
-    id: t.id,
-    title: t.title,
-    description: t.description,
-    order: t.order,
-    subjectId: t.subjectId,
-    subjectName: t.subject.name,
-    isUnlocked: t.unlocks.length > 0,
-    unlockedAt: t.unlocks[0]?.unlockedAt?.toISOString() || null,
-    counts: t._count,
-  }));
+  const topicsData = topics.map((t) => {
+    const unlock = t.unlocks[0];
+    const raw = (unlock?.contentIds as unknown) as string[] | null | undefined;
+    const selectedCount =
+      unlock && Array.isArray(raw) ? raw.length : null; // null = всё доступно
+
+    return {
+      id: t.id,
+      title: t.title,
+      description: t.description,
+      order: t.order,
+      subjectId: t.subjectId,
+      subjectName: t.subject.name,
+      isUnlocked: t.unlocks.length > 0,
+      unlockedAt: unlock?.unlockedAt?.toISOString() || null,
+      counts: t._count,
+      selectedCount,
+    };
+  });
 
   const avgScore =
     submissions.length > 0
@@ -171,7 +182,7 @@ export default async function StudentDetailPage({
         allSubjects={allSubjects}
       />
 
-      <StudentTopicsManager studentId={student.id} initialTopics={topicsData} />
+      <StudentTopicsManager studentId={student.id} initialTopics={topicsData} studentName={student.name}/>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 my-6">
         <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-5">

@@ -153,7 +153,7 @@ export function StudentTopicsView({ topics }: { topics: Topic[] }) {
                             {topic.notes.map((n) => (
                               <Link
                                 key={n.id}
-                                href={`/student/notes`}
+                                href="/student/notes"
                                 className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-emerald-500/30 transition"
                               >
                                 <BookOpen className="h-4 w-4 text-emerald-400" />
