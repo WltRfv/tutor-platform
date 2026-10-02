@@ -3,13 +3,9 @@ import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import {
-  BookOpen,
-  FileText,
   Code2,
-  Calendar,
   ArrowRight,
   Clock,
-  ClipboardList,
   AlertTriangle,
   TrendingUp,
   CheckCircle2,
@@ -42,19 +38,7 @@ export default async function StudentHome() {
     take: 3,
   });
 
-  const myNotesCount = subjectIds.length
-    ? await prisma.note.count({
-        where: { published: true, subjectId: { in: subjectIds } },
-      })
-    : 0;
-
-  const myTestsCount = subjectIds.length
-    ? await prisma.test.count({
-        where: { published: true, subjectId: { in: subjectIds } },
-      })
-    : 0;
-
-  // НЕВЫПОЛНЕННЫЕ ДЗ
+  // Невыполненные ДЗ
   const allHomeworks = subjectIds.length
     ? await prisma.homework.findMany({
         where: {
@@ -78,7 +62,7 @@ export default async function StudentHome() {
     (hw) => hw.submissions[0]?.status === 'NEEDS_REVISION'
   );
 
-  // Средний балл по тестам
+  // Средний балл
   const submissions = await prisma.submission.findMany({
     where: { userId },
     select: { score: true },
@@ -90,21 +74,16 @@ export default async function StudentHome() {
         )
       : null;
 
-  // Смайлики от учителя за последние 5 сдач ДЗ
+  // Смайлики от учителя
   const recentReviews = await prisma.homeworkSubmission.findMany({
-    where: {
-      userId,
-      gradeEmoji: { not: null },
-    },
+    where: { userId, gradeEmoji: { not: null } },
     orderBy: { updatedAt: 'desc' },
     take: 5,
-    include: {
-      homework: { select: { title: true, id: true } },
-    },
+    include: { homework: { select: { title: true, id: true } } },
   });
 
   return (
-    <div className="p-8 max-w-7xl">
+    <div className="p-8 max-w-5xl">
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-white mb-1">
           Привет, {session.user?.name?.split(' ')[0]}! 👋
@@ -115,9 +94,9 @@ export default async function StudentHome() {
         </p>
       </div>
 
-      {/* Красная плашка: невыполненные ДЗ */}
+      {/* Алерт: невыполненные ДЗ */}
       {(incompleteHW.length > 0 || needsRevisionHW.length > 0) && (
-        <Link href="/student/homework" className="block mb-4 group">
+        <Link href="/student/homework" className="block mb-6 group">
           <div className="backdrop-blur-xl bg-gradient-to-br from-red-500/10 to-orange-500/10 border border-red-500/30 rounded-2xl p-5 hover:border-red-500/50 transition flex items-center gap-4">
             <div className="p-3 rounded-2xl bg-gradient-to-br from-red-500 to-orange-500 shadow-lg shadow-red-500/30">
               <AlertTriangle className="h-6 w-6 text-white" />
@@ -126,7 +105,11 @@ export default async function StudentHome() {
               <div className="text-white font-semibold text-lg">
                 {incompleteHW.length > 0 && (
                   <>
-                    {incompleteHW.length} {incompleteHW.length === 1 ? 'задание' : 'заданий'} не сдано
+                    {incompleteHW.length}{' '}
+                    {incompleteHW.length === 1
+                      ? 'задание'
+                      : 'заданий'}{' '}
+                    не сдано
                   </>
                 )}
                 {incompleteHW.length > 0 && needsRevisionHW.length > 0 && ' · '}
@@ -174,66 +157,8 @@ export default async function StudentHome() {
         </div>
       )}
 
-      {/* 4 карточки */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <Link href="/student/homework">
-          <div className="relative group">
-            <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-orange-500 opacity-0 group-hover:opacity-20 rounded-2xl blur-xl transition" />
-            <div className="relative backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-5 hover:border-white/20 transition">
-              <div className="inline-flex p-2.5 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 mb-3 shadow-lg">
-                <ClipboardList className="h-5 w-5 text-white" />
-              </div>
-              <div className="text-3xl font-bold text-white mb-1">
-                {allHomeworks.length}
-              </div>
-              <div className="text-xs text-slate-400">домашних заданий</div>
-            </div>
-          </div>
-        </Link>
-
-        <Link href="/student/notes">
-          <div className="relative group">
-            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 to-teal-500 opacity-0 group-hover:opacity-20 rounded-2xl blur-xl transition" />
-            <div className="relative backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-5 hover:border-white/20 transition">
-              <div className="inline-flex p-2.5 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 mb-3 shadow-lg">
-                <BookOpen className="h-5 w-5 text-white" />
-              </div>
-              <div className="text-3xl font-bold text-white mb-1">{myNotesCount}</div>
-              <div className="text-xs text-slate-400">конспектов</div>
-            </div>
-          </div>
-        </Link>
-
-        <Link href="/student/tests">
-          <div className="relative group">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-cyan-500 opacity-0 group-hover:opacity-20 rounded-2xl blur-xl transition" />
-            <div className="relative backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-5 hover:border-white/20 transition">
-              <div className="inline-flex p-2.5 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 mb-3 shadow-lg">
-                <FileText className="h-5 w-5 text-white" />
-              </div>
-              <div className="text-3xl font-bold text-white mb-1">{myTestsCount}</div>
-              <div className="text-xs text-slate-400">тестов доступно</div>
-            </div>
-          </div>
-        </Link>
-
-        <Link href="/student/compiler">
-          <div className="relative group">
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-pink-500 opacity-0 group-hover:opacity-20 rounded-2xl blur-xl transition" />
-            <div className="relative backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-5 hover:border-white/20 transition">
-              <div className="inline-flex p-2.5 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 mb-3 shadow-lg">
-                <Code2 className="h-5 w-5 text-white" />
-              </div>
-              <div className="text-3xl font-bold text-white mb-1">{codeRunsCount}</div>
-              <div className="text-xs text-slate-400">запусков кода</div>
-            </div>
-          </div>
-        </Link>
-      </div>
-
-      {/* Прогресс */}
-      <div className="grid lg:grid-cols-2 gap-6 mb-6">
-        {/* Диаграмма среднего балла */}
+      {/* Прогресс + Последние запуски */}
+      <div className="grid lg:grid-cols-2 gap-6">
         <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6">
           <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-emerald-400" />
@@ -282,7 +207,9 @@ export default async function StudentHome() {
               <div>
                 <div className="flex justify-between text-xs mb-1">
                   <span className="text-slate-400">Сдано тестов</span>
-                  <span className="text-white font-medium">{submissions.length}</span>
+                  <span className="text-white font-medium">
+                    {submissions.length}
+                  </span>
                 </div>
                 <div className="w-full h-2 rounded-full bg-white/10 overflow-hidden">
                   <div
@@ -301,7 +228,9 @@ export default async function StudentHome() {
                 <div className="w-full h-2 rounded-full bg-white/10 overflow-hidden">
                   <div
                     className="h-full rounded-full bg-gradient-to-r from-purple-500 to-pink-500"
-                    style={{ width: `${Math.min((codeRunsCount / 20) * 100, 100)}%` }}
+                    style={{
+                      width: `${Math.min((codeRunsCount / 20) * 100, 100)}%`,
+                    }}
                   />
                 </div>
               </div>
@@ -309,7 +238,8 @@ export default async function StudentHome() {
                 <div className="flex justify-between text-xs mb-1">
                   <span className="text-slate-400">ДЗ выполнено</span>
                   <span className="text-white font-medium">
-                    {allHomeworks.length - incompleteHW.length} из {allHomeworks.length}
+                    {allHomeworks.length - incompleteHW.length} из{' '}
+                    {allHomeworks.length}
                   </span>
                 </div>
                 <div className="w-full h-2 rounded-full bg-white/10 overflow-hidden">
@@ -331,15 +261,23 @@ export default async function StudentHome() {
           </div>
         </div>
 
-        {/* Последние запуски кода */}
         <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6">
           <h2 className="text-lg font-semibold text-white mb-4">
             Последние запуски кода
           </h2>
           {recentRuns.length === 0 ? (
-            <p className="text-slate-500 text-sm py-6 text-center">
-              Попробуй компилятор!
-            </p>
+            <div className="text-center py-8">
+              <Code2 className="h-10 w-10 mx-auto mb-3 text-slate-600" />
+              <p className="text-slate-500 text-sm mb-3">
+                Попробуй компилятор!
+              </p>
+              <Link
+                href="/student/compiler"
+                className="inline-flex items-center gap-1 text-sm text-purple-400 hover:text-purple-300"
+              >
+                Открыть <ArrowRight className="h-3 w-3" />
+              </Link>
+            </div>
           ) : (
             <div className="space-y-3">
               {recentRuns.map((r) => (
@@ -363,40 +301,6 @@ export default async function StudentHome() {
             </div>
           )}
         </div>
-      </div>
-
-      {/* Быстрые действия */}
-      <div className="grid md:grid-cols-3 gap-4">
-        {[
-          {
-            href: '/student/calendar',
-            label: 'Расписание занятий',
-            icon: Calendar,
-            color: 'text-orange-400',
-          },
-          {
-            href: '/student/notes',
-            label: 'Открыть конспекты',
-            icon: BookOpen,
-            color: 'text-emerald-400',
-          },
-          {
-            href: '/student/compiler',
-            label: 'Запустить код',
-            icon: Code2,
-            color: 'text-purple-400',
-          },
-        ].map((a, i) => (
-          <Link
-            key={i}
-            href={a.href}
-            className="flex items-center gap-3 p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-purple-500/30 transition group"
-          >
-            <a.icon className={`h-5 w-5 ${a.color}`} />
-            <span className="text-sm text-slate-200 flex-1">{a.label}</span>
-            <ArrowRight className="h-4 w-4 text-slate-500 group-hover:text-white group-hover:translate-x-0.5 transition" />
-          </Link>
-        ))}
       </div>
     </div>
   );

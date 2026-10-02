@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
-import { BookMarked, Plus, Eye, Clock, Layers, ArrowLeft } from 'lucide-react';
+import { BookMarked, Plus, Clock, Layers, ArrowLeft, ChevronRight } from 'lucide-react';
 import { StudentSubjectTabs } from '@/components/student/StudentSubjectTabs';
 
 export const dynamic = 'force-dynamic';
@@ -57,7 +57,7 @@ export default async function LessonPlansPage({
     );
   }
 
-  // === Уровень 2: темы внутри предмета ===
+  // === Уровень 2: список тем предмета (как ссылки) ===
   const currentSubject = subjects.find((s) => s.id === subjectParam);
   if (!currentSubject) {
     return (
@@ -77,16 +77,17 @@ export default async function LessonPlansPage({
     where: { subjectId: subjectParam, isActive: true },
     orderBy: { order: 'asc' },
     include: {
-      lessonPlans: { orderBy: { createdAt: 'asc' } },
+      _count: { select: { lessonPlans: true } },
     },
   });
 
-  const plansWithoutTopic = await prisma.lessonPlan.findMany({
+  const plansWithoutTopicCount = await prisma.lessonPlan.count({
     where: { subjectId: subjectParam, topicId: null },
-    orderBy: { createdAt: 'asc' },
   });
 
-  const totalPlans = topics.reduce((sum, t) => sum + t.lessonPlans.length, 0) + plansWithoutTopic.length;
+  const totalPlans =
+    topics.reduce((sum, t) => sum + t._count.lessonPlans, 0) +
+    plansWithoutTopicCount;
 
   return (
     <div className="p-8 max-w-5xl">
@@ -130,95 +131,73 @@ export default async function LessonPlansPage({
         currentSubjectId={subjectParam}
       />
 
-      {topics.length === 0 ? (
+      {topics.length === 0 && plansWithoutTopicCount === 0 ? (
         <div className="text-center py-20 text-slate-500 backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl">
           <Layers className="h-12 w-12 mx-auto mb-4 opacity-30" />
           <p>По этому предмету пока нет тем</p>
         </div>
       ) : (
-        <div className="space-y-5">
+        <div className="grid md:grid-cols-2 gap-3">
           {topics.map((t) => {
-            const plans = t.lessonPlans;
+            const count = t._count.lessonPlans;
             return (
-              <div
+              <Link
                 key={t.id}
-                className="rounded-2xl bg-white/5 border border-white/10 p-5"
+                href={`/teacher/lesson-plans/topic/${t.id}`}
+                className="group relative backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-5 hover:bg-white/10 hover:border-indigo-500/40 transition"
               >
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 rounded-lg bg-gradient-to-br from-indigo-500 to-blue-500">
-                    <Layers className="h-4 w-4 text-white" />
+                <div className="flex items-start gap-4">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-500 flex-shrink-0 shadow-lg">
+                    <Layers className="h-5 w-5 text-white" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h2 className="text-lg font-semibold text-white">
+                    <h2 className="text-white font-semibold mb-1 truncate">
                       {t.title}
                     </h2>
-                    <p className="text-xs text-slate-500">
-                      {plans.length} методичек
-                    </p>
+                    {t.description && (
+                      <p className="text-xs text-slate-400 mb-2 line-clamp-2">
+                        {t.description}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                      <Clock className="h-3 w-3" />
+                      {count}{' '}
+                      {count === 1
+                        ? 'методичка'
+                        : count >= 2 && count <= 4
+                        ? 'методички'
+                        : 'методичек'}
+                    </div>
                   </div>
+                  <ChevronRight className="h-5 w-5 text-slate-500 group-hover:text-white group-hover:translate-x-0.5 transition flex-shrink-0 mt-1" />
                 </div>
-
-                {plans.length === 0 ? (
-                  <p className="text-sm text-slate-500 pl-11">
-                    Пока пусто — создай методичку для этой темы
-                  </p>
-                ) : (
-                  <div className="space-y-2">
-                    {plans.map((p) => (
-                      <Link key={p.id} href={`/teacher/lesson-plans/${p.id}`}>
-                        <div className="group flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-indigo-500/30 transition">
-                          <BookMarked className="h-4 w-4 text-indigo-400 flex-shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <div className="text-sm text-white truncate">
-                              {p.title}
-                            </div>
-                            <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-500">
-                              <span className="flex items-center gap-1">
-                                <Clock className="h-3 w-3" /> {p.duration} мин
-                              </span>
-                              {p.published ? (
-                                <span className="text-emerald-400">
-                                  ✓ готова
-                                </span>
-                              ) : (
-                                <span>черновик</span>
-                              )}
-                            </div>
-                          </div>
-                          <Eye className="h-4 w-4 text-slate-500 opacity-0 group-hover:opacity-100 transition" />
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
+              </Link>
             );
           })}
 
-          {plansWithoutTopic.length > 0 && (
-            <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
-              <h2 className="text-lg font-semibold text-white mb-4">
-                Без темы
-              </h2>
-              <div className="space-y-2">
-                {plansWithoutTopic.map((p) => (
-                  <Link key={p.id} href={`/teacher/lesson-plans/${p.id}`}>
-                    <div className="group flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-indigo-500/30 transition">
-                      <BookMarked className="h-4 w-4 text-indigo-400 flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm text-white truncate">
-                          {p.title}
-                        </div>
-                        <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-500">
-                          <Clock className="h-3 w-3" /> {p.duration} мин
-                        </div>
-                      </div>
-                      <Eye className="h-4 w-4 text-slate-500 opacity-0 group-hover:opacity-100 transition" />
-                    </div>
-                  </Link>
-                ))}
+          {/* Методички без темы */}
+          {plansWithoutTopicCount > 0 && (
+            <Link
+              href={`/teacher/lesson-plans/topic/no-topic?subject=${subjectParam}`}
+              className="group relative backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-5 hover:bg-white/10 hover:border-amber-500/40 transition"
+            >
+              <div className="flex items-start gap-4">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex-shrink-0 shadow-lg">
+                  <BookMarked className="h-5 w-5 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-white font-semibold mb-1">Без темы</h2>
+                  <p className="text-xs text-slate-400 mb-2">
+                    Методички не привязанные ни к одной теме
+                  </p>
+                  <div className="flex items-center gap-2 text-xs text-slate-500">
+                    <Clock className="h-3 w-3" />
+                    {plansWithoutTopicCount} шт.
+                  </div>
+                </div>
+                <ChevronRight className="h-5 w-5 text-slate-500 group-hover:text-white group-hover:translate-x-0.5 transition flex-shrink-0 mt-1" />
               </div>
-            </div>
+            </Link>
           )}
         </div>
       )}
