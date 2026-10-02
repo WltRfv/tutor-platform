@@ -166,6 +166,7 @@ export default function EditNotePage() {
             onChange={(v) => setForm({ ...form, content: v })}
             placeholder="Текст конспекта. Поддерживается markdown, картинки, таблицы, формулы."
             rows={18}
+            noteId={id}
           />
         </div>
 

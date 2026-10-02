@@ -499,3 +499,22 @@ model HomeworkStart {
   @@unique([homeworkId, userId])
   @@index([userId])
 }
+model Attachment {
+  id           String   @id @default(cuid())
+  ownerId      String
+  name         String
+  url          String
+  mime         String?
+  size         Int?
+  noteId       String?
+  testId       String?
+  homeworkId   String?
+  lessonPlanId String?
+  createdAt    DateTime @default(now())
+
+  @@index([ownerId])
+  @@index([noteId])
+  @@index([testId])
+  @@index([homeworkId])
+  @@index([lessonPlanId])
+}
