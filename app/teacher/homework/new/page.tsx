@@ -17,11 +17,16 @@ import {
   ListChecks,
   FileText,
   Code2,
+  Wand2,
+  PenSquare,
+  Sparkles,
+  X,
 } from 'lucide-react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { ImageUploader } from '@/components/shared/ImageUploader';
+import { MarkdownEditor } from '@/components/shared/MarkdownEditor';
 
 type Subject = { id: string; name: string; category: string };
 type Topic = { id: string; title: string; subjectId: string };
@@ -45,6 +50,8 @@ type Task = {
   language: string;
   starterCode: string;
 };
+
+type Mode = 'MANUAL' | 'PASTE';
 
 const LANGUAGES = [
   { value: 'python', label: 'Python 3' },
@@ -71,6 +78,13 @@ export default function NewHomeworkPage() {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
+
+  const [mode, setMode] = useState<Mode>('MANUAL');
+
+  // PASTE-режим
+  const [pasteText, setPasteText] = useState('');
+  const [parsedTasks, setParsedTasks] = useState<string[] | null>(null);
+  const [parsing, setParsing] = useState(false);
 
   const [form, setForm] = useState({
     title: '',
@@ -100,6 +114,7 @@ export default function NewHomeworkPage() {
         }
       })
       .catch(() => toast.error('Не удалось загрузить данные'));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const availableTopics = topics.filter((t) => t.subjectId === form.subjectId);
@@ -108,16 +123,48 @@ export default function NewHomeworkPage() {
   );
 
   const addTask = () => setTasks([...tasks, emptyTask()]);
-
   const removeTask = (i: number) => {
     if (tasks.length === 1) return toast.error('Нужна хотя бы 1 задача');
     setTasks(tasks.filter((_, idx) => idx !== i));
   };
-
   const updateTask = (i: number, patch: Partial<Task>) => {
     const next = [...tasks];
     next[i] = { ...next[i], ...patch };
     setTasks(next);
+  };
+
+  // === Parser ===
+  const handleParse = async () => {
+    if (!pasteText.trim()) return toast.error('Вставь текст ДЗ');
+    setParsing(true);
+    try {
+      const res = await fetch('/api/teacher/homework/parse', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: pasteText }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setParsedTasks(data.tasks.map((t: any) => t.text));
+      toast.success(`Разбито на ${data.tasks.length} задач`);
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setParsing(false);
+    }
+  };
+
+  const applyParsed = () => {
+    if (!parsedTasks || parsedTasks.length === 0) return;
+    const newTasks: Task[] = parsedTasks.map((text) => ({
+      ...emptyTask(),
+      text,
+    }));
+    setTasks(newTasks);
+    setMode('MANUAL');
+    setParsedTasks(null);
+    setPasteText('');
+    toast.success(`Применено: ${newTasks.length} задач`);
   };
 
   const submit = async (e: React.FormEvent) => {
@@ -150,13 +197,11 @@ export default function NewHomeworkPage() {
           tasks: tasks.map((t) => ({
             text: t.text,
             imageUrl: t.imageUrl || null,
-            correctAnswer:
-              t.taskType === 'TEXT' ? t.correctAnswer || null : null,
+            correctAnswer: t.taskType === 'TEXT' ? t.correctAnswer || null : null,
             answerType: t.answerType,
             points: t.points,
             language: t.taskType === 'CODE' ? t.language : null,
-            starterCode:
-              t.taskType === 'CODE' && t.starterCode ? t.starterCode : null,
+            starterCode: t.taskType === 'CODE' && t.starterCode ? t.starterCode : null,
           })),
         }),
       });
@@ -181,17 +226,149 @@ export default function NewHomeworkPage() {
         <ArrowLeft className="h-4 w-4" /> К списку заданий
       </Link>
 
-      <div className="flex items-center gap-3 mb-8">
+      <div className="flex items-center gap-3 mb-6">
         <div className="p-2.5 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 shadow-lg">
           <ClipboardList className="h-5 w-5 text-white" />
         </div>
         <div>
           <h1 className="text-3xl font-bold text-white">Новое задание</h1>
-          <p className="text-slate-400 text-sm">
-            Обычные задачи или задачи с кодом
-          </p>
+          <p className="text-slate-400 text-sm">Обычные задачи или задачи с кодом</p>
         </div>
       </div>
+
+      {/* Переключатель режима */}
+      <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-white/5 border border-white/10 mb-6">
+        <button
+          type="button"
+          onClick={() => setMode('MANUAL')}
+          className={cn(
+            'flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition',
+            mode === 'MANUAL'
+              ? 'bg-gradient-to-r from-purple-500/30 to-blue-500/30 text-white'
+              : 'text-slate-400 hover:text-white'
+          )}
+        >
+          <PenSquare className="h-4 w-4" />
+          Вручную
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode('PASTE')}
+          className={cn(
+            'flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition',
+            mode === 'PASTE'
+              ? 'bg-gradient-to-r from-purple-500/30 to-blue-500/30 text-white'
+              : 'text-slate-400 hover:text-white'
+          )}
+        >
+          <Wand2 className="h-4 w-4" />
+          Загрузить готовое ДЗ
+        </button>
+      </div>
+
+      {/* PASTE-режим */}
+      <AnimatePresence mode="wait">
+        {mode === 'PASTE' && (
+          <motion.div
+            key="paste"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="backdrop-blur-xl bg-white/5 border border-purple-500/30 rounded-2xl p-6 mb-6"
+          >
+            <div className="flex items-start gap-3 mb-4">
+              <Sparkles className="h-5 w-5 text-purple-400 flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-slate-300">
+                <div className="font-semibold text-white mb-1">
+                  Загрузи ДЗ целиком — система сама разобьёт на задачи
+                </div>
+                <div className="text-slate-400 text-xs">
+                  Разделители: <code className="text-purple-300">Задача 1.</code>,{' '}
+                  <code className="text-purple-300">№1</code>,{' '}
+                  <code className="text-purple-300">1)</code>, пустые строки.
+                  После разбивки всё равно можно будет отредактировать каждую задачу вручную.
+                </div>
+              </div>
+            </div>
+
+            <textarea
+              value={pasteText}
+              onChange={(e) => setPasteText(e.target.value)}
+              placeholder={`Вставь текст задания:
+
+Задача 1. Вычисли 2+2
+Задача 2. Реши уравнение x^2=9
+Задача 3. Найди площадь круга радиусом 5`}
+              rows={12}
+              className="w-full bg-white/5 border border-white/10 text-white rounded-xl p-4 text-sm resize-y focus:outline-none focus:border-purple-500/50 font-mono"
+            />
+
+            <div className="flex gap-2 mt-3">
+              <Button
+                type="button"
+                onClick={handleParse}
+                disabled={parsing || !pasteText.trim()}
+                className="gap-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white"
+              >
+                {parsing ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Wand2 className="h-4 w-4" />
+                )}
+                Разбить на задачи
+              </Button>
+              {pasteText && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setPasteText('');
+                    setParsedTasks(null);
+                  }}
+                  className="gap-2 border-white/20 text-slate-300"
+                >
+                  <X className="h-4 w-4" /> Очистить
+                </Button>
+              )}
+            </div>
+
+            {parsedTasks && parsedTasks.length > 0 && (
+              <div className="mt-5 pt-5 border-t border-white/10">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="text-sm font-semibold text-white">
+                    Распознано задач: {parsedTasks.length}
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={applyParsed}
+                    className="gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Применить к задачам
+                  </Button>
+                </div>
+                <div className="space-y-2 max-h-72 overflow-y-auto">
+                  {parsedTasks.map((t, i) => (
+                    <div
+                      key={i}
+                      className="p-3 rounded-lg bg-slate-950/50 border border-white/10 text-xs"
+                    >
+                      <div className="flex items-start gap-2">
+                        <span className="text-purple-300 font-bold flex-shrink-0">
+                          {i + 1}.
+                        </span>
+                        <div className="text-slate-300 whitespace-pre-wrap">
+                          {t.length > 200 ? t.slice(0, 200) + '…' : t}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <form onSubmit={submit} className="space-y-5">
         <div>
@@ -221,11 +398,9 @@ export default function NewHomeworkPage() {
               className="mt-2 w-full bg-slate-900 border border-white/10 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none"
               required
             >
-              <option value="">— Выбери предмет —</option>
+              <option value="">- Выбери предмет -</option>
               {subjects.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
+                <option key={s.id} value={s.id}>{s.name}</option>
               ))}
             </select>
           </div>
@@ -236,11 +411,9 @@ export default function NewHomeworkPage() {
               onChange={(e) => setForm({ ...form, topicId: e.target.value })}
               className="mt-2 w-full bg-slate-900 border border-white/10 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none"
             >
-              <option value="">— Без темы —</option>
+              <option value="">- Без темы -</option>
               {availableTopics.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.title}
-                </option>
+                <option key={t.id} value={t.id}>{t.title}</option>
               ))}
             </select>
           </div>
@@ -251,9 +424,7 @@ export default function NewHomeworkPage() {
           <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-white/5 border border-white/10">
             <button
               type="button"
-              onClick={() =>
-                setForm({ ...form, targetType: 'ALL', targetUserId: '' })
-              }
+              onClick={() => setForm({ ...form, targetType: 'ALL', targetUserId: '' })}
               className={cn(
                 'flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition',
                 form.targetType === 'ALL'
@@ -290,16 +461,14 @@ export default function NewHomeworkPage() {
             ) : (
               <select
                 value={form.targetUserId}
-                onChange={(e) =>
-                  setForm({ ...form, targetUserId: e.target.value })
-                }
+                onChange={(e) => setForm({ ...form, targetUserId: e.target.value })}
                 className="mt-2 w-full bg-slate-900 border border-white/10 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none"
                 required
               >
-                <option value="">— Выбери ученика —</option>
+                <option value="">- Выбери ученика -</option>
                 {filteredStudents.map((s) => (
                   <option key={s.id} value={s.id}>
-                    {s.name} {s.grade ? `(${s.grade} кл.)` : ''} — {s.email}
+                    {s.name} {s.grade ? `(${s.grade} кл.)` : ''} - {s.email}
                   </option>
                 ))}
               </select>
@@ -318,7 +487,7 @@ export default function NewHomeworkPage() {
           />
         </div>
 
-        {/* КОНСТРУКТОР ЗАДАЧ */}
+        {/* Задачи */}
         <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-5">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
@@ -352,7 +521,6 @@ export default function NewHomeworkPage() {
                     </button>
                   </div>
 
-                  {/* Тип задачи */}
                   <div className="grid grid-cols-2 gap-2 mb-3">
                     <button
                       type="button"
@@ -382,15 +550,14 @@ export default function NewHomeworkPage() {
                     </button>
                   </div>
 
-                  <textarea
+                  <MarkdownEditor
                     value={t.text}
-                    onChange={(e) => updateTask(i, { text: e.target.value })}
-                    placeholder="Условие задачи... (можно $x^2$)"
+                    onChange={(v) => updateTask(i, { text: v })}
+                    placeholder="Условие задачи... (поддерживается markdown, формулы)"
                     rows={3}
-                    className="w-full bg-white/5 border border-white/10 text-white rounded-lg p-3 text-sm resize-y focus:outline-none focus:border-purple-500/50 mb-3"
                   />
 
-                  <div className="mb-3">
+                  <div className="mt-3">
                     <ImageUploader
                       label="Картинка к задаче"
                       value={t.imageUrl}
@@ -398,33 +565,22 @@ export default function NewHomeworkPage() {
                     />
                   </div>
 
-                  {/* Поля для текстовой задачи */}
                   {t.taskType === 'TEXT' && (
-                    <div className="grid md:grid-cols-3 gap-2 p-3 rounded-lg bg-purple-500/5 border border-purple-500/20">
-                      <div className="md:col-span-1">
-                        <Label className="text-[11px] text-slate-400">
-                          Правильный ответ
-                        </Label>
+                    <div className="grid md:grid-cols-3 gap-2 p-3 rounded-lg bg-purple-500/5 border border-purple-500/20 mt-3">
+                      <div>
+                        <Label className="text-[11px] text-slate-400">Правильный ответ</Label>
                         <Input
                           value={t.correctAnswer}
-                          onChange={(e) =>
-                            updateTask(i, { correctAnswer: e.target.value })
-                          }
+                          onChange={(e) => updateTask(i, { correctAnswer: e.target.value })}
                           placeholder="Опционально"
                           className="mt-1 h-9 bg-white/5 border-white/10 text-white text-sm"
                         />
                       </div>
                       <div>
-                        <Label className="text-[11px] text-slate-400">
-                          Тип
-                        </Label>
+                        <Label className="text-[11px] text-slate-400">Тип</Label>
                         <select
                           value={t.answerType}
-                          onChange={(e) =>
-                            updateTask(i, {
-                              answerType: e.target.value as any,
-                            })
-                          }
+                          onChange={(e) => updateTask(i, { answerType: e.target.value as any })}
                           className="mt-1 w-full h-9 bg-slate-900 border border-white/10 text-white text-sm rounded-lg px-2 focus:outline-none"
                         >
                           <option value="TEXT">Текст</option>
@@ -433,57 +589,40 @@ export default function NewHomeworkPage() {
                         </select>
                       </div>
                       <div>
-                        <Label className="text-[11px] text-slate-400">
-                          Баллы
-                        </Label>
+                        <Label className="text-[11px] text-slate-400">Баллы</Label>
                         <Input
                           type="number"
                           min={1}
                           value={t.points}
-                          onChange={(e) =>
-                            updateTask(i, { points: Number(e.target.value) })
-                          }
+                          onChange={(e) => updateTask(i, { points: Number(e.target.value) })}
                           className="mt-1 h-9 bg-white/5 border-white/10 text-white text-sm"
                         />
                       </div>
                     </div>
                   )}
 
-                  {/* Поля для задачи с кодом */}
                   {t.taskType === 'CODE' && (
-                    <div className="space-y-3 p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
+                    <div className="space-y-3 p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20 mt-3">
                       <div className="grid md:grid-cols-2 gap-3">
                         <div>
-                          <Label className="text-[11px] text-slate-400">
-                            Язык программирования
-                          </Label>
+                          <Label className="text-[11px] text-slate-400">Язык программирования</Label>
                           <select
                             value={t.language}
-                            onChange={(e) =>
-                              updateTask(i, { language: e.target.value })
-                            }
+                            onChange={(e) => updateTask(i, { language: e.target.value })}
                             className="mt-1 w-full h-9 bg-slate-900 border border-white/10 text-white text-sm rounded-lg px-2 focus:outline-none"
                           >
                             {LANGUAGES.map((l) => (
-                              <option key={l.value} value={l.value}>
-                                {l.label}
-                              </option>
+                              <option key={l.value} value={l.value}>{l.label}</option>
                             ))}
                           </select>
                         </div>
                         <div>
-                          <Label className="text-[11px] text-slate-400">
-                            Баллы
-                          </Label>
+                          <Label className="text-[11px] text-slate-400">Баллы</Label>
                           <Input
                             type="number"
                             min={1}
                             value={t.points}
-                            onChange={(e) =>
-                              updateTask(i, {
-                                points: Number(e.target.value),
-                              })
-                            }
+                            onChange={(e) => updateTask(i, { points: Number(e.target.value) })}
                             className="mt-1 h-9 bg-white/5 border-white/10 text-white text-sm"
                           />
                         </div>
@@ -495,14 +634,12 @@ export default function NewHomeworkPage() {
                         </Label>
                         <textarea
                           value={t.starterCode}
-                          onChange={(e) =>
-                            updateTask(i, { starterCode: e.target.value })
-                          }
+                          onChange={(e) => updateTask(i, { starterCode: e.target.value })}
                           placeholder={
                             t.language === 'python'
                               ? '# Начальный код\nprint("Привет!")\n'
                               : t.language === 'pascal'
-                              ? 'program Task;\nbegin\n  writeln(\'Привет!\');\nend.\n'
+                              ? "program Task;\nbegin\n  writeln('Привет!');\nend.\n"
                               : '// Начальный код\n'
                           }
                           rows={5}
@@ -551,11 +688,7 @@ export default function NewHomeworkPage() {
           disabled={loading}
           className="w-full h-12 gap-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white"
         >
-          {loading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Save className="h-4 w-4" />
-          )}
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
           {loading ? 'Создание...' : `Создать задание (${tasks.length} задач)`}
         </Button>
       </form>
