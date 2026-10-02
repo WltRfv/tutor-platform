@@ -1,8 +1,6 @@
 'use client';
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, ChevronDown } from 'lucide-react';
-import { MathText } from '@/components/shared/MathText';
+import Link from 'next/link';
+import { BookOpen, ArrowRight } from 'lucide-react';
 
 type Note = {
   id: string;
@@ -15,64 +13,33 @@ type Note = {
 };
 
 export function NotesList({ notes }: { notes: Note[] }) {
-  const [openId, setOpenId] = useState<string | null>(null);
-
   return (
     <div className="space-y-3">
-      {notes.map((note) => {
-        const isOpen = openId === note.id;
-        return (
-          <motion.div
-            key={note.id}
-            layout
-            className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:border-purple-500/30 transition"
-          >
-            <button
-              onClick={() => setOpenId(isOpen ? null : note.id)}
-              className="w-full flex items-center gap-4 p-5 text-left group"
-            >
-              <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex-shrink-0">
-                <BookOpen className="h-5 w-5 text-white" />
+      {notes.map((note) => (
+        <Link
+          key={note.id}
+          href={`/student/notes/${note.id}`}
+          className="block backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-5 hover:bg-white/10 hover:border-purple-500/40 transition group"
+        >
+          <div className="flex items-center gap-4">
+            <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex-shrink-0">
+              <BookOpen className="h-5 w-5 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-white font-semibold truncate">{note.title}</h3>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-xs px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-200">
+                  {note.subjectName}
+                </span>
+                {note.topic && (
+                  <span className="text-xs text-slate-400 truncate">{note.topic}</span>
+                )}
               </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="text-white font-semibold truncate">{note.title}</h3>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-xs px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-200">
-                    {note.subjectName}
-                  </span>
-                  {note.topic && (
-                    <span className="text-xs text-slate-400 truncate">
-                      {note.topic}
-                    </span>
-                  )}
-                </div>
-              </div>
-              <ChevronDown
-                className={`h-5 w-5 text-slate-500 transition-transform flex-shrink-0 ${
-                  isOpen ? 'rotate-180' : ''
-                }`}
-              />
-            </button>
-            <AnimatePresence initial={false}>
-              {isOpen && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.25 }}
-                  className="overflow-hidden"
-                >
-                  <div className="px-5 pb-5 pt-2 border-t border-white/5">
-                    <MathText className="text-slate-300 leading-relaxed">
-                      {note.content}
-                    </MathText>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
-        );
-      })}
+            </div>
+            <ArrowRight className="h-5 w-5 text-slate-500 group-hover:text-white group-hover:translate-x-0.5 transition flex-shrink-0" />
+          </div>
+        </Link>
+      ))}
     </div>
   );
 }

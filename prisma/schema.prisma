@@ -43,6 +43,7 @@ model User {
   accentDark      String?
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
+  
 
   activities        Activity[]
   submissions       Submission[]
@@ -60,6 +61,7 @@ model User {
   topicUnlocks      TopicUnlock[]
   notificationReads NotificationRead[]
   homeworkStarts    HomeworkStart[]
+  selfWorkStatuses  SelfWorkStatus[]
   lessonPlans       LessonPlan[]         @relation("TeacherLessonPlans")
 }
 
@@ -147,19 +149,23 @@ model TopicUnlock {
 // ============================================
 
 model Note {
-  id        String   @id @default(cuid())
-  title     String
-  content   String
-  subjectId String
-  subject   Subjects @relation(fields: [subjectId], references: [id])
-  topicId   String?
-  topic     Topic?   @relation(fields: [topicId], references: [id])
-  topicName String?
-  imageUrl  String?
-  published Boolean  @default(false)
-  authorId  String
-  author    User     @relation("TeacherNotes", fields: [authorId], references: [id])
-  createdAt DateTime @default(now())
+  id              String   @id @default(cuid())
+  title           String
+  content         String
+  practiceContent String?
+  selfWorkContent String?
+  subjectId       String
+  subject         Subjects @relation(fields: [subjectId], references: [id])
+  topicId         String?
+  topic           Topic?   @relation(fields: [topicId], references: [id])
+  topicName       String?
+  imageUrl        String?
+  published       Boolean  @default(false)
+  authorId        String
+  author          User     @relation("TeacherNotes", fields: [authorId], references: [id])
+  createdAt       DateTime @default(now())
+
+  selfWorkStatuses SelfWorkStatus[]
 }
 
 model LessonPlan {
@@ -518,4 +524,21 @@ model Attachment {
   @@index([testId])
   @@index([homeworkId])
   @@index([lessonPlanId])
+}
+model SelfWorkStatus {
+  id             String    @id @default(cuid())
+  noteId         String
+  note           Note      @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status         String    @default("PENDING")
+  studentAnswer  String?
+  teacherComment String?
+  reviewedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([noteId, userId])
+  @@index([userId])
+  @@index([noteId])
 }

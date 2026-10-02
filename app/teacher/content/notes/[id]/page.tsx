@@ -8,9 +8,11 @@ import {
   EyeOff,
   Calendar,
   Edit,
+  Users,
 } from 'lucide-react';
 import { DeleteNoteButton } from '@/components/teacher/DeleteNoteButton';
-import { MathText } from '@/components/shared/MathText';
+import { NoteTabs } from '@/components/shared/NoteTabs';
+import { SelfWorkReview } from '@/components/teacher/SelfWorkReview';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -28,8 +30,66 @@ export default async function NoteViewPage({
 
   if (!note) notFound();
 
+  // Список учеников, у которых тема разблокирована и конспект им доступен
+  let eligible: { id: string; name: string; email: string }[] = [];
+
+  if (note.topicId) {
+    const unlocks = await prisma.topicUnlock.findMany({
+      where: { topicId: note.topicId },
+      include: {
+        user: {
+          select: { id: true, name: true, email: true, role: true },
+        },
+      },
+    });
+
+    eligible = unlocks
+      .filter((u) => {
+        if (u.user.role !== 'STUDENT') return false;
+        const raw = (u.contentIds as unknown) as string[] | null | undefined;
+        if (raw === null || raw === undefined) return true;
+        if (!Array.isArray(raw)) return true;
+        return raw.includes(`note:${id}`);
+      })
+      .map((u) => u.user);
+  }
+
+  // Статусы самостоятельных работ
+  const statuses = await prisma.selfWorkStatus.findMany({
+    where: { noteId: id },
+  });
+  const statusMap = new Map(statuses.map((s) => [s.userId, s]));
+
+  const selfWorkPanel =
+    eligible.length > 0 ? (
+      <SelfWorkReview
+        noteId={id}
+        students={eligible.map((s) => ({
+          id: s.id,
+          name: s.name,
+          email: s.email,
+          status: statusMap.get(s.id)?.status || 'PENDING',
+          studentAnswer: statusMap.get(s.id)?.studentAnswer || null,
+          teacherComment: statusMap.get(s.id)?.teacherComment || null,
+        }))}
+      />
+    ) : note.topicId ? (
+      <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 text-center">
+        <Users className="h-8 w-8 mx-auto mb-2 text-slate-500 opacity-40" />
+        <p className="text-sm text-slate-400">
+          Ни один ученик ещё не получил доступ к этой теме
+        </p>
+      </div>
+    ) : (
+      <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 text-center">
+        <p className="text-sm text-slate-400">
+          Привяжи конспект к теме, чтобы отслеживать зачёты учеников
+        </p>
+      </div>
+    );
+
   return (
-    <div className="p-8 max-w-4xl">
+    <div className="p-8 max-w-5xl">
       <Link
         href="/teacher/content"
         className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white mb-6 transition"
@@ -38,7 +98,7 @@ export default async function NoteViewPage({
       </Link>
 
       <div className="mb-6 flex items-start gap-4 flex-wrap">
-        <div className="p-3 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 shadow-lg shadow-emerald-500/20 flex-shrink-0">
+        <div className="p-3 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 shadow-lg flex-shrink-0">
           <BookOpen className="h-6 w-6 text-white" />
         </div>
         <div className="flex-1 min-w-[200px]">
@@ -94,14 +154,15 @@ export default async function NoteViewPage({
         </div>
       )}
 
-      <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8">
-        <MathText className="text-slate-300 leading-relaxed">
-          {note.content}
-        </MathText>
-      </div>
+      <NoteTabs
+        theory={note.content}
+        practice={note.practiceContent}
+        selfWork={note.selfWorkContent}
+        selfWorkExtra={selfWorkPanel}
+      />
 
       <p className="text-xs text-slate-500 mt-6 text-center">
-        👁 Так этот конспект видят ученики с этим предметом
+        👁 Так этот конспект видят ученики. Практику и самостоятельную тоже.
       </p>
     </div>
   );

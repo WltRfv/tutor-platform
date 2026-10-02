@@ -26,6 +26,8 @@ export default function EditNotePage() {
   const [form, setForm] = useState({
     title: '',
     content: '',
+    practiceContent: '',
+    selfWorkContent: '',
     subjectId: '',
     topicId: '',
     imageUrl: '',
@@ -45,6 +47,8 @@ export default function EditNotePage() {
         setForm({
           title: noteData.title || '',
           content: noteData.content || '',
+          practiceContent: noteData.practiceContent || '',
+          selfWorkContent: noteData.selfWorkContent || '',
           subjectId: noteData.subjectId || '',
           topicId: noteData.topicId || '',
           imageUrl: noteData.imageUrl || '',
@@ -60,11 +64,13 @@ export default function EditNotePage() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.title.trim() || !form.content.trim()) {
-      return toast.error('Заполни заголовок и содержание');
+      return toast.error('Заполни заголовок и основной текст');
     }
     if (!form.subjectId) return toast.error('Выбери предмет');
+
     setLoading(true);
     try {
+      // Основные поля
       const res = await fetch(`/api/teacher/notes/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -78,6 +84,18 @@ export default function EditNotePage() {
         }),
       });
       if (!res.ok) throw new Error('Ошибка при сохранении');
+
+      // Практика + самостоятельная
+      const res2 = await fetch(`/api/teacher/notes/${id}/content`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          practiceContent: form.practiceContent,
+          selfWorkContent: form.selfWorkContent,
+        }),
+      });
+      if (!res2.ok) throw new Error('Ошибка при сохранении практики/самостоятельной');
+
       toast.success('Конспект обновлён');
       router.push(`/teacher/content/notes/${id}`);
       router.refresh();
@@ -90,7 +108,7 @@ export default function EditNotePage() {
 
   if (fetching) {
     return (
-      <div className="p-8 max-w-4xl">
+      <div className="p-8 max-w-5xl">
         <div className="animate-pulse space-y-4">
           <div className="h-9 w-64 bg-white/10 rounded-lg" />
           <div className="h-12 bg-white/5 rounded-xl" />
@@ -101,7 +119,7 @@ export default function EditNotePage() {
   }
 
   return (
-    <div className="p-8 max-w-4xl">
+    <div className="p-8 max-w-6xl">
       <Link
         href={`/teacher/content/notes/${id}`}
         className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white mb-6 transition"
@@ -110,7 +128,7 @@ export default function EditNotePage() {
       </Link>
 
       <h1 className="text-3xl font-bold text-white mb-1">Редактирование</h1>
-      <p className="text-slate-400 mb-8">Обнови содержимое и сохрани изменения</p>
+      <p className="text-slate-400 mb-8">Три части: теория, практика на занятии, самостоятельная</p>
 
       <form onSubmit={submit} className="space-y-5">
         <div>
@@ -138,7 +156,6 @@ export default function EditNotePage() {
               ))}
             </select>
           </div>
-
           <div>
             <Label className="text-slate-300">Тема (необязательно)</Label>
             <select
@@ -160,13 +177,37 @@ export default function EditNotePage() {
         </div>
 
         <div>
-          <Label className="text-slate-300 mb-2 block">Содержание</Label>
+          <Label className="text-slate-300 mb-2 block">📖 Теория</Label>
           <MarkdownEditor
             value={form.content}
             onChange={(v) => setForm({ ...form, content: v })}
-            placeholder="Текст конспекта. Поддерживается markdown, картинки, таблицы, формулы."
-            rows={18}
+            placeholder="Основной текст конспекта — правила, определения, разбор"
+            rows={16}
             noteId={id}
+          />
+        </div>
+
+        <div>
+          <Label className="text-slate-300 mb-2 block">
+            🔧 Практика на занятии (необязательно)
+          </Label>
+          <MarkdownEditor
+            value={form.practiceContent}
+            onChange={(v) => setForm({ ...form, practiceContent: v })}
+            placeholder="Задания, которые разбирали вместе на уроке"
+            rows={12}
+          />
+        </div>
+
+        <div>
+          <Label className="text-slate-300 mb-2 block">
+            ✅ Самостоятельная работа (необязательно)
+          </Label>
+          <MarkdownEditor
+            value={form.selfWorkContent}
+            onChange={(v) => setForm({ ...form, selfWorkContent: v })}
+            placeholder="Что нужно сделать самому. Ученик отправит сюда ответ, ты поставишь зачёт"
+            rows={12}
           />
         </div>
 
@@ -175,9 +216,6 @@ export default function EditNotePage() {
             <ImageIcon className="h-4 w-4 text-purple-400" />
             <h3 className="text-sm font-semibold text-white">Обложка конспекта</h3>
           </div>
-          <p className="text-xs text-slate-400 mb-4">
-            Картинка появится сверху конспекта у ученика
-          </p>
           <ImageUploader
             label="Картинка-обложка"
             value={form.imageUrl}
