@@ -44,28 +44,18 @@ const SUBJECT_MAP: Record<string, string> = {
   'огэ': 'OGE_9',
 };
 
-/**
- * Разбивает входной текст на блоки-вопросы.
- * Пробует по очереди:
- * 1. ━━━ ВОПРОС ━━━
- * 2. "Вопрос N:", "Задача N.", "№ N"
- * 3. "N)" или "N." в начале строки (минимум 2 блока)
- * 4. Весь текст как один вопрос
- */
 function splitQuestions(text: string): string[] {
   const explicit = text.split(/━+\s*ВОПРОС\s*━+/i);
   if (explicit.length > 1) return explicit.map((s) => s.trim()).filter(Boolean);
 
-  const labeled = text.split(/\n(?=\s*(?:Вопрос|Задача|№|Task)\s*\d+[\s:.)]*)/i);
-  if (labeled.length > 1) return labeled.map((s) => s.trim()).filter(Boolean);
-
-  const numbered = text.split(/\n(?=\s*\d{1,3}[).]\s)/);
-  if (numbered.length >= 2) return numbered.map((s) => s.trim()).filter(Boolean);
+  const union =
+    /\n(?=\s*(?:(?:Вопрос|Задача|№|Task)\s*\d+[\s:.)]*|\d{1,3}[).]\s))/i;
+  const labeled = text.split(union).map((s) => s.trim()).filter(Boolean);
+  if (labeled.length >= 2) return labeled;
 
   return [text.trim()];
 }
 
-/** Убирает служебный префикс "Вопрос N:", "Задача N.", "N)" из блока */
 function stripPrefix(block: string): string {
   return block
     .replace(/^\s*(?:Вопрос|Задача|№|Task)\s*\d+[\s:.)]*/i, '')
@@ -88,6 +78,7 @@ function parseBlock(block: string): ParsedQuestion | null {
   let correctLetters: string[] = [];
   let explanationLines: string[] = [];
   let inExplanation = false;
+  let typeExplicit = false;
 
   for (const raw of lines) {
     const line = raw.trim();
@@ -115,6 +106,7 @@ function parseBlock(block: string): ParsedQuestion | null {
       const raw = line.replace(/^Тип:\s*/, '').trim().toUpperCase();
       if (['SINGLE_CHOICE', 'MULTI_CHOICE', 'TEXT', 'NUMBER', 'TRUE_FALSE'].includes(raw)) {
         q.type = raw;
+        typeExplicit = true;
       }
     } else if (line.startsWith('Баллов:')) {
       q.points = parseInt(line.replace(/^Баллов:\s*/, '')) || 1;
@@ -151,12 +143,10 @@ function parseBlock(block: string): ParsedQuestion | null {
     q.explanation = explanationLines.join(' ').trim();
   }
 
-  // Если явного "Текст:" не было — весь plain-текст это вопрос
   const questionText = plainLines.join('\n').trim();
   if (!questionText) return null;
 
-  // Автодетект типа, если не задан явно
-  if (!q.type || q.type === 'SINGLE_CHOICE') {
+  if (!typeExplicit) {
     if (options.length > 0 && correctLetters.length > 1) q.type = 'MULTI_CHOICE';
     else if (options.length > 0) q.type = 'SINGLE_CHOICE';
     else if (q.correctBool !== undefined) q.type = 'TRUE_FALSE';
@@ -197,7 +187,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Нет доступа' }, { status: 403 });
   }
 
-  const { text, dryRun } = await req.json();
+  const body = await req.json();
+  const { text, dryRun, defaultSubjectId, defaultTopic } = body as {
+    text?: string;
+    dryRun?: boolean;
+    defaultSubjectId?: string | null;
+    defaultTopic?: string | null;
+  };
 
   if (!text || !text.trim()) {
     return NextResponse.json({ error: 'Пустой текст' }, { status: 400 });
@@ -220,6 +216,9 @@ export async function POST(req: Request) {
     select: { id: true, code: true, name: true },
   });
   const subjectByCode = new Map(subjects.map((s) => [s.code, s]));
+  const validDefaultSubject = defaultSubjectId
+    ? subjects.find((s) => s.id === defaultSubjectId)?.id || null
+    : null;
 
   const results: { ok: boolean; index: number; error?: string }[] = [];
   let imported = 0;
@@ -238,8 +237,15 @@ export async function POST(req: Request) {
       if (!subjectId && q.class === '5') subjectId = subjectByCode.get('MATH_5')?.id || null;
       if (!subjectId && q.class === '6') subjectId = subjectByCode.get('MATH_6')?.id || null;
 
+      // Fallback на выбранный в UI предмет
+      if (!subjectId) subjectId = validDefaultSubject;
+
       if (!subjectId) {
-        results.push({ ok: false, index: i, error: `Не найден предмет: ${q.subject || '-'}` });
+        results.push({
+          ok: false,
+          index: i,
+          error: 'Не найден предмет. Укажи «Предмет:» в тексте или выбери предмет по умолчанию',
+        });
         skipped++;
         continue;
       }
@@ -251,10 +257,12 @@ export async function POST(req: Request) {
         continue;
       }
 
+      const finalTopic = q.topic || defaultTopic || 'Без темы';
+
       await prisma.question.create({
         data: {
           subjectId,
-          topic: q.topic || 'Без темы',
+          topic: finalTopic,
           difficulty: q.difficulty || 2,
           type: q.type,
           text: q.text,
@@ -288,5 +296,6 @@ export async function POST(req: Request) {
     skipped,
     total: parsed.length,
     results,
+    questions: parsed, // ← возвращаем распарсенное, чтобы превью отрендерилось
   });
 }

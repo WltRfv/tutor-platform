@@ -1,18 +1,21 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 
+/**
+ * Разбивает текст на задачи.
+ * Комбинированный паттерн — разделяет за один проход по всем меткам:
+ *   "Задача N.", "Задание N.", "№ N", "Task N"
+ *   "N)" или "N." в начале строки
+ */
 function splitTasks(text: string): string[] {
-  // 1. Явные метки
-  let parts = text.split(/\n(?=\s*(?:Задача|Задание|№|Task)\s*\d+[\s:.)]*)/i);
-  if (parts.length > 1) return parts.map((s) => s.trim()).filter(Boolean);
+  const union =
+    /\n(?=\s*(?:(?:Задача|Задание|№|Task)\s*\d+[\s:.)]*|\d{1,3}[).]\s))/i;
+  const parts = text.split(union).map((s) => s.trim()).filter(Boolean);
+  if (parts.length >= 2) return parts;
 
-  // 2. Просто номер "N)" или "N."
-  parts = text.split(/\n(?=\s*\d{1,3}[).]\s)/);
-  if (parts.length >= 2) return parts.map((s) => s.trim()).filter(Boolean);
-
-  // 3. Пустые строки
-  parts = text.split(/\n\s*\n+/);
-  if (parts.length >= 2) return parts.map((s) => s.trim()).filter(Boolean);
+  // fallback: пустые строки
+  const byBlanks = text.split(/\n\s*\n+/).map((s) => s.trim()).filter(Boolean);
+  if (byBlanks.length >= 2) return byBlanks;
 
   return [text.trim()];
 }
@@ -41,10 +44,7 @@ export async function POST(req: Request) {
   if (!text) return NextResponse.json({ error: 'Пустой текст' }, { status: 400 });
 
   const rawBlocks = splitTasks(text);
-  const tasks = rawBlocks
-    .map(stripPrefix)
-    .filter(Boolean)
-    .map((t) => ({ text: t }));
+  const tasks = rawBlocks.map(stripPrefix).filter(Boolean).map((t) => ({ text: t }));
 
   return NextResponse.json({ ok: true, tasks, total: tasks.length });
 }

@@ -1,9 +1,11 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   ArrowLeft,
   Upload,
@@ -33,11 +35,8 @@ type ParsedQuestion = {
   correctBool?: boolean;
 };
 
-type Result = {
-  ok: boolean;
-  index: number;
-  error?: string;
-};
+type Result = { ok: boolean; index: number; error?: string };
+type Subject = { id: string; name: string; category: string; grade: number | null };
 
 export default function ImportQuestionsPage() {
   const router = useRouter();
@@ -47,6 +46,21 @@ export default function ImportQuestionsPage() {
   const [stats, setStats] = useState<{ imported: number; skipped: number; total: number } | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingPreview, setLoadingPreview] = useState(false);
+
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [defaultSubjectId, setDefaultSubjectId] = useState('');
+  const [defaultTopic, setDefaultTopic] = useState('');
+
+  useEffect(() => {
+    fetch('/api/teacher/subjects')
+      .then((r) => r.json())
+      .then((data: Subject[]) => {
+        setSubjects(data);
+        if (data.length > 0 && !defaultSubjectId) setDefaultSubjectId(data[0].id);
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handlePreview = async () => {
     if (!text.trim()) return toast.error('Вставь текст');
@@ -58,7 +72,12 @@ export default function ImportQuestionsPage() {
       const res = await fetch('/api/teacher/questions/import', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, dryRun: true }),
+        body: JSON.stringify({
+          text,
+          dryRun: true,
+          defaultSubjectId: defaultSubjectId || null,
+          defaultTopic: defaultTopic || null,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -78,13 +97,17 @@ export default function ImportQuestionsPage() {
       const res = await fetch('/api/teacher/questions/import', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({
+          text,
+          defaultSubjectId: defaultSubjectId || null,
+          defaultTopic: defaultTopic || null,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setResults(data.results);
       setStats({ imported: data.imported, skipped: data.skipped, total: data.total });
-      setPreview(data.questions);
+      setPreview(data.questions || null);
       toast.success(`Импортировано: ${data.imported} из ${data.total}`);
       router.refresh();
     } catch (e: any) {
@@ -110,37 +133,71 @@ export default function ImportQuestionsPage() {
         <div>
           <h1 className="text-3xl font-bold text-white">Импорт заданий</h1>
           <p className="text-slate-400 text-sm">
-            Вставь текст из Google Docs — система распарсит вопросы
+            Вставь текст — система распарсит вопросы
           </p>
         </div>
       </div>
 
-      {/* Инструкция */}
       <div className="backdrop-blur-xl bg-blue-500/5 border border-blue-500/20 rounded-2xl p-5 mb-6">
         <div className="flex items-start gap-3">
           <FileText className="h-5 w-5 text-blue-400 flex-shrink-0 mt-0.5" />
           <div className="flex-1 text-sm text-slate-300">
             <div className="font-semibold text-white mb-2">Как импортировать:</div>
             <ol className="list-decimal list-inside space-y-1 text-slate-400">
-              <li>Открой Google Docs с заданиями</li>
-              <li>Выдели всё (Cmd+A) → скопируй (Cmd+C)</li>
-              <li>Вставь в поле ниже (Cmd+V)</li>
+              <li>Выбери предмет и тему по умолчанию (ниже) — они применятся, если в тексте вопроса не указан свой предмет</li>
+              <li>Вставь текст заданий</li>
               <li>Нажми «Проверить» — увидишь превью</li>
               <li>Если всё ок — нажми «Импортировать»</li>
             </ol>
             <div className="mt-3 text-xs">
-              Между вопросами должен быть разделитель: <code className="text-purple-300">━━━ ВОПРОС ━━━</code>
+              Разделители: <code className="text-purple-300">━━━ ВОПРОС ━━━</code>,{' '}
+              <code className="text-purple-300">Задача 1.</code>,{' '}
+              <code className="text-purple-300">1)</code>,{' '}
+              <code className="text-purple-300">№ 1</code>.
             </div>
           </div>
         </div>
       </div>
 
-      {/* Поле ввода */}
+      {/* Предмет и тема по умолчанию */}
+      <div className="grid md:grid-cols-2 gap-4 mb-5">
+        <div>
+          <Label className="text-slate-300">Предмет по умолчанию</Label>
+          <select
+            value={defaultSubjectId}
+            onChange={(e) => setDefaultSubjectId(e.target.value)}
+            className="mt-2 w-full bg-slate-900 border border-white/10 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:border-purple-500/50"
+          >
+            <option value="">— Не использовать —</option>
+            {subjects.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}{s.grade ? ` (${s.grade} кл.)` : ''}
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-slate-500 mt-1">
+            Если в тексте нет «Предмет:» и «Класс:» — возьмётся этот
+          </p>
+        </div>
+        <div>
+          <Label className="text-slate-300">Тема по умолчанию</Label>
+          <Input
+            value={defaultTopic}
+            onChange={(e) => setDefaultTopic(e.target.value)}
+            placeholder="Например: Квадратные уравнения"
+            className="mt-2 bg-white/5 border-white/10 text-white"
+          />
+          <p className="text-xs text-slate-500 mt-1">
+            Если в тексте нет «Тема:» — возьмётся эта
+          </p>
+        </div>
+      </div>
+
       <div className="mb-4">
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Вставь текст из Google Docs..."
+          placeholder="Вставь текст с заданиями..."
           rows={15}
           className="w-full bg-white/5 border border-white/10 text-white rounded-xl p-4 text-sm font-mono resize-y focus:outline-none focus:border-purple-500/50 leading-relaxed"
         />
@@ -155,13 +212,12 @@ export default function ImportQuestionsPage() {
         </div>
       </div>
 
-      {/* Кнопки */}
       <div className="flex gap-2 flex-wrap mb-6">
         <Button
           onClick={handlePreview}
           disabled={loadingPreview || !text.trim()}
           variant="outline"
-          className="gap-2 border-white/20 text-white hover:bg-white/5"
+          className="gap-2 border-white/20 text-slate-200 hover:bg-white/5 hover:text-white"
         >
           {loadingPreview ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -184,7 +240,6 @@ export default function ImportQuestionsPage() {
         </Button>
       </div>
 
-      {/* Статистика */}
       {stats && (
         <div className="grid grid-cols-3 gap-3 mb-6">
           <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl p-4">
@@ -202,7 +257,6 @@ export default function ImportQuestionsPage() {
         </div>
       )}
 
-      {/* Превью */}
       {preview && preview.length > 0 && (
         <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-5">
           <div className="text-sm font-semibold text-white mb-4">
@@ -212,7 +266,6 @@ export default function ImportQuestionsPage() {
             {preview.map((q, i) => {
               const result = results?.find((r) => r.index === i);
               const isError = result && !result.ok;
-
               return (
                 <div
                   key={i}
@@ -263,14 +316,10 @@ export default function ImportQuestionsPage() {
         </div>
       )}
 
-      {/* Пустой результат */}
       {preview && preview.length === 0 && (
         <div className="text-center py-12 text-slate-500 backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl">
           <AlertTriangle className="h-12 w-12 mx-auto mb-4 opacity-30" />
           <p>Не распознано ни одного вопроса</p>
-          <p className="text-xs mt-2">
-            Проверь, что между вопросами разделитель <code>━━━ ВОПРОС ━━━</code>
-          </p>
         </div>
       )}
     </div>
