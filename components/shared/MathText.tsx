@@ -21,70 +21,62 @@ export function MathText({
         remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={[rehypeRaw, rehypeKatex]}
         components={{
+          // ─── Параграфы: отступ снизу, читаемая строка ───
           p: ({ children }) => (
-            <p className="whitespace-pre-wrap leading-relaxed">{children}</p>
-          ),
-          img: ({ src, alt }) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={typeof src === 'string' ? src : ''}
-              alt={alt || ''}
-              className="rounded-xl border border-white/10 my-3 max-h-[600px] object-contain"
-            />
-          ),
-          table: ({ children }) => (
-            <div className="overflow-x-auto my-4">
-              <table className="w-full border-collapse text-sm">{children}</table>
-            </div>
-          ),
-          thead: ({ children }) => (
-            <thead className="bg-white/5">{children}</thead>
-          ),
-          th: ({ children }) => (
-            <th className="border border-white/10 px-3 py-2 text-left font-semibold">
+            <p className="whitespace-pre-wrap leading-7 mb-4 text-[15px] last:mb-0">
               {children}
-            </th>
+            </p>
           ),
-          td: ({ children }) => (
-            <td className="border border-white/10 px-3 py-2 align-top">
-              {children}
-            </td>
-          ),
-          code: ({ children, className: codeClass }) => {
-            const isBlock = (codeClass || '').includes('language-');
-            if (isBlock) {
-              return (
-                <pre className="bg-slate-950/80 border border-white/10 rounded-lg p-3 text-xs font-mono text-slate-200 overflow-x-auto my-3">
-                  <code>{children}</code>
-                </pre>
-              );
-            }
-            return (
-              <code className="bg-white/10 rounded px-1.5 py-0.5 text-xs font-mono text-purple-200">
-                {children}
-              </code>
-            );
-          },
-          blockquote: ({ children }) => (
-            <blockquote className="border-l-4 border-purple-500/40 bg-white/5 pl-4 py-2 my-3 italic text-slate-300">
-              {children}
-            </blockquote>
-          ),
-          ul: ({ children }) => (
-            <ul className="list-disc list-inside space-y-1 my-2">{children}</ul>
-          ),
-          ol: ({ children }) => (
-            <ol className="list-decimal list-inside space-y-1 my-2">{children}</ol>
-          ),
+
+          // ─── Заголовки с отступами ───
           h1: ({ children }) => (
-            <h1 className="text-2xl font-bold text-white mt-5 mb-2">{children}</h1>
+            <h1 className="text-2xl font-bold text-white mt-8 mb-4 first:mt-0">
+              {children}
+            </h1>
           ),
           h2: ({ children }) => (
-            <h2 className="text-xl font-bold text-white mt-4 mb-2">{children}</h2>
+            <h2 className="text-xl font-bold text-white mt-8 mb-3 first:mt-0">
+              {children}
+            </h2>
           ),
           h3: ({ children }) => (
-            <h3 className="text-lg font-semibold text-white mt-3 mb-1.5">{children}</h3>
+            <h3 className="text-lg font-semibold text-white mt-6 mb-2 first:mt-0">
+              {children}
+            </h3>
           ),
+          h4: ({ children }) => (
+            <h4 className="text-base font-semibold text-white mt-4 mb-2">
+              {children}
+            </h4>
+          ),
+
+          // ─── Списки с отступами ───
+          ul: ({ children }) => (
+            <ul className="list-disc pl-6 space-y-1.5 my-4 text-[15px] leading-7">
+              {children}
+            </ul>
+          ),
+          ol: ({ children }) => (
+            <ol className="list-decimal pl-6 space-y-1.5 my-4 text-[15px] leading-7">
+              {children}
+            </ol>
+          ),
+          li: ({ children }) => (
+            <li className="pl-1 marker:text-purple-400">{children}</li>
+          ),
+
+          // ─── Жирный, курсив ───
+          strong: ({ children }) => (
+            <strong className="font-semibold text-white">{children}</strong>
+          ),
+          em: ({ children }) => (
+            <em className="italic text-slate-200">{children}</em>
+          ),
+
+          // ─── Разделитель ───
+          hr: () => <hr className="border-white/10 my-6" />,
+
+          // ─── Ссылки ───
           a: ({ href, children }) => (
             <a
               href={href}
@@ -95,7 +87,62 @@ export function MathText({
               {children}
             </a>
           ),
-          hr: () => <hr className="border-white/10 my-4" />,
+
+          // ─── Картинки ───
+          img: ({ src, alt }) => (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={typeof src === 'string' ? src : ''}
+              alt={alt || ''}
+              className="rounded-xl border border-white/10 my-5 max-h-[600px] object-contain mx-auto block"
+            />
+          ),
+
+          // ─── Таблицы с отступами ───
+          table: ({ children }) => (
+            <div className="overflow-x-auto my-5 rounded-xl border border-white/10">
+              <table className="w-full border-collapse text-sm">
+                {children}
+              </table>
+            </div>
+          ),
+          thead: ({ children }) => (
+            <thead className="bg-white/5">{children}</thead>
+          ),
+          th: ({ children }) => (
+            <th className="border-b border-white/10 px-4 py-3 text-left font-semibold text-white">
+              {children}
+            </th>
+          ),
+          td: ({ children }) => (
+            <td className="border-b border-white/5 px-4 py-2.5 align-top text-slate-300">
+              {children}
+            </td>
+          ),
+
+          // ─── Код ───
+          code: ({ children, className: codeClass }) => {
+            const isBlock = (codeClass || '').includes('language-');
+            if (isBlock) {
+              return (
+                <pre className="bg-slate-950/80 border border-white/10 rounded-lg p-4 text-xs font-mono text-slate-200 overflow-x-auto my-4">
+                  <code>{children}</code>
+                </pre>
+              );
+            }
+            return (
+              <code className="bg-white/10 rounded px-1.5 py-0.5 text-[13px] font-mono text-purple-200">
+                {children}
+              </code>
+            );
+          },
+
+          // ─── Цитаты ───
+          blockquote: ({ children }) => (
+            <blockquote className="border-l-4 border-purple-500/50 bg-white/5 pl-4 pr-3 py-3 my-4 italic text-slate-300 rounded-r-lg">
+              {children}
+            </blockquote>
+          ),
         }}
       >
         {children}

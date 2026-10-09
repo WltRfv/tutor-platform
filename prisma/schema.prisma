@@ -129,6 +129,7 @@ model Topic {
   unlocks       TopicUnlock[]
   lessonPlans   LessonPlan[]
   presentations Presentation[]
+  subtopics Subtopic[]
 
   @@index([subjectId, order])
 }
@@ -167,6 +168,9 @@ model Note {
   author          User     @relation("TeacherNotes", fields: [authorId], references: [id])
   createdAt       DateTime @default(now())
 
+  subtopicId  String?
+  subtopic    Subtopic? @relation(fields: [subtopicId], references: [id], onDelete: SetNull)
+
   selfWorkStatuses SelfWorkStatus[]
   presentation     Presentation?    @relation(fields: [presentationId], references: [id])
   presentationId   String?
@@ -187,6 +191,9 @@ model LessonPlan {
   author    User     @relation("TeacherLessonPlans", fields: [authorId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  subtopicId  String?
+  subtopic    Subtopic? @relation(fields: [subtopicId], references: [id], onDelete: SetNull)
 
   @@index([subjectId])
   @@index([topicId])
@@ -264,6 +271,9 @@ model Test {
 
   submissions    Submission[]
   retakeRequests RetakeRequest[]
+
+  subtopicId  String?
+  subtopic    Subtopic? @relation(fields: [subtopicId], references: [id], onDelete: SetNull)
 
   @@index([teacherId, createdAt])
 }
@@ -348,6 +358,8 @@ model Homework {
   tasks       HomeworkTask[]
   submissions HomeworkSubmission[]
   starts      HomeworkStart[]
+  subtopicId  String?
+  subtopic    Subtopic? @relation(fields: [subtopicId], references: [id], onDelete: SetNull)
 
   @@index([teacherId, createdAt])
   @@index([subjectId])
@@ -567,6 +579,9 @@ model Presentation {
   slides Slide[]
   notes  Note[]
 
+  subtopicId  String?
+  subtopic    Subtopic? @relation(fields: [subtopicId], references: [id], onDelete: SetNull)
+
   @@index([subjectId])
   @@index([topicId])
   @@index([authorId])
@@ -584,4 +599,24 @@ model Slide {
   updatedAt      DateTime     @updatedAt
 
   @@index([presentationId])
+}
+model Subtopic {
+  id          String   @id @default(cuid())
+  topicId     String
+  topic       Topic    @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  order       Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  notes         Note[]
+  tests         Test[]
+  homeworks     Homework[]
+  lessonPlans   LessonPlan[]
+  presentations Presentation[]
+
+  @@unique([topicId, title])
+  @@index([topicId, order])
 }
