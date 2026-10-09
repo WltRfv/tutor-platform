@@ -113,7 +113,7 @@ export default async function TestsPage({
     .filter((t) => {
       if (!t.topicId) return true;
       if (!contentFilter.has(t.topicId)) return false;
-      const filter = contentFilter.get(t.topicId);
+      const filter = contentFilter.get(t.topicId) ?? null;
       if (filter === null) return true;
       return filter.has(`test:${t.id}`);
     })

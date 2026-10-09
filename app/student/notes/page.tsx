@@ -109,12 +109,11 @@ export default async function NotesPage({
     include: { subject: { select: { name: true } } },
   });
 
-  // Фильтр по contentIds
   const notes = rawNotes
     .filter((n) => {
       if (!n.topicId) return true;
       if (!contentFilter.has(n.topicId)) return false;
-      const filter = contentFilter.get(n.topicId);
+      const filter = contentFilter.get(n.topicId) ?? null;
       if (filter === null) return true;
       return filter.has(`note:${n.id}`);
     })

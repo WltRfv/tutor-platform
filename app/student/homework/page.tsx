@@ -64,7 +64,6 @@ export default async function StudentHomeworkPage({
     currentSubjectId = subjectIds[0];
   }
 
-  // Учитываем не только открытые темы, но и выбранный контент
   const unlocks = await prisma.topicUnlock.findMany({
     where: { userId },
     select: { topicId: true, contentIds: true },
@@ -147,19 +146,22 @@ export default async function StudentHomeworkPage({
 
   // Фильтр по contentIds
   const homeworks = rawHomeworks.filter((hw) => {
-    if (!hw.topicId) return true; // без темы — показываем
-    if (!contentFilter.has(hw.topicId)) {
-      // Тема не открыта
-      // Исключение: персональные ДЗ видны даже без разблокировки темы
-      if (hw.targetType === 'SPECIFIC' && hw.targetUserId === userId) return true;
+    if (!hw.topicId) return true;
+
+    const hasTopicFilter = contentFilter.has(hw.topicId);
+    if (!hasTopicFilter) {
+      // Темы нет в разблокированных — персональное ДЗ всё равно видно
+      if (hw.targetType === 'SPECIFIC' && hw.targetUserId === userId) {
+        return true;
+      }
       return false;
     }
-    const filter = contentFilter.get(hw.topicId);
+
+    const filter = contentFilter.get(hw.topicId) ?? null;
     if (filter === null) return true;
     return filter.has(`homework:${hw.id}`);
   });
 
-  // Сортировка: сначала с dueDate по возрастанию, потом без даты по §N
   homeworks.sort((a, b) => {
     const aHas = !!a.dueDate;
     const bHas = !!b.dueDate;
