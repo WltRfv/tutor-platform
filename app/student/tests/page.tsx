@@ -8,6 +8,14 @@ import { StudentSubjectTabs } from '@/components/student/StudentSubjectTabs';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+function getSectionNumber(title: string): number {
+  const m = title.match(/§\s*(\d+(?:[.,]\d+)?)/);
+  if (m) return parseFloat(m[1].replace(',', '.'));
+  const m2 = title.match(/^(\d+(?:[.,]\d+)?)\s*[.)]/);
+  if (m2) return parseFloat(m2[1].replace(',', '.'));
+  return 999999;
+}
+
 export default async function TestsPage({
   searchParams,
 }: {
@@ -47,9 +55,14 @@ export default async function TestsPage({
 
   const unlocks = await prisma.topicUnlock.findMany({
     where: { userId },
-    select: { topicId: true },
+    select: { topicId: true, contentIds: true },
   });
   const unlockedTopicIds = unlocks.map((u) => u.topicId);
+  const contentFilter = new Map<string, Set<string> | null>();
+  unlocks.forEach((u) => {
+    const raw = u.contentIds as unknown as string[] | null | undefined;
+    contentFilter.set(u.topicId, Array.isArray(raw) ? new Set(raw) : null);
+  });
 
   if (!currentSubjectId) {
     const allTests = await prisma.test.findMany({
@@ -88,15 +101,28 @@ export default async function TestsPage({
     );
   }
 
-  const tests = await prisma.test.findMany({
+  const rawTests = await prisma.test.findMany({
     where: {
       published: true,
       subjectId: currentSubjectId,
-      OR: [{ topicId: null }, { topicId: { in: unlockedTopicIds } }],
     },
-    orderBy: { createdAt: 'desc' },
     include: { subject: { select: { name: true } } },
   });
+
+  const tests = rawTests
+    .filter((t) => {
+      if (!t.topicId) return true;
+      if (!contentFilter.has(t.topicId)) return false;
+      const filter = contentFilter.get(t.topicId);
+      if (filter === null) return true;
+      return filter.has(`test:${t.id}`);
+    })
+    .sort((a, b) => {
+      const na = getSectionNumber(a.title);
+      const nb = getSectionNumber(b.title);
+      if (na !== nb) return na - nb;
+      return a.title.localeCompare(b.title, 'ru');
+    });
 
   const submissions = await prisma.submission.findMany({
     where: { userId, testId: { not: null } },
@@ -113,7 +139,9 @@ export default async function TestsPage({
         <h1 className="text-3xl font-bold text-white mb-1">
           {currentSubject?.name || 'Тесты'}
         </h1>
-        <p className="text-slate-400 text-sm">Доступно тестов: {tests.length}</p>
+        <p className="text-slate-400 text-sm">
+          Доступно тестов: {tests.length}
+        </p>
       </div>
 
       <StudentSubjectTabs

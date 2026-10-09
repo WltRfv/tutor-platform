@@ -9,6 +9,44 @@ import { BookOpen, FileText, ArrowRight, Layers } from 'lucide-react';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+/** Извлекает номер параграфа из заголовка: "§1. Проценты" → 1, "1) Задача" → 1 */
+function getSectionNumber(title: string): number {
+  const m = title.match(/§\s*(\d+(?:[.,]\d+)?)/);
+  if (m) return parseFloat(m[1].replace(',', '.'));
+  const m2 = title.match(/^(\d+(?:[.,]\d+)?)\s*[.)]/);
+  if (m2) return parseFloat(m2[1].replace(',', '.'));
+  return 999999;
+}
+
+function sortBySection<T extends { title: string }>(items: T[]): T[] {
+  return [...items].sort((a, b) => {
+    const na = getSectionNumber(a.title);
+    const nb = getSectionNumber(b.title);
+    if (na !== nb) return na - nb;
+    return a.title.localeCompare(b.title, 'ru');
+  });
+}
+
+type HWItem = { id: string; title: string; dueDate: Date | null };
+
+function sortHomeworks(items: HWItem[]): HWItem[] {
+  return [...items].sort((a, b) => {
+    const aHas = !!a.dueDate;
+    const bHas = !!b.dueDate;
+    if (aHas && !bHas) return -1;
+    if (!aHas && bHas) return 1;
+    if (aHas && bHas) {
+      const da = new Date(a.dueDate!).getTime();
+      const db = new Date(b.dueDate!).getTime();
+      if (da !== db) return da - db;
+    }
+    const na = getSectionNumber(a.title);
+    const nb = getSectionNumber(b.title);
+    if (na !== nb) return na - nb;
+    return a.title.localeCompare(b.title, 'ru');
+  });
+}
+
 export default async function StudentTopicsPage({
   searchParams,
 }: {
@@ -67,7 +105,7 @@ export default async function StudentTopicsPage({
             { targetType: 'SPECIFIC', targetUserId: userId },
           ],
         },
-        select: { id: true, title: true },
+        select: { id: true, title: true, dueDate: true },
       },
       presentations: {
         where: { published: true },
@@ -82,7 +120,6 @@ export default async function StudentTopicsPage({
     const raw = (unlock?.contentIds as unknown) as string[] | null | undefined;
     const selectedContent = Array.isArray(raw) ? new Set(raw) : null;
 
-    // Фильтрация: selectedContent === null означает "всё доступно"
     const notes = selectedContent
       ? t.notes.filter((n) => selectedContent.has(`note:${n.id}`))
       : t.notes;
@@ -104,14 +141,13 @@ export default async function StudentTopicsPage({
       subjectId: t.subjectId,
       subjectName: t.subject.name,
       isUnlocked,
-      notes,
-      tests,
-      homeworks,
-      presentations,
+      notes: sortBySection(notes),
+      tests: sortBySection(tests),
+      homeworks: sortHomeworks(homeworks),
+      presentations: sortBySection(presentations),
     };
   });
 
-  // Если предмет не выбран
   if (!currentSubjectId) {
     const topicsCounts: Record<string, number> = {};
     topics.forEach((t) => {

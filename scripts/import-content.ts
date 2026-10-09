@@ -30,10 +30,6 @@ function cleanText(s: string): string {
     .trim();
 }
 
-/**
- * Разбивает файл на секции по маркерам === NAME ===.
- * Если одна и та же секция встречается несколько раз — склеивает их содержимое.
- */
 function splitSections(text: string): Record<string, string> {
   const buckets: Record<string, string[]> = {};
   const re = /^===\s*([A-Z_]+)\s*===\s*$/gm;
@@ -67,6 +63,18 @@ function parseKV(block: string): Record<string, string> {
     if (m) out[m[1].trim().toLowerCase()] = m[2].trim();
   }
   return out;
+}
+
+function logProgress(label: string, current: number, total: number) {
+  const width = 30;
+  const filled = Math.round((current / total) * width);
+  const bar = '█'.repeat(filled) + '░'.repeat(width - filled);
+  process.stdout.write(`   ${label}: [${bar}] ${current}/${total}\r`);
+}
+
+function logDone(label: string, total: number, elapsedMs?: number) {
+  const time = elapsedMs ? ` (${(elapsedMs / 1000).toFixed(1)}с)` : '';
+  process.stdout.write(`   ${label}: ${total}${time}                    \n`);
 }
 
 // ───────────────────────────── SUBJECT + TOPICS ─────────────────────────────
@@ -450,267 +458,380 @@ async function importSubject(
   if (!teacher) throw new Error('Не найден TEACHER в БД');
   const teacherId = teacher.id;
 
-  // TOPICS — плоский список глав
+  // ─── Разбираем ВСЁ заранее ───
+  console.log('   📄 Парсинг файла...');
+  const notesPre = parseNotes(sections['NOTES'] || '');
+  const testsPre = parseTests(sections['TESTS'] || '');
+  const homeworksPre = parseHomeworks(sections['HOMEWORK'] || '');
+  const plansPre = parseLessonPlans(sections['LESSON_PLANS'] || '');
+  const presentationsPre = parsePresentations(sections['PRESENTATIONS'] || '');
+  const questionsPre = parseQuestionsBlock(sections['QUESTIONS'] || '');
+  console.log(
+    `   Найдено: конспектов ${notesPre.length}, заданий ${questionsPre.length}, тестов ${testsPre.length}, ДЗ ${homeworksPre.length}, методичек ${plansPre.length}, презентаций ${presentationsPre.length}`
+  );
+
+  // ─── TOPICS ───
   const topicMap = new Map<string, string>();
   const topicsList = parseTopicsList(sections['TOPICS'] || '');
-  for (let i = 0; i < topicsList.length; i++) {
-    const title = topicsList[i];
-    let topic = await prisma.topic.findFirst({
-      where: { subjectId: subject.id, title },
-    });
-    if (topic) {
+  const allTopicTitles = new Set<string>(topicsList);
+  notesPre.forEach((n) => n.topicTitle && allTopicTitles.add(n.topicTitle));
+  testsPre.forEach((t) => t.topicTitle && allTopicTitles.add(t.topicTitle));
+  homeworksPre.forEach((h) => h.topicTitle && allTopicTitles.add(h.topicTitle));
+  plansPre.forEach((p) => p.topicTitle && allTopicTitles.add(p.topicTitle));
+  presentationsPre.forEach(
+    (p) => p.topicTitle && allTopicTitles.add(p.topicTitle)
+  );
+
+  // Один запрос — все существующие темы
+  const existingTopics = await prisma.topic.findMany({
+    where: { subjectId: subject.id },
+    select: { id: true, title: true },
+  });
+  const existingTopicMap = new Map(existingTopics.map((t) => [t.title, t.id]));
+
+  console.log(`   🗂 Создаю/обновляю ${allTopicTitles.size} тем...`);
+  let orderCounter = 0;
+  for (const title of allTopicTitles) {
+    const existingId = existingTopicMap.get(title);
+    if (existingId) {
       await prisma.topic.update({
-        where: { id: topic.id },
-        data: { order: i },
+        where: { id: existingId },
+        data: { order: orderCounter++ },
       });
+      topicMap.set(title, existingId);
     } else {
-      topic = await prisma.topic.create({
-        data: { subjectId: subject.id, title, order: i, isActive: true },
+      const created = await prisma.topic.create({
+        data: { subjectId: subject.id, title, order: orderCounter++, isActive: true },
       });
+      topicMap.set(title, created.id);
       report['Глав создано'] = (report['Глав создано'] || 0) + 1;
     }
-    topicMap.set(title, topic.id);
   }
 
-  async function ensureTopic(title: string): Promise<string | null> {
+  function ensureTopic(title: string): string | null {
     if (!title) return null;
-    const key = title.trim();
-    if (topicMap.has(key)) return topicMap.get(key)!;
-    let topic = await prisma.topic.findFirst({
-      where: { subjectId: subject.id, title: key },
-    });
-    if (!topic) {
-      topic = await prisma.topic.create({
-        data: { subjectId: subject.id, title: key, order: 999 },
-      });
-      report['Глав создано'] = (report['Глав создано'] || 0) + 1;
-    }
-    topicMap.set(key, topic.id);
-    return topic.id;
+    return topicMap.get(title.trim()) || null;
   }
 
-  // NOTES — внутри главы, заголовок = параграф
-  const notes = parseNotes(sections['NOTES'] || '');
-  for (const n of notes) {
-    const topicId = await ensureTopic(n.topicTitle);
-    if (!topicId) {
-      report['Конспектов пропущено'] =
-        (report['Конспектов пропущено'] || 0) + 1;
-      continue;
-    }
-    const existing = await prisma.note.findFirst({
-      where: { subjectId: subject.id, title: n.title },
+  // ─── NOTES ───
+  if (notesPre.length > 0) {
+    const t0 = Date.now();
+    const existingNotes = await prisma.note.findMany({
+      where: { subjectId: subject.id },
+      select: { id: true, title: true },
     });
-    const data = {
-      title: n.title,
-      content: n.theory || ' ',
-      practiceContent: n.practice || null,
-      selfWorkContent: n.selfwork || null,
-      subjectId: subject.id,
-      topicId,
-      topicName: n.topicTitle,
-      published: n.published,
-      authorId: teacherId,
-    };
-    if (existing) await prisma.note.update({ where: { id: existing.id }, data });
-    else await prisma.note.create({ data });
-    report['Конспектов'] = (report['Конспектов'] || 0) + 1;
+    const existingNoteMap = new Map(existingNotes.map((n) => [n.title, n.id]));
+
+    for (let i = 0; i < notesPre.length; i++) {
+      logProgress('📘 Конспекты', i + 1, notesPre.length);
+      const n = notesPre[i];
+      const topicId = ensureTopic(n.topicTitle);
+      if (!topicId) {
+        report['Конспектов пропущено'] =
+          (report['Конспектов пропущено'] || 0) + 1;
+        continue;
+      }
+      const data = {
+        title: n.title,
+        content: n.theory || ' ',
+        practiceContent: n.practice || null,
+        selfWorkContent: n.selfwork || null,
+        subjectId: subject.id,
+        topicId,
+        topicName: n.topicTitle,
+        published: n.published,
+        authorId: teacherId,
+      };
+      const existingId = existingNoteMap.get(n.title);
+      if (existingId) {
+        await prisma.note.update({ where: { id: existingId }, data });
+      } else {
+        await prisma.note.create({ data });
+      }
+    }
+    logDone('📘 Конспекты', notesPre.length, Date.now() - t0);
+    report['Конспектов'] = (report['Конспектов'] || 0) + notesPre.length;
   }
 
-  // QUESTIONS — банк заданий
-  const questions = parseQuestionsBlock(sections['QUESTIONS'] || '');
-  for (const q of questions) {
-    const existing = await prisma.question.findFirst({
-      where: { subjectId: subject.id, text: q.text },
+  // ─── QUESTIONS ───
+  if (questionsPre.length > 0) {
+    const t0 = Date.now();
+    console.log('   🧠 Загружаю существующие вопросы...');
+    const existingQuestions = await prisma.question.findMany({
+      where: { subjectId: subject.id },
+      select: { id: true, text: true },
     });
-    const data: any = {
-      subjectId: subject.id,
-      topic: q.topicTitle || 'Без темы',
-      difficulty: q.difficulty,
-      type: q.type,
-      text: q.text,
-      options: q.options.length ? q.options : undefined,
-      correct: q.type === 'SINGLE_CHOICE' ? q.correct ?? 0 : undefined,
-      correctMulti: q.type === 'MULTI_CHOICE' ? q.correctMulti : undefined,
-      correctText: q.type === 'TEXT' ? q.correctText ?? null : null,
-      matchMode: q.type === 'TEXT' ? 'CONTAINS' : null,
-      correctNumber: q.type === 'NUMBER' ? q.correctNumber ?? null : null,
-      tolerance: q.type === 'NUMBER' ? q.tolerance : null,
-      correctBool: q.type === 'TRUE_FALSE' ? q.correctBool ?? null : null,
-      explanation: q.explanation || null,
-      points: q.points,
-      source: 'import',
-      authorId: teacherId,
-    };
-    if (existing)
-      await prisma.question.update({ where: { id: existing.id }, data });
-    else await prisma.question.create({ data });
-    report['Заданий в банк'] = (report['Заданий в банк'] || 0) + 1;
+    const existingQMap = new Map(
+      existingQuestions.map((q) => [q.text, q.id])
+    );
+    console.log(`   Существующих: ${existingQuestions.length}`);
+
+    const toCreateQ: any[] = [];
+    const toUpdateQ: { id: string; data: any }[] = [];
+
+    for (const q of questionsPre) {
+      const data: any = {
+        subjectId: subject.id,
+        topic: q.topicTitle || 'Без темы',
+        difficulty: q.difficulty,
+        type: q.type,
+        text: q.text,
+        options: q.options.length ? q.options : undefined,
+        correct: q.type === 'SINGLE_CHOICE' ? q.correct ?? 0 : undefined,
+        correctMulti: q.type === 'MULTI_CHOICE' ? q.correctMulti : undefined,
+        correctText: q.type === 'TEXT' ? q.correctText ?? null : null,
+        matchMode: q.type === 'TEXT' ? 'CONTAINS' : null,
+        correctNumber: q.type === 'NUMBER' ? q.correctNumber ?? null : null,
+        tolerance: q.type === 'NUMBER' ? q.tolerance : null,
+        correctBool: q.type === 'TRUE_FALSE' ? q.correctBool ?? null : null,
+        explanation: q.explanation || null,
+        points: q.points,
+        source: 'import',
+        authorId: teacherId,
+      };
+      const existingId = existingQMap.get(q.text);
+      if (existingId) {
+        toUpdateQ.push({ id: existingId, data });
+      } else {
+        toCreateQ.push(data);
+      }
+    }
+
+    if (toCreateQ.length > 0) {
+      console.log(`   📥 Вставляю ${toCreateQ.length} новых вопросов...`);
+      // Разбиваем на чанки по 500 — если вдруг очень много
+      const CHUNK = 500;
+      for (let i = 0; i < toCreateQ.length; i += CHUNK) {
+        const chunk = toCreateQ.slice(i, i + CHUNK);
+        await prisma.question.createMany({ data: chunk });
+        logProgress('📥 Вставка вопросов', Math.min(i + CHUNK, toCreateQ.length), toCreateQ.length);
+      }
+      process.stdout.write('\n');
+    }
+
+    if (toUpdateQ.length > 0) {
+      console.log(`   ✏️ Обновляю ${toUpdateQ.length} существующих...`);
+      for (let i = 0; i < toUpdateQ.length; i++) {
+        logProgress('✏️ Обновление', i + 1, toUpdateQ.length);
+        await prisma.question.update({
+          where: { id: toUpdateQ[i].id },
+          data: toUpdateQ[i].data,
+        });
+      }
+      process.stdout.write('\n');
+    }
+
+    logDone('🧠 Вопросы', questionsPre.length, Date.now() - t0);
+    report['Заданий в банк'] = questionsPre.length;
   }
 
-  // TESTS
-  const tests = parseTests(sections['TESTS'] || '');
-  for (const t of tests) {
-    const topicId = await ensureTopic(t.topicTitle);
-    const questionsJson = t.questions.map((q: RawQuestion, i: number) => ({
-      id: `q${i + 1}`,
-      type: q.type,
-      text: q.text,
-      points: q.points,
-      ...(q.type === 'SINGLE_CHOICE' && {
-        options: q.options,
-        correct: q.correct,
-      }),
-      ...(q.type === 'MULTI_CHOICE' && {
-        options: q.options,
-        correctMulti: q.correctMulti,
-      }),
-      ...(q.type === 'TEXT' && {
-        correctText: q.correctText,
-        matchMode: 'CONTAINS',
-      }),
-      ...(q.type === 'NUMBER' && {
-        correctNumber: q.correctNumber,
-        tolerance: q.tolerance,
-      }),
-      ...(q.type === 'TRUE_FALSE' && { correctBool: q.correctBool }),
-    }));
-
-    const existing = await prisma.test.findFirst({
-      where: { subjectId: subject.id, title: t.title },
+  // ─── TESTS ───
+  if (testsPre.length > 0) {
+    const t0 = Date.now();
+    const existingTests = await prisma.test.findMany({
+      where: { subjectId: subject.id },
+      select: { id: true, title: true },
     });
-    const data = {
-      title: t.title,
-      subjectId: subject.id,
-      teacherId,
-      mode: 'MANUAL',
-      questions: questionsJson,
-      timeLimit: t.timeLimit,
-      attemptsAllowed: t.attemptsAllowed,
-      published: t.published,
-      topicId: topicId || null,
-    };
-    if (existing) await prisma.test.update({ where: { id: existing.id }, data });
-    else await prisma.test.create({ data });
-    report['Тестов'] = (report['Тестов'] || 0) + 1;
+    const existingTestMap = new Map(existingTests.map((t) => [t.title, t.id]));
+
+    for (let i = 0; i < testsPre.length; i++) {
+      logProgress('📝 Тесты', i + 1, testsPre.length);
+      const t = testsPre[i];
+      const topicId = ensureTopic(t.topicTitle);
+      const questionsJson = t.questions.map((q: RawQuestion, qi: number) => ({
+        id: `q${qi + 1}`,
+        type: q.type,
+        text: q.text,
+        points: q.points,
+        ...(q.type === 'SINGLE_CHOICE' && {
+          options: q.options,
+          correct: q.correct,
+        }),
+        ...(q.type === 'MULTI_CHOICE' && {
+          options: q.options,
+          correctMulti: q.correctMulti,
+        }),
+        ...(q.type === 'TEXT' && {
+          correctText: q.correctText,
+          matchMode: 'CONTAINS',
+        }),
+        ...(q.type === 'NUMBER' && {
+          correctNumber: q.correctNumber,
+          tolerance: q.tolerance,
+        }),
+        ...(q.type === 'TRUE_FALSE' && { correctBool: q.correctBool }),
+      }));
+
+      const data = {
+        title: t.title,
+        subjectId: subject.id,
+        teacherId,
+        mode: 'MANUAL',
+        questions: questionsJson,
+        timeLimit: t.timeLimit,
+        attemptsAllowed: t.attemptsAllowed,
+        published: t.published,
+        topicId: topicId || null,
+      };
+
+      const existingId = existingTestMap.get(t.title);
+      if (existingId) {
+        await prisma.test.update({ where: { id: existingId }, data });
+      } else {
+        await prisma.test.create({ data });
+      }
+    }
+    logDone('📝 Тесты', testsPre.length, Date.now() - t0);
+    report['Тестов'] = (report['Тестов'] || 0) + testsPre.length;
   }
 
-  // HOMEWORK
-  const homeworks = parseHomeworks(sections['HOMEWORK'] || '');
-  for (const h of homeworks) {
-    const topicId = await ensureTopic(h.topicTitle);
-    const existing = await prisma.homework.findFirst({
-      where: { subjectId: subject.id, title: h.title },
+  // ─── HOMEWORK ───
+  if (homeworksPre.length > 0) {
+    const t0 = Date.now();
+    const existingHomeworks = await prisma.homework.findMany({
+      where: { subjectId: subject.id },
+      select: { id: true, title: true },
     });
-    let hwId: string;
-    if (existing) {
-      await prisma.homework.update({
-        where: { id: existing.id },
-        data: {
-          description: h.description || null,
-          dueDate: h.dueDate,
-          targetType: h.targetType,
-          topicId: topicId || null,
-          topicName: h.topicTitle || null,
-        },
-      });
-      hwId = existing.id;
-      await prisma.homeworkTask.deleteMany({ where: { homeworkId: hwId } });
-    } else {
-      const created = await prisma.homework.create({
-        data: {
-          title: h.title,
-          description: h.description || null,
-          subjectId: subject.id,
-          dueDate: h.dueDate,
-          targetType: h.targetType,
-          topicId: topicId || null,
-          topicName: h.topicTitle || null,
-          teacherId,
-        },
-      });
-      hwId = created.id;
+    const existingHwMap = new Map(existingHomeworks.map((h) => [h.title, h.id]));
+
+    for (let i = 0; i < homeworksPre.length; i++) {
+      logProgress('📋 ДЗ', i + 1, homeworksPre.length);
+      const h = homeworksPre[i];
+      const topicId = ensureTopic(h.topicTitle);
+      const existingId = existingHwMap.get(h.title);
+      let hwId: string;
+      if (existingId) {
+        await prisma.homework.update({
+          where: { id: existingId },
+          data: {
+            description: h.description || null,
+            dueDate: h.dueDate,
+            targetType: h.targetType,
+            topicId: topicId || null,
+            topicName: h.topicTitle || null,
+          },
+        });
+        hwId = existingId;
+        await prisma.homeworkTask.deleteMany({ where: { homeworkId: hwId } });
+      } else {
+        const created = await prisma.homework.create({
+          data: {
+            title: h.title,
+            description: h.description || null,
+            subjectId: subject.id,
+            dueDate: h.dueDate,
+            targetType: h.targetType,
+            topicId: topicId || null,
+            topicName: h.topicTitle || null,
+            teacherId,
+          },
+        });
+        hwId = created.id;
+      }
+      if (h.tasks.length) {
+        await prisma.homeworkTask.createMany({
+          data: h.tasks.map((t: { text: string }, ti: number) => ({
+            homeworkId: hwId,
+            order: ti,
+            text: t.text,
+            answerType: 'TEXT',
+            points: 1,
+          })),
+        });
+      }
     }
-    if (h.tasks.length) {
-      await prisma.homeworkTask.createMany({
-        data: h.tasks.map((t, i) => ({
-          homeworkId: hwId,
-          order: i,
-          text: t.text,
-          answerType: 'TEXT',
-          points: 1,
-        })),
-      });
-    }
-    report['ДЗ'] = (report['ДЗ'] || 0) + 1;
+    logDone('📋 ДЗ', homeworksPre.length, Date.now() - t0);
+    report['ДЗ'] = (report['ДЗ'] || 0) + homeworksPre.length;
   }
 
-  // LESSON PLANS
-  const plans = parseLessonPlans(sections['LESSON_PLANS'] || '');
-  for (const p of plans) {
-    const topicId = await ensureTopic(p.topicTitle);
-    const existing = await prisma.lessonPlan.findFirst({
-      where: { subjectId: subject.id, title: p.title },
+  // ─── LESSON PLANS ───
+  if (plansPre.length > 0) {
+    const t0 = Date.now();
+    const existingPlans = await prisma.lessonPlan.findMany({
+      where: { subjectId: subject.id },
+      select: { id: true, title: true },
     });
-    const data = {
-      title: p.title,
-      subjectId: subject.id,
-      content: p.content,
-      duration: p.duration,
-      published: p.published,
-      topicId: topicId || null,
-      topicName: p.topicTitle || null,
-      authorId: teacherId,
-    };
-    if (existing)
-      await prisma.lessonPlan.update({ where: { id: existing.id }, data });
-    else await prisma.lessonPlan.create({ data });
-    report['Методичек'] = (report['Методичек'] || 0) + 1;
+    const existingPlanMap = new Map(existingPlans.map((p) => [p.title, p.id]));
+
+    for (let i = 0; i < plansPre.length; i++) {
+      logProgress('📖 Методички', i + 1, plansPre.length);
+      const p = plansPre[i];
+      const topicId = ensureTopic(p.topicTitle);
+      const data = {
+        title: p.title,
+        subjectId: subject.id,
+        content: p.content,
+        duration: p.duration,
+        published: p.published,
+        topicId: topicId || null,
+        topicName: p.topicTitle || null,
+        authorId: teacherId,
+      };
+      const existingId = existingPlanMap.get(p.title);
+      if (existingId) {
+        await prisma.lessonPlan.update({ where: { id: existingId }, data });
+      } else {
+        await prisma.lessonPlan.create({ data });
+      }
+    }
+    logDone('📖 Методички', plansPre.length, Date.now() - t0);
+    report['Методичек'] = (report['Методичек'] || 0) + plansPre.length;
   }
 
-  // PRESENTATIONS
-  const presentations = parsePresentations(sections['PRESENTATIONS'] || '');
-  for (const p of presentations) {
-    const topicId = await ensureTopic(p.topicTitle);
-    const existing = await prisma.presentation.findFirst({
-      where: { subjectId: subject.id, title: p.title },
+  // ─── PRESENTATIONS ───
+  if (presentationsPre.length > 0) {
+    const t0 = Date.now();
+    const existingPres = await prisma.presentation.findMany({
+      where: { subjectId: subject.id },
+      select: { id: true, title: true },
     });
-    let pId: string;
-    if (existing) {
-      await prisma.presentation.update({
-        where: { id: existing.id },
-        data: {
-          published: p.published,
-          topicId: topicId || null,
-          topicName: p.topicTitle || null,
-        },
-      });
-      pId = existing.id;
-      await prisma.slide.deleteMany({ where: { presentationId: pId } });
-    } else {
-      const created = await prisma.presentation.create({
-        data: {
-          title: p.title,
-          subjectId: subject.id,
-          published: p.published,
-          topicId: topicId || null,
-          topicName: p.topicTitle || null,
-          authorId: teacherId,
-        },
-      });
-      pId = created.id;
+    const existingPresMap = new Map(existingPres.map((p) => [p.title, p.id]));
+
+    for (let i = 0; i < presentationsPre.length; i++) {
+      logProgress('🎞 Презентации', i + 1, presentationsPre.length);
+      const p = presentationsPre[i];
+      const topicId = ensureTopic(p.topicTitle);
+      let pId: string;
+      const existingId = existingPresMap.get(p.title);
+      if (existingId) {
+        await prisma.presentation.update({
+          where: { id: existingId },
+          data: {
+            published: p.published,
+            topicId: topicId || null,
+            topicName: p.topicTitle || null,
+          },
+        });
+        pId = existingId;
+        await prisma.slide.deleteMany({ where: { presentationId: pId } });
+      } else {
+        const created = await prisma.presentation.create({
+          data: {
+            title: p.title,
+            subjectId: subject.id,
+            published: p.published,
+            topicId: topicId || null,
+            topicName: p.topicTitle || null,
+            authorId: teacherId,
+          },
+        });
+        pId = created.id;
+      }
+      if (p.slides.length) {
+        await prisma.slide.createMany({
+          data: p.slides.map(
+            (s: { title: string; content: string }, si: number) => ({
+              presentationId: pId,
+              order: si,
+              title: s.title || null,
+              content: s.content,
+            })
+          ),
+        });
+      }
     }
-    if (p.slides.length) {
-      await prisma.slide.createMany({
-        data: p.slides.map((s, i) => ({
-          presentationId: pId,
-          order: i,
-          title: s.title || null,
-          content: s.content,
-        })),
-      });
-    }
-    report['Презентаций'] = (report['Презентаций'] || 0) + 1;
+    logDone('🎞 Презентации', presentationsPre.length, Date.now() - t0);
+    report['Презентаций'] = (report['Презентаций'] || 0) + presentationsPre.length;
   }
 }
 
@@ -744,12 +865,13 @@ async function main() {
     try {
       await importSubject(sections, report);
       for (const [k, v] of Object.entries(report)) {
-        console.log(`   ${k}: ${v}`);
+        console.log(`   ✓ ${k}: ${v}`);
         globalReport[k] = (globalReport[k] || 0) + v;
       }
-      console.log(`   ⏱ ${((Date.now() - t0) / 1000).toFixed(1)} сек\n`);
+      console.log(`   ⏱ Итого: ${((Date.now() - t0) / 1000).toFixed(1)} сек\n`);
     } catch (e: any) {
       console.error(`   ❌ Ошибка: ${e.message}\n`);
+      if (e.stack) console.error(e.stack);
     }
   }
 

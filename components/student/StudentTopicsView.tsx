@@ -11,8 +11,11 @@ import {
   ClipboardList,
   Presentation as PresentationIcon,
   ArrowRight,
+  Clock,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+type HWItem = { id: string; title: string; dueDate?: Date | string | null };
 
 type Topic = {
   id: string;
@@ -24,7 +27,7 @@ type Topic = {
   isUnlocked: boolean;
   notes: { id: string; title: string }[];
   tests: { id: string; title: string }[];
-  homeworks: { id: string; title: string }[];
+  homeworks: HWItem[];
   presentations: { id: string; title: string }[];
 };
 
@@ -108,7 +111,9 @@ export function StudentTopicsView({ topics }: { topics: Topic[] }) {
 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                          <h3 className="text-white font-semibold">{topic.title}</h3>
+                          <h3 className="text-white font-semibold">
+                            {topic.title}
+                          </h3>
                           {!topic.isUnlocked && (
                             <span className="text-xs px-2 py-0.5 rounded-md bg-slate-500/20 text-slate-400">
                               Закрыто учителем
@@ -132,7 +137,9 @@ export function StudentTopicsView({ topics }: { topics: Topic[] }) {
                               <span>{topic.homeworks.length} ДЗ</span>
                             )}
                             {topic.presentations?.length > 0 && (
-                              <span>{topic.presentations.length} презентаций</span>
+                              <span>
+                                {topic.presentations.length} презентаций
+                              </span>
                             )}
                           </div>
                         )}
@@ -157,59 +164,129 @@ export function StudentTopicsView({ topics }: { topics: Topic[] }) {
                           transition={{ duration: 0.2 }}
                           className="overflow-hidden"
                         >
-                          <div className="px-5 pb-5 pt-0 border-t border-white/5 space-y-2">
-                            {topic.notes.map((n) => (
-                              <Link
-                                key={n.id}
-                                href={`/student/notes/${n.id}`}
-                                className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-emerald-500/30 transition"
+                          <div className="px-5 pb-5 pt-4 border-t border-white/5 space-y-5">
+                            {/* ─── Конспекты ─── */}
+                            {topic.notes.length > 0 && (
+                              <Section
+                                icon={
+                                  <BookOpen className="h-4 w-4 text-emerald-400" />
+                                }
+                                title="Конспекты"
+                                count={topic.notes.length}
                               >
-                                <BookOpen className="h-4 w-4 text-emerald-400" />
-                                <span className="text-sm text-slate-200 flex-1 truncate">
-                                  {n.title}
-                                </span>
-                                <ArrowRight className="h-3 w-3 text-slate-500" />
-                              </Link>
-                            ))}
-                            {topic.tests.map((t) => (
-                              <Link
-                                key={t.id}
-                                href={`/student/tests/${t.id}`}
-                                className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-blue-500/30 transition"
+                                {topic.notes.map((n) => (
+                                  <Link
+                                    key={n.id}
+                                    href={`/student/notes/${n.id}`}
+                                    className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-emerald-500/30 transition"
+                                  >
+                                    <BookOpen className="h-4 w-4 text-emerald-400 flex-shrink-0" />
+                                    <span className="text-sm text-slate-200 flex-1 truncate">
+                                      {n.title}
+                                    </span>
+                                    <ArrowRight className="h-3 w-3 text-slate-500" />
+                                  </Link>
+                                ))}
+                              </Section>
+                            )}
+
+                            {/* ─── Тесты ─── */}
+                            {topic.tests.length > 0 && (
+                              <Section
+                                icon={
+                                  <FileText className="h-4 w-4 text-blue-400" />
+                                }
+                                title="Тесты"
+                                count={topic.tests.length}
                               >
-                                <FileText className="h-4 w-4 text-blue-400" />
-                                <span className="text-sm text-slate-200 flex-1 truncate">
-                                  {t.title}
-                                </span>
-                                <ArrowRight className="h-3 w-3 text-slate-500" />
-                              </Link>
-                            ))}
-                            {topic.homeworks.map((h) => (
-                              <Link
-                                key={h.id}
-                                href={`/student/homework/${h.id}`}
-                                className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-amber-500/30 transition"
+                                {topic.tests.map((t) => (
+                                  <Link
+                                    key={t.id}
+                                    href={`/student/tests/${t.id}`}
+                                    className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-blue-500/30 transition"
+                                  >
+                                    <FileText className="h-4 w-4 text-blue-400 flex-shrink-0" />
+                                    <span className="text-sm text-slate-200 flex-1 truncate">
+                                      {t.title}
+                                    </span>
+                                    <ArrowRight className="h-3 w-3 text-slate-500" />
+                                  </Link>
+                                ))}
+                              </Section>
+                            )}
+
+                            {/* ─── ДЗ ─── */}
+                            {topic.homeworks.length > 0 && (
+                              <Section
+                                icon={
+                                  <ClipboardList className="h-4 w-4 text-amber-400" />
+                                }
+                                title="Домашние задания"
+                                count={topic.homeworks.length}
                               >
-                                <ClipboardList className="h-4 w-4 text-amber-400" />
-                                <span className="text-sm text-slate-200 flex-1 truncate">
-                                  {h.title}
-                                </span>
-                                <ArrowRight className="h-3 w-3 text-slate-500" />
-                              </Link>
-                            ))}
-                            {topic.presentations?.map((p) => (
-                              <Link
-                                key={p.id}
-                                href={`/student/presentations/${p.id}`}
-                                className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-pink-500/30 transition"
+                                {topic.homeworks.map((h) => {
+                                  const due = h.dueDate
+                                    ? new Date(h.dueDate)
+                                    : null;
+                                  const isOverdue =
+                                    due && due.getTime() < Date.now();
+                                  return (
+                                    <Link
+                                      key={h.id}
+                                      href={`/student/homework/${h.id}`}
+                                      className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-amber-500/30 transition"
+                                    >
+                                      <ClipboardList className="h-4 w-4 text-amber-400 flex-shrink-0" />
+                                      <span className="text-sm text-slate-200 flex-1 truncate">
+                                        {h.title}
+                                      </span>
+                                      {due && (
+                                        <span
+                                          className={cn(
+                                            'text-[10px] flex items-center gap-1 flex-shrink-0',
+                                            isOverdue
+                                              ? 'text-red-400'
+                                              : 'text-slate-500'
+                                          )}
+                                        >
+                                          <Clock className="h-3 w-3" />
+                                          {due.toLocaleDateString('ru-RU', {
+                                            day: '2-digit',
+                                            month: '2-digit',
+                                          })}
+                                        </span>
+                                      )}
+                                      <ArrowRight className="h-3 w-3 text-slate-500" />
+                                    </Link>
+                                  );
+                                })}
+                              </Section>
+                            )}
+
+                            {/* ─── Презентации ─── */}
+                            {topic.presentations?.length > 0 && (
+                              <Section
+                                icon={
+                                  <PresentationIcon className="h-4 w-4 text-pink-400" />
+                                }
+                                title="Презентации"
+                                count={topic.presentations.length}
                               >
-                                <PresentationIcon className="h-4 w-4 text-pink-400" />
-                                <span className="text-sm text-slate-200 flex-1 truncate">
-                                  {p.title}
-                                </span>
-                                <ArrowRight className="h-3 w-3 text-slate-500" />
-                              </Link>
-                            ))}
+                                {topic.presentations.map((p) => (
+                                  <Link
+                                    key={p.id}
+                                    href={`/student/presentations/${p.id}`}
+                                    className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-pink-500/30 transition"
+                                  >
+                                    <PresentationIcon className="h-4 w-4 text-pink-400 flex-shrink-0" />
+                                    <span className="text-sm text-slate-200 flex-1 truncate">
+                                      {p.title}
+                                    </span>
+                                    <ArrowRight className="h-3 w-3 text-slate-500" />
+                                  </Link>
+                                ))}
+                              </Section>
+                            )}
                           </div>
                         </motion.div>
                       )}
@@ -221,6 +298,31 @@ export function StudentTopicsView({ topics }: { topics: Topic[] }) {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+function Section({
+  icon,
+  title,
+  count,
+  children,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  count: number;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <div className="flex items-center gap-2 mb-2">
+        {icon}
+        <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+          {title}
+        </span>
+        <span className="text-xs text-slate-600">({count})</span>
+      </div>
+      <div className="space-y-1.5">{children}</div>
     </div>
   );
 }

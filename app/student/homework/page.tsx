@@ -17,6 +17,14 @@ import { StudentSubjectTabs } from '@/components/student/StudentSubjectTabs';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+function getSectionNumber(title: string): number {
+  const m = title.match(/§\s*(\d+(?:[.,]\d+)?)/);
+  if (m) return parseFloat(m[1].replace(',', '.'));
+  const m2 = title.match(/^(\d+(?:[.,]\d+)?)\s*[.)]/);
+  if (m2) return parseFloat(m2[1].replace(',', '.'));
+  return 999999;
+}
+
 export default async function StudentHomeworkPage({
   searchParams,
 }: {
@@ -56,11 +64,17 @@ export default async function StudentHomeworkPage({
     currentSubjectId = subjectIds[0];
   }
 
+  // Учитываем не только открытые темы, но и выбранный контент
   const unlocks = await prisma.topicUnlock.findMany({
     where: { userId },
-    select: { topicId: true },
+    select: { topicId: true, contentIds: true },
   });
   const unlockedTopicIds = unlocks.map((u) => u.topicId);
+  const contentFilter = new Map<string, Set<string> | null>();
+  unlocks.forEach((u) => {
+    const raw = u.contentIds as unknown as string[] | null | undefined;
+    contentFilter.set(u.topicId, Array.isArray(raw) ? new Set(raw) : null);
+  });
 
   if (!currentSubjectId) {
     const allHW = await prisma.homework.findMany({
@@ -106,7 +120,7 @@ export default async function StudentHomeworkPage({
     );
   }
 
-  const homeworks = await prisma.homework.findMany({
+  const rawHomeworks = await prisma.homework.findMany({
     where: {
       OR: [
         {
@@ -121,7 +135,6 @@ export default async function StudentHomeworkPage({
         },
       ],
     },
-    orderBy: { createdAt: 'desc' },
     include: {
       teacher: { select: { name: true } },
       subject: { select: { name: true } },
@@ -130,6 +143,37 @@ export default async function StudentHomeworkPage({
         orderBy: { version: 'desc' },
       },
     },
+  });
+
+  // Фильтр по contentIds
+  const homeworks = rawHomeworks.filter((hw) => {
+    if (!hw.topicId) return true; // без темы — показываем
+    if (!contentFilter.has(hw.topicId)) {
+      // Тема не открыта
+      // Исключение: персональные ДЗ видны даже без разблокировки темы
+      if (hw.targetType === 'SPECIFIC' && hw.targetUserId === userId) return true;
+      return false;
+    }
+    const filter = contentFilter.get(hw.topicId);
+    if (filter === null) return true;
+    return filter.has(`homework:${hw.id}`);
+  });
+
+  // Сортировка: сначала с dueDate по возрастанию, потом без даты по §N
+  homeworks.sort((a, b) => {
+    const aHas = !!a.dueDate;
+    const bHas = !!b.dueDate;
+    if (aHas && !bHas) return -1;
+    if (!aHas && bHas) return 1;
+    if (aHas && bHas) {
+      const da = new Date(a.dueDate!).getTime();
+      const db = new Date(b.dueDate!).getTime();
+      if (da !== db) return da - db;
+    }
+    const na = getSectionNumber(a.title);
+    const nb = getSectionNumber(b.title);
+    if (na !== nb) return na - nb;
+    return a.title.localeCompare(b.title, 'ru');
   });
 
   const currentSubject = userSubjects.find(
@@ -238,7 +282,8 @@ export default async function StudentHomeworkPage({
                       {hw.dueDate && (
                         <span className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
-                          до {new Date(hw.dueDate).toLocaleDateString('ru-RU')}
+                          до{' '}
+                          {new Date(hw.dueDate).toLocaleDateString('ru-RU')}
                         </span>
                       )}
                       {lastSub && (

@@ -2,6 +2,23 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 
+function getSectionNumber(title: string): number {
+  const m = title.match(/§\s*(\d+(?:[.,]\d+)?)/);
+  if (m) return parseFloat(m[1].replace(',', '.'));
+  const m2 = title.match(/^(\d+(?:[.,]\d+)?)\s*[.)]/);
+  if (m2) return parseFloat(m2[1].replace(',', '.'));
+  return 999999;
+}
+
+function sortBySection<T extends { title: string }>(items: T[]): T[] {
+  return [...items].sort((a, b) => {
+    const na = getSectionNumber(a.title);
+    const nb = getSectionNumber(b.title);
+    if (na !== nb) return na - nb;
+    return a.title.localeCompare(b.title, 'ru');
+  });
+}
+
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -31,22 +48,18 @@ export async function GET(
     prisma.note.findMany({
       where: { topicId: id, published: true },
       select: { id: true, title: true },
-      orderBy: { createdAt: 'desc' },
     }),
     prisma.test.findMany({
       where: { topicId: id, published: true },
       select: { id: true, title: true },
-      orderBy: { createdAt: 'desc' },
     }),
     prisma.homework.findMany({
       where: { topicId: id },
       select: { id: true, title: true },
-      orderBy: { createdAt: 'desc' },
     }),
     prisma.presentation.findMany({
       where: { topicId: id, published: true },
       select: { id: true, title: true },
-      orderBy: { createdAt: 'desc' },
     }),
     prisma.topicUnlock.findUnique({
       where: { topicId_userId: { topicId: id, userId } },
@@ -56,15 +69,15 @@ export async function GET(
 
   const isUnlocked = !!unlock;
   const raw = (unlock?.contentIds as unknown) as string[] | null | undefined;
-  const selected = Array.isArray(raw) ? raw : null; // null = всё доступно
+  const selected = Array.isArray(raw) ? raw : null;
 
   return NextResponse.json({
     topic: { id: topic.id, title: topic.title },
     isUnlocked,
     selectedContentIds: selected,
-    notes,
-    tests,
-    homeworks,
-    presentations,
+    notes: sortBySection(notes),
+    tests: sortBySection(tests),
+    homeworks: sortBySection(homeworks),
+    presentations: sortBySection(presentations),
   });
 }

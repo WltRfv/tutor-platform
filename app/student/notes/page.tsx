@@ -8,6 +8,14 @@ import { StudentSubjectTabs } from '@/components/student/StudentSubjectTabs';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+function getSectionNumber(title: string): number {
+  const m = title.match(/§\s*(\d+(?:[.,]\d+)?)/);
+  if (m) return parseFloat(m[1].replace(',', '.'));
+  const m2 = title.match(/^(\d+(?:[.,]\d+)?)\s*[.)]/);
+  if (m2) return parseFloat(m2[1].replace(',', '.'));
+  return 999999;
+}
+
 export default async function NotesPage({
   searchParams,
 }: {
@@ -47,11 +55,15 @@ export default async function NotesPage({
 
   const unlocks = await prisma.topicUnlock.findMany({
     where: { userId },
-    select: { topicId: true },
+    select: { topicId: true, contentIds: true },
   });
   const unlockedTopicIds = unlocks.map((u) => u.topicId);
+  const contentFilter = new Map<string, Set<string> | null>();
+  unlocks.forEach((u) => {
+    const raw = u.contentIds as unknown as string[] | null | undefined;
+    contentFilter.set(u.topicId, Array.isArray(raw) ? new Set(raw) : null);
+  });
 
-  // Если предмет не выбран и есть несколько
   if (!currentSubjectId) {
     const allNotes = await prisma.note.findMany({
       where: {
@@ -89,16 +101,29 @@ export default async function NotesPage({
     );
   }
 
-  // Материалы по выбранному предмету
-  const notes = await prisma.note.findMany({
+  const rawNotes = await prisma.note.findMany({
     where: {
       published: true,
       subjectId: currentSubjectId,
-      OR: [{ topicId: null }, { topicId: { in: unlockedTopicIds } }],
     },
-    orderBy: { createdAt: 'desc' },
     include: { subject: { select: { name: true } } },
   });
+
+  // Фильтр по contentIds
+  const notes = rawNotes
+    .filter((n) => {
+      if (!n.topicId) return true;
+      if (!contentFilter.has(n.topicId)) return false;
+      const filter = contentFilter.get(n.topicId);
+      if (filter === null) return true;
+      return filter.has(`note:${n.id}`);
+    })
+    .sort((a, b) => {
+      const na = getSectionNumber(a.title);
+      const nb = getSectionNumber(b.title);
+      if (na !== nb) return na - nb;
+      return a.title.localeCompare(b.title, 'ru');
+    });
 
   const currentSubject = userSubjects.find(
     (us) => us.subjectId === currentSubjectId
