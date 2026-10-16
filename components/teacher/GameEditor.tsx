@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -44,7 +44,7 @@ export function GameEditor({ gameId, initial }: Props) {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [loading, setLoading] = useState(false);
-  const [fetching, setFetching] = useState(!initial);
+  const [fetching, setFetching] = useState(true);
 
   const [form, setForm] = useState({
     title: initial?.title || '',
@@ -60,8 +60,8 @@ export function GameEditor({ gameId, initial }: Props) {
       : [{ question: '', answer: '' }]
   );
 
-  useState(() => {
-    if (initial) return;
+  // Загружаем предметы и темы ВСЕГДА — и при создании, и при редактировании
+  useEffect(() => {
     Promise.all([
       fetch('/api/teacher/subjects').then((r) => r.json()),
       fetch('/api/teacher/topics').then((r) => r.json()),
@@ -69,13 +69,17 @@ export function GameEditor({ gameId, initial }: Props) {
       .then(([subjectsData, topicsData]) => {
         setSubjects(subjectsData);
         setTopics(topicsData);
-        if (subjectsData.length > 0 && !form.subjectId) {
-          setForm((f) => ({ ...f, subjectId: subjectsData[0].id }));
-        }
+        // Если создание новой игры и предмет ещё не выбран — ставим первый
+        setForm((f) => {
+          if (!f.subjectId && subjectsData.length > 0) {
+            return { ...f, subjectId: subjectsData[0].id };
+          }
+          return f;
+        });
       })
       .catch(() => toast.error('Не удалось загрузить данные'))
       .finally(() => setFetching(false));
-  });
+  }, []);
 
   const availableTopics = topics.filter((t) => t.subjectId === form.subjectId);
 
@@ -157,6 +161,7 @@ export function GameEditor({ gameId, initial }: Props) {
         <div className="animate-pulse space-y-4">
           <div className="h-9 w-64 bg-white/10 rounded-lg" />
           <div className="h-12 bg-white/5 rounded-xl" />
+          <div className="h-48 bg-white/5 rounded-xl" />
         </div>
       </div>
     );
