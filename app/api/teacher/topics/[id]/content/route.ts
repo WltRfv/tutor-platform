@@ -83,6 +83,6 @@ export async function GET(
     tests: sortBySection(tests),
     homeworks: sortBySection(homeworks),
     presentations: sortBySection(presentations),
-    game: sortBySection(games),
+    games: sortBySection(games),
   });
 }
