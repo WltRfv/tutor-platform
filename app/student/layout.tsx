@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Gamepad2 } from 'lucide-react';
 import {
   Calendar,
   Code2,
@@ -29,7 +30,9 @@ const items = [
   { href: '/student/homework', label: 'Домашние задания', icon: ClipboardList },
   { href: '/student/compiler', label: 'Компилятор', icon: Code2 },
   { href: '/student/calendar', label: 'Расписание', icon: Calendar },
+  { href: '/student/games', label: 'Игры', icon: Gamepad2 },
   { href: '/student/settings', label: 'Настройки', icon: Settings },
+
 ];
 
 export default function StudentLayout({ children }: { children: React.ReactNode }) {

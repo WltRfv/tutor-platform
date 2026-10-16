@@ -44,7 +44,7 @@ export async function GET(
     return NextResponse.json({ error: 'Тема не найдена' }, { status: 404 });
   }
 
-  const [notes, tests, homeworks, presentations, unlock] = await Promise.all([
+  const [notes, tests, homeworks, presentations, games, unlock] = await Promise.all([
     prisma.note.findMany({
       where: { topicId: id, published: true },
       select: { id: true, title: true },
@@ -60,6 +60,10 @@ export async function GET(
     prisma.presentation.findMany({
       where: { topicId: id, published: true },
       select: { id: true, title: true },
+    }),
+    prisma.game.findMany({
+      where: { topicId: id, published: true, isTemplate: false },
+      select: { id: true, title: true, type: true },
     }),
     prisma.topicUnlock.findUnique({
       where: { topicId_userId: { topicId: id, userId } },
@@ -79,5 +83,6 @@ export async function GET(
     tests: sortBySection(tests),
     homeworks: sortBySection(homeworks),
     presentations: sortBySection(presentations),
+    game: sortBySection(games),
   });
 }

@@ -31,6 +31,7 @@ import { ThemeToggle } from '@/components/shared/ThemeToggle';
 import { NotificationBell } from '@/components/shared/NotificationBell';
 import { signOut } from 'next-auth/react';
 import { cn } from '@/lib/utils';
+import { Gamepad2 } from 'lucide-react';
 
 type Mode = 'teacher' | 'admin';
 
@@ -43,6 +44,7 @@ const teacherMenu = [
   { href: '/teacher/homework', label: 'Домашние задания', icon: ClipboardList },
   { href: '/teacher/content', label: 'Конспекты и тесты', icon: BookOpen },
   { href: '/teacher/lesson-plans', label: 'Методички', icon: BookMarked },
+{ href: '/teacher/games', label: 'Игры', icon: Gamepad2 },
   { href: '/teacher/presentations', label: 'Презентации', icon: Presentation },
   { href: '/teacher/calendar', label: 'Расписание', icon: Calendar },
   { href: '/teacher/retakes', label: 'Пересдачи', icon: RefreshCw },

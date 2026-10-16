@@ -111,6 +111,10 @@ export default async function StudentTopicsPage({
         where: { published: true },
         select: { id: true, title: true },
       },
+      games: {
+        where: { published: true, isTemplate: false },
+        select: { id: true, title: true, type: true },
+      },
     },
   });
 
@@ -132,6 +136,9 @@ export default async function StudentTopicsPage({
     const presentations = selectedContent
       ? t.presentations.filter((p) => selectedContent.has(`presentation:${p.id}`))
       : t.presentations;
+    const games = selectedContent
+      ? t.games.filter((g) => selectedContent.has(`game:${g.id}`))
+      : t.games;
 
     return {
       id: t.id,
@@ -145,6 +152,7 @@ export default async function StudentTopicsPage({
       tests: sortBySection(tests),
       homeworks: sortHomeworks(homeworks),
       presentations: sortBySection(presentations),
+      games: sortBySection(games),
     };
   });
 

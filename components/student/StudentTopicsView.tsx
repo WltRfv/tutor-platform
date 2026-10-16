@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
+import {Gamepad2} from 'lucide-react';
 import {
   Lock,
   Unlock,
@@ -29,6 +30,7 @@ type Topic = {
   tests: { id: string; title: string }[];
   homeworks: HWItem[];
   presentations: { id: string; title: string }[];
+  games: { id: string; title: string; type: string }[];
 };
 
 export function StudentTopicsView({ topics }: { topics: Topic[] }) {
@@ -72,7 +74,8 @@ export function StudentTopicsView({ topics }: { topics: Topic[] }) {
                   topic.notes.length +
                   topic.tests.length +
                   topic.homeworks.length +
-                  (topic.presentations?.length || 0);
+                  (topic.presentations?.length || 0)+
+                   (topic.games?.length || 0);
 
                 return (
                   <motion.div
@@ -140,6 +143,9 @@ export function StudentTopicsView({ topics }: { topics: Topic[] }) {
                               <span>
                                 {topic.presentations.length} презентаций
                               </span>
+                            )}
+                            {topic.games?.length > 0 && (
+                                <span>🎮 {topic.games.length} игр</span>
                             )}
                           </div>
                         )}
@@ -286,6 +292,27 @@ export function StudentTopicsView({ topics }: { topics: Topic[] }) {
                                   </Link>
                                 ))}
                               </Section>
+                            )}
+                            {topic.games?.length > 0 && (
+                                <Section
+                                    icon={<Gamepad2 className="h-4 w-4 text-purple-400" />}
+                                    title="Игры"
+                                    count={topic.games.length}
+                                >
+                                    {topic.games.map((g) => (
+                                    <Link
+                                        key={g.id}
+                                        href={`/student/games/${g.id}`}
+                                        className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-purple-500/30 transition"
+                                    >
+                                        <Gamepad2 className="h-4 w-4 text-purple-400 flex-shrink-0" />
+                                        <span className="text-sm text-slate-200 flex-1 truncate">
+                                        {g.title}
+                                        </span>
+                                        <ArrowRight className="h-3 w-3 text-slate-500" />
+                                    </Link>
+                                    ))}
+                                </Section>
                             )}
                           </div>
                         </motion.div>

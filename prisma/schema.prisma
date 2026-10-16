@@ -22,6 +22,16 @@ enum ApplicationStatus {
   REJECTED
 }
 
+enum GameType {
+  CARDS
+  MATCHING
+  FIND_ERROR
+  QUIZ
+  TRAINER
+  HINTS
+  QUEST
+}
+
 // ============================================
 // USER
 // ============================================
@@ -44,29 +54,35 @@ model User {
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
 
-  activities           Activity[]
-  submissions          Submission[]
-  notes                Note[]               @relation("TeacherNotes")
-  codeRuns             CodeRun[]
-  lessons              Lesson[]             @relation("UserLessons")
-  taughtLessons        Lesson[]             @relation("TeacherLessons")
-  homeworkCreated      Homework[]           @relation("TeacherHomework")
-  homeworkTargeted     Homework[]           @relation("UserHomeworkTarget")
-  homeworkSubmitted    HomeworkSubmission[]
-  userSubjects         UserSubject[]
-  testsCreated         Test[]               @relation("TeacherTests")
-  questions            Question[]
-  retakeRequests       RetakeRequest[]
-  topicUnlocks         TopicUnlock[]
-  notificationReads    NotificationRead[]
-  homeworkStarts       HomeworkStart[]
-  selfWorkStatuses     SelfWorkStatus[]
-  lessonPlans          LessonPlan[]         @relation("TeacherLessonPlans")
-  presentationsCreated Presentation[]       @relation("TeacherPresentations")
+  activities        Activity[]
+  submissions       Submission[]
+  notes             Note[]               @relation("TeacherNotes")
+  codeRuns          CodeRun[]
+  lessons           Lesson[]             @relation("UserLessons")
+  taughtLessons     Lesson[]             @relation("TeacherLessons")
+  homeworkCreated   Homework[]           @relation("TeacherHomework")
+  homeworkTargeted  Homework[]           @relation("UserHomeworkTarget")
+  homeworkSubmitted HomeworkSubmission[]
+  userSubjects      UserSubject[]
+  testsCreated      Test[]               @relation("TeacherTests")
+  questions         Question[]
+  retakeRequests    RetakeRequest[]
+  topicUnlocks      TopicUnlock[]
+  notificationReads NotificationRead[]
+  homeworkStarts    HomeworkStart[]
+  lessonPlans       LessonPlan[]         @relation("TeacherLessonPlans")
+  presentationsCreated Presentation[]    @relation("TeacherPresentations")
+  selfWorkStatuses  SelfWorkStatus[]
+
+  // Игры
+  gamesCreated     Game[]           @relation("TeacherGames")
+  gameSessions     GameSession[]
+  assignedGames    AssignedGame[]   @relation("AssignedToUser")
+  assignedByMe     AssignedGame[]   @relation("AssignedByTeacher")
 }
 
 // ============================================
-// SUBJECTS (динамический реестр)
+// SUBJECTS
 // ============================================
 
 model Subjects {
@@ -81,15 +97,16 @@ model Subjects {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  users         UserSubject[]
-  notes         Note[]
-  tests         Test[]
-  homeworks     Homework[]
-  lessons       Lesson[]
-  questions     Question[]
-  topics        Topic[]
-  lessonPlans   LessonPlan[]
+  users        UserSubject[]
+  notes        Note[]
+  tests        Test[]
+  homeworks    Homework[]
+  lessons      Lesson[]
+  questions    Question[]
+  topics       Topic[]
+  lessonPlans  LessonPlan[]
   presentations Presentation[]
+  games        Game[]
 
   @@map("Subjects")
 }
@@ -123,13 +140,13 @@ model Topic {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  notes         Note[]
-  tests         Test[]
-  homeworks     Homework[]
-  unlocks       TopicUnlock[]
-  lessonPlans   LessonPlan[]
+  notes        Note[]
+  tests        Test[]
+  homeworks    Homework[]
+  unlocks      TopicUnlock[]
+  lessonPlans  LessonPlan[]
   presentations Presentation[]
-  subtopics Subtopic[]
+  games        Game[]
 
   @@index([subjectId, order])
 }
@@ -148,7 +165,7 @@ model TopicUnlock {
 }
 
 // ============================================
-// NOTES (конспекты)
+// NOTES
 // ============================================
 
 model Note {
@@ -157,6 +174,8 @@ model Note {
   content         String
   practiceContent String?
   selfWorkContent String?
+  presentationId  String?
+  presentation    Presentation? @relation("NotePresentation", fields: [presentationId], references: [id], onDelete: SetNull)
   subjectId       String
   subject         Subjects @relation(fields: [subjectId], references: [id])
   topicId         String?
@@ -168,12 +187,9 @@ model Note {
   author          User     @relation("TeacherNotes", fields: [authorId], references: [id])
   createdAt       DateTime @default(now())
 
-  subtopicId  String?
-  subtopic    Subtopic? @relation(fields: [subtopicId], references: [id], onDelete: SetNull)
-
   selfWorkStatuses SelfWorkStatus[]
-  presentation     Presentation?    @relation(fields: [presentationId], references: [id])
-  presentationId   String?
+
+  @@index([presentationId])
 }
 
 model LessonPlan {
@@ -192,15 +208,30 @@ model LessonPlan {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  subtopicId  String?
-  subtopic    Subtopic? @relation(fields: [subtopicId], references: [id], onDelete: SetNull)
-
   @@index([subjectId])
   @@index([topicId])
 }
 
+model SelfWorkStatus {
+  id             String    @id @default(cuid())
+  noteId         String
+  note           Note      @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status         String    @default("PENDING")
+  studentAnswer  String?
+  teacherComment String?
+  reviewedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([noteId, userId])
+  @@index([userId])
+  @@index([noteId])
+}
+
 // ============================================
-// QUESTIONS (банк заданий)
+// QUESTIONS
 // ============================================
 
 model Question {
@@ -210,19 +241,18 @@ model Question {
 
   topic      String
   difficulty Int    @default(2)
-
-  type String @default("SINGLE_CHOICE")
+  type       String @default("SINGLE_CHOICE")
 
   text     String
   imageUrl String?
 
-  options       Json?
-  correct       Int?
-  correctMulti  Json?
-  correctText   String?
-  matchMode     String?
+  options      Json?
+  correct      Int?
+  correctMulti Json?
+  correctText  String?
+  matchMode    String?
   correctNumber Float?
-  tolerance     Float?   @default(0.01)
+  tolerance     Float?  @default(0.01)
   correctBool   Boolean?
 
   explanation String?
@@ -234,6 +264,8 @@ model Question {
 
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
+
+  gameItems GameItem[]
 
   @@index([subjectId, topic])
   @@index([difficulty])
@@ -271,9 +303,6 @@ model Test {
 
   submissions    Submission[]
   retakeRequests RetakeRequest[]
-
-  subtopicId  String?
-  subtopic    Subtopic? @relation(fields: [subtopicId], references: [id], onDelete: SetNull)
 
   @@index([teacherId, createdAt])
 }
@@ -358,8 +387,6 @@ model Homework {
   tasks       HomeworkTask[]
   submissions HomeworkSubmission[]
   starts      HomeworkStart[]
-  subtopicId  String?
-  subtopic    Subtopic? @relation(fields: [subtopicId], references: [id], onDelete: SetNull)
 
   @@index([teacherId, createdAt])
   @@index([subjectId])
@@ -416,11 +443,11 @@ model HomeworkSubmission {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  aiReview         String?
-  aiReviewScore    Int?
-  aiReviewedAt     DateTime?
-  taskCodes        Json?
-  timeSpent        Int?
+  aiReview        String?
+  aiReviewScore   Int?
+  aiReviewedAt    DateTime?
+  taskCodes       Json?
+  timeSpent       Int?
   taskCodesMetrics Json?
 
   @@index([homeworkId, userId, version])
@@ -428,7 +455,7 @@ model HomeworkSubmission {
 }
 
 // ============================================
-// LESSONS (расписание)
+// LESSONS
 // ============================================
 
 model Lesson {
@@ -523,6 +550,51 @@ model HomeworkStart {
   @@index([userId])
 }
 
+// ============================================
+// PRESENTATIONS
+// ============================================
+
+model Presentation {
+  id        String   @id @default(cuid())
+  title     String
+  subjectId String
+  subject   Subjects @relation(fields: [subjectId], references: [id])
+  topicId   String?
+  topic     Topic?   @relation(fields: [topicId], references: [id])
+  topicName String?
+  imageUrl  String?
+  published Boolean  @default(false)
+  authorId  String
+  author    User     @relation("TeacherPresentations", fields: [authorId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  slides Slide[]
+  notes  Note[] @relation("NotePresentation")
+
+  @@index([subjectId])
+  @@index([topicId])
+  @@index([authorId])
+}
+
+model Slide {
+  id             String       @id @default(cuid())
+  presentationId String
+  presentation   Presentation @relation(fields: [presentationId], references: [id], onDelete: Cascade)
+  order          Int          @default(0)
+  title          String?
+  content        String
+  imageUrl       String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([presentationId])
+}
+
+// ============================================
+// ATTACHMENTS
+// ============================================
+
 model Attachment {
   id           String   @id @default(cuid())
   ownerId      String
@@ -543,80 +615,155 @@ model Attachment {
   @@index([lessonPlanId])
 }
 
-model SelfWorkStatus {
-  id             String    @id @default(cuid())
-  noteId         String
-  note           Note      @relation(fields: [noteId], references: [id], onDelete: Cascade)
-  userId         String
-  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  status         String    @default("PENDING")
-  studentAnswer  String?
-  teacherComment String?
-  reviewedAt     DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+// ============================================
+// GAMES — базовые модели под все механики
+// ============================================
 
-  @@unique([noteId, userId])
-  @@index([userId])
-  @@index([noteId])
-}
+model Game {
+  id          String    @id @default(cuid())
+  type        GameType
+  title       String
+  description String?
 
-model Presentation {
-  id        String   @id @default(cuid())
-  title     String
   subjectId String
   subject   Subjects @relation(fields: [subjectId], references: [id])
-  topicId   String?
-  topic     Topic?   @relation(fields: [topicId], references: [id])
-  topicName String?
-  imageUrl  String?
-  published Boolean  @default(false)
-  authorId  String
-  author    User     @relation("TeacherPresentations", fields: [authorId], references: [id])
+
+  topicId String?
+  topic   Topic?  @relation(fields: [topicId], references: [id])
+
+  authorId String
+  author   User   @relation("TeacherGames", fields: [authorId], references: [id])
+
+  isTemplate Boolean @default(false)
+  published  Boolean @default(false)
+  settings   Json?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  slides Slide[]
-  notes  Note[]
+  items       GameItem[]
+  sessions    GameSession[]
+  assignments AssignedGame[]
 
-  subtopicId  String?
-  subtopic    Subtopic? @relation(fields: [subtopicId], references: [id], onDelete: SetNull)
+  // Для квестов: какие игры входят в этот квест как уровни
+  questLevels GameQuestLevel[] @relation("QuestLevels")
 
+  // Для квестов: какие квесты используют эту игру как уровень
+  usedInQuests GameQuestLevel[] @relation("LevelGameUsage")
+
+  @@index([authorId, createdAt])
   @@index([subjectId])
   @@index([topicId])
-  @@index([authorId])
+  @@index([isTemplate])
+  @@index([type])
 }
 
-model Slide {
-  id             String       @id @default(cuid())
-  presentationId String
-  presentation   Presentation @relation(fields: [presentationId], references: [id], onDelete: Cascade)
-  order          Int          @default(0)
-  title          String?
-  content        String
-  imageUrl       String?
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+model GameItem {
+  id     String @id @default(cuid())
+  gameId String
+  game   Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
 
-  @@index([presentationId])
+  order   Int   @default(0)
+  payload Json
+
+  // Для QUIZ и TRAINER — ссылка на существующий Question
+  questionId String?
+  question   Question? @relation(fields: [questionId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  answers GameAnswer[]
+
+  @@index([gameId, order])
+  @@index([questionId])
 }
-model Subtopic {
-  id          String   @id @default(cuid())
-  topicId     String
-  topic       Topic    @relation(fields: [topicId], references: [id], onDelete: Cascade)
-  title       String
-  description String?
-  order       Int      @default(0)
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
 
-  notes         Note[]
-  tests         Test[]
-  homeworks     Homework[]
-  lessonPlans   LessonPlan[]
-  presentations Presentation[]
+model GameSession {
+  id     String @id @default(cuid())
+  gameId String
+  game   Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
 
-  @@unique([topicId, title])
-  @@index([topicId, order])
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  status String @default("IN_PROGRESS")
+
+  score        Int?
+  totalPoints  Int?
+  percent      Float?
+  correctCount Int?
+  wrongCount   Int?
+  skippedCount Int?
+  durationSec  Int?
+  metadata     Json?
+
+  startedAt  DateTime  @default(now())
+  finishedAt DateTime?
+  updatedAt  DateTime  @updatedAt
+
+  answers GameAnswer[]
+
+  @@index([userId, startedAt])
+  @@index([gameId, startedAt])
+  @@index([status])
+}
+
+model GameAnswer {
+  id        String @id @default(cuid())
+  sessionId String
+  session   GameSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  itemId String?
+  item   GameItem? @relation(fields: [itemId], references: [id], onDelete: SetNull)
+
+  answer       Json?
+  isCorrect    Boolean?
+  selfMarked   Boolean?
+  points       Int     @default(0)
+  timeSpentMs  Int?
+
+  createdAt DateTime @default(now())
+
+  @@index([sessionId])
+  @@index([itemId])
+}
+
+model AssignedGame {
+  id     String @id @default(cuid())
+  gameId String
+  game   Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation("AssignedToUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  assignedById String
+  assignedBy   User   @relation("AssignedByTeacher", fields: [assignedById], references: [id])
+
+  isRequired Boolean   @default(true)
+  dueDate    DateTime?
+  status     String    @default("PENDING")
+
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  @@unique([gameId, userId])
+  @@index([userId, status])
+  @@index([dueDate])
+}
+
+model GameQuestLevel {
+  id      String @id @default(cuid())
+  questId String
+  quest   Game   @relation("QuestLevels", fields: [questId], references: [id], onDelete: Cascade)
+
+  levelId String
+  level   Game   @relation("LevelGameUsage", fields: [levelId], references: [id], onDelete: Cascade)
+
+  order Int     @default(0)
+  title String?
+
+  createdAt DateTime @default(now())
+
+  @@index([questId, order])
+  @@index([levelId])
 }

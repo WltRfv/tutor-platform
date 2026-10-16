@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
+import {Gamepad2} from 'lucide-react';
 import {
   X,
   Loader2,
@@ -47,6 +48,7 @@ export function TopicContentPicker({
   const [tests, setTests] = useState<Item[]>([]);
   const [homeworks, setHomeworks] = useState<Item[]>([]);
   const [presentations, setPresentations] = useState<Item[]>([]);
+  const [games, setGames] = useState<Item[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [wasUnlocked, setWasUnlocked] = useState(false);
 
@@ -60,6 +62,7 @@ export function TopicContentPicker({
         setTests(data.tests || []);
         setHomeworks(data.homeworks || []);
         setPresentations(data.presentations || []);
+        setGames(data.games || []);
         setWasUnlocked(!!data.isUnlocked);
 
         const selectedFromServer = data.selectedContentIds as string[] | null;
@@ -72,6 +75,7 @@ export function TopicContentPicker({
           (data.presentations || []).forEach((p: Item) =>
             all.add(`presentation:${p.id}`)
           );
+          (data.games || []).forEach((g: Item) => all.add(`game:${g.id}`));
           setSelected(all);
         } else {
           setSelected(new Set(selectedFromServer));
@@ -95,6 +99,7 @@ export function TopicContentPicker({
     tests.forEach((t) => all.add(`test:${t.id}`));
     homeworks.forEach((h) => all.add(`homework:${h.id}`));
     presentations.forEach((p) => all.add(`presentation:${p.id}`));
+    games.forEach((g) => all.add(`game:${g.id}`));
     setSelected(all);
   };
 
@@ -132,7 +137,7 @@ export function TopicContentPicker({
   };
 
   const totalAvailable =
-    notes.length + tests.length + homeworks.length + presentations.length;
+    notes.length + tests.length + homeworks.length + presentations.length + games.length;
 
   return (
     <AnimatePresence>
@@ -284,8 +289,24 @@ export function TopicContentPicker({
                           onToggle={() => toggle(`presentation:${p.id}`)}
                         />
                       ))}
+                
                     </Section>
                   )}
+                  {games.length > 0 && (
+                    <Section
+                        icon={<Gamepad2 className="h-4 w-4 text-purple-400" />}
+                        title={`Игры (${games.length})`}
+                    >
+                        {games.map((g) => (
+                        <Row
+                            key={g.id}
+                            label={g.title}
+                            checked={selected.has(`game:${g.id}`)}
+                            onToggle={() => toggle(`game:${g.id}`)}
+                        />
+                        ))}
+                    </Section>
+                    )}
                 </div>
               </>
             )}
