@@ -13,9 +13,7 @@ export async function POST(
   const { id } = await params;
 
   let body: any;
-  try {
-    body = await req.json();
-  } catch {
+  try { body = await req.json(); } catch {
     return NextResponse.json({ error: 'Неверный JSON' }, { status: 400 });
   }
 
@@ -26,34 +24,40 @@ export async function POST(
     where: { id: sessionId, userId, gameId: id },
     include: { answers: true },
   });
-  if (!sessionRow) {
-    return NextResponse.json({ error: 'Сессия не найдена' }, { status: 404 });
-  }
-  if (sessionRow.status === 'COMPLETED') {
-    return NextResponse.json({ ok: true, alreadyFinished: true });
+  if (!sessionRow) return NextResponse.json({ error: 'Сессия не найдена' }, { status: 404 });
+  if (sessionRow.status !== 'IN_PROGRESS') {
+    return NextResponse.json({ error: 'Сессия уже завершена' }, { status: 400 });
   }
 
   const totalItems = await prisma.gameItem.count({ where: { gameId: id } });
 
   let correctCount = 0;
   let wrongCount = 0;
+  const answeredItemIds = new Set<string>();
+
   for (const a of sessionRow.answers) {
-    if (a.selfMarked === true) correctCount++;
-    else if (a.selfMarked === false) wrongCount++;
+    if (a.itemId) answeredItemIds.add(a.itemId);
+    const ok = a.isCorrect === true || a.selfMarked === true;
+    const bad = a.isCorrect === false || a.selfMarked === false;
+    if (ok) correctCount++;
+    else if (bad) wrongCount++;
   }
 
-  const answered = sessionRow.answers.length;
-  const skippedCount = Math.max(0, totalItems - answered);
-  const percent = totalItems > 0 ? Math.round((correctCount / totalItems) * 100) : 0;
+  const skippedCount = Math.max(0, totalItems - answeredItemIds.size);
+  const percent = totalItems > 0
+    ? Math.round((correctCount / totalItems) * 100)
+    : 0;
 
-  const startedAt = sessionRow.startedAt;
-  const finishedAt = new Date();
-  const durationSec = Math.max(0, Math.round((finishedAt.getTime() - startedAt.getTime()) / 1000));
+  const durationSec = Math.max(
+    0,
+    Math.round((Date.now() - sessionRow.startedAt.getTime()) / 1000)
+  );
 
   await prisma.gameSession.update({
     where: { id: sessionId },
     data: {
-      status: 'COMPLETED',
+      status: 'FINISHED',
+      finishedAt: new Date(),
       score: correctCount,
       totalPoints: totalItems,
       percent,
@@ -61,43 +65,16 @@ export async function POST(
       wrongCount,
       skippedCount,
       durationSec,
-      finishedAt,
     },
   });
 
-  // Отмечаем назначение выполненным
   await prisma.assignedGame.updateMany({
     where: { gameId: id, userId, status: { in: ['PENDING', 'IN_PROGRESS'] } },
-    data: { status: 'COMPLETED', completedAt: finishedAt },
-  });
-
-  // Пишем событие в Activity
-  const game = await prisma.game.findUnique({ where: { id }, select: { title: true } });
-  await prisma.activity.create({
-    data: {
-      userId,
-      eventType: 'game_completed',
-      metadata: {
-        gameId: id,
-        sessionId,
-        gameTitle: game?.title || '',
-        percent,
-        correctCount,
-        totalItems,
-        durationSec,
-      },
-    },
+    data: { status: 'COMPLETED', completedAt: new Date() },
   });
 
   return NextResponse.json({
     ok: true,
-    result: {
-      percent,
-      correctCount,
-      wrongCount,
-      skippedCount,
-      totalItems,
-      durationSec,
-    },
+    result: { percent, correctCount, wrongCount, skippedCount, totalItems, durationSec },
   });
 }

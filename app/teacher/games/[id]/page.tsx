@@ -1,7 +1,8 @@
 import { auth } from '@/auth';
 import { redirect, notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
-import { GameEditor, type CardItem } from '@/components/teacher/GameEditor';
+import { GameEditor } from '@/components/teacher/GameEditor';
+import type { GameType } from '@/types/game';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -21,22 +22,16 @@ export default async function EditGamePage({
   });
   if (!game) notFound();
 
-  const items: CardItem[] =
-    game.type === 'CARDS'
-      ? game.items.map((it) => {
-          const p = (it.payload as any) || {};
-          return {
-            id: it.id,
-            question: p.question || '',
-            answer: p.answer || '',
-          };
-        })
-      : [];
+  const items = game.items.map((it) => ({
+    id: it.id,
+    payload: it.payload,
+  }));
 
   return (
     <GameEditor
       gameId={game.id}
       initial={{
+        type: game.type as GameType,
         title: game.title,
         description: game.description || '',
         subjectId: game.subjectId,

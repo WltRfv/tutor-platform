@@ -1,0 +1,235 @@
+.
+├── AGENTS.md
+├── CLAUDE.md
+├── README.md
+├── app
+│   ├── (auth)
+│   │   ├── login
+│   │   └── register
+│   ├── api
+│   │   ├── auth
+│   │   ├── compiler
+│   │   ├── homework
+│   │   ├── lessons
+│   │   ├── me
+│   │   ├── notifications
+│   │   ├── register
+│   │   ├── student
+│   │   ├── teacher
+│   │   ├── telegram
+│   │   ├── tests
+│   │   └── track
+│   ├── apple-icon.tsx
+│   ├── board
+│   │   └── page.tsx
+│   ├── favicon.ico
+│   ├── globals.css
+│   ├── icon.tsx
+│   ├── layout.tsx
+│   ├── opengraph-image.tsx
+│   ├── page.tsx
+│   ├── providers.tsx
+│   ├── robots.ts
+│   ├── sitemap.ts
+│   ├── student
+│   │   ├── calendar
+│   │   ├── compiler
+│   │   ├── games
+│   │   ├── homework
+│   │   ├── layout.tsx
+│   │   ├── loading.tsx
+│   │   ├── notes
+│   │   ├── page.tsx
+│   │   ├── presentations
+│   │   ├── settings
+│   │   ├── tests
+│   │   └── topics
+│   └── teacher
+│       ├── admin
+│       ├── applications
+│       ├── calendar
+│       ├── content
+│       ├── games
+│       ├── homework
+│       ├── layout.tsx
+│       ├── lesson-plans
+│       ├── loading.tsx
+│       ├── page.tsx
+│       ├── presentations
+│       ├── questions
+│       ├── retakes
+│       ├── students
+│       ├── topics
+│       └── upload-image
+├── auth.config.ts
+├── auth.ts
+├── components
+│   ├── landing
+│   │   ├── About.tsx
+│   │   ├── AnimatedBackground.tsx
+│   │   ├── CTASection.tsx
+│   │   ├── Hero.tsx
+│   │   ├── Pricing.tsx
+│   │   ├── Stats.tsx
+│   │   └── Subjects.tsx
+│   ├── shared
+│   │   ├── AppearanceSettings.tsx
+│   │   ├── AttachmentsPanel.tsx
+│   │   ├── BoardClient.tsx
+│   │   ├── CalendarView.tsx
+│   │   ├── HomeworkBoard.tsx
+│   │   ├── ImageUploader.tsx
+│   │   ├── LessonCard.tsx
+│   │   ├── MarkdownEditor.tsx
+│   │   ├── MathText.tsx
+│   │   ├── NoteTabs.tsx
+│   │   ├── NotificationBell.tsx
+│   │   ├── SlideViewer.tsx
+│   │   ├── ThemeProvider.tsx
+│   │   └── ThemeToggle.tsx
+│   ├── student
+│   │   ├── CardsGamePlayer.tsx
+│   │   ├── CodeCompiler.tsx
+│   │   ├── HomeworkView.tsx
+│   │   ├── NotesList.tsx
+│   │   ├── RetakeRequestModal.tsx
+│   │   ├── StudentSelfWorkPanel.tsx
+│   │   ├── StudentSubjectTabs.tsx
+│   │   ├── StudentTopicsView.tsx
+│   │   ├── TaskCodeEditor.tsx
+│   │   ├── TestPageClient.tsx
+│   │   └── TestRunner.tsx
+│   ├── teacher
+│   │   ├── ApplicationsList.tsx
+│   │   ├── DeleteLessonPlanButton.tsx
+│   │   ├── DeleteNoteButton.tsx
+│   │   ├── DeletePresentationButton.tsx
+│   │   ├── DeleteTestButton.tsx
+│   │   ├── GameEditor.tsx
+│   │   ├── MessengerLinkEditor.tsx
+│   │   ├── PresentationForm.tsx
+│   │   ├── QuestionForm.tsx
+│   │   ├── QuestionsList.tsx
+│   │   ├── RetakeRequestsList.tsx
+│   │   ├── SelfWorkReview.tsx
+│   │   ├── SlidesEditor.tsx
+│   │   ├── StudentSubjectsManager.tsx
+│   │   ├── StudentTopicsManager.tsx
+│   │   ├── SubmissionViewer.tsx
+│   │   ├── SubmissionsList.tsx
+│   │   ├── TopicContentPicker.tsx
+│   │   └── TopicsManager.tsx
+│   └── ui
+│       ├── avatar.tsx
+│       ├── badge.tsx
+│       ├── button.tsx
+│       ├── card.tsx
+│       ├── dialog.tsx
+│       ├── dropdown-menu.tsx
+│       ├── input.tsx
+│       ├── label.tsx
+│       ├── select.tsx
+│       ├── separator.tsx
+│       ├── sheet.tsx
+│       ├── sonner.tsx
+│       ├── tabs.tsx
+│       └── textarea.tsx
+├── components.json
+├── content
+│   ├── algebra-7.md
+│   ├── algebra-8.md
+│   ├── algebra-9.md
+│   ├── content
+│   │   ├── algebra-7.md
+│   │   ├── algebra-8.md
+│   │   ├── algebra-9.md
+│   │   ├── geometry-7.md
+│   │   ├── geometry-8.md
+│   │   ├── geometry-9.md
+│   │   ├── images
+│   │   ├── informatics-7.md
+│   │   ├── informatics-8.md
+│   │   ├── informatics-9.md
+│   │   ├── math-5.md
+│   │   ├── math-6.md
+│   │   ├── oge-9.md
+│   │   ├── transfer-5.md
+│   │   ├── transfer-6.md
+│   │   ├── transfer-7.md
+│   │   ├── transfer-8.md
+│   │   ├── transfer-9.md
+│   │   ├── vpr-5.md
+│   │   ├── vpr-6.md
+│   │   ├── vpr-7.md
+│   │   ├── vpr-8.md
+│   │   └── vpr-9.md
+│   ├── geometry-7.md
+│   ├── geometry-8.md
+│   ├── geometry-9.md
+│   ├── images
+│   ├── informatics-7.md
+│   ├── informatics-8.md
+│   ├── informatics-9.md
+│   ├── math-5.md
+│   ├── math-6.backup.md
+│   ├── math-6.md
+│   ├── oge-9.md
+│   ├── transfer-5.md
+│   ├── transfer-6.md
+│   ├── transfer-7.md
+│   ├── transfer-8.md
+│   ├── transfer-9.md
+│   ├── vpr-5.md
+│   ├── vpr-6.md
+│   ├── vpr-7.md
+│   ├── vpr-8.md
+│   └── vpr-9.md
+├── eslint.config.mjs
+├── hooks
+│   └── use-activity-tracker.ts
+├── lib
+│   ├── ai-checker.ts
+│   ├── google-calendar.ts
+│   ├── prisma.ts
+│   ├── sortByNumber.ts
+│   ├── subjects.ts
+│   ├── supabase.ts
+│   ├── telegram.ts
+│   └── utils.ts
+├── migration.sql
+├── next-auth.d.ts
+├── next-env.d.ts
+├── next.config.ts
+├── package-lock.json
+├── package.json
+├── postcss.config.mjs
+├── prisma
+│   └── schema.prisma
+├── prisma.config.ts
+├── project_tree.txt
+├── proxy.ts
+├── public
+│   ├── file.svg
+│   ├── globe.svg
+│   ├── next.svg
+│   ├── teacher.jpg
+│   ├── tldraw-assets
+│   │   ├── embed-icons
+│   │   ├── fonts
+│   │   ├── icons
+│   │   └── translations
+│   ├── vercel.svg
+│   └── window.svg
+├── scripts
+│   ├── clean-notes.ts
+│   └── import-content.ts
+├── settings.json
+├── src
+│   └── generated
+│       └── prisma
+├── structure.txt
+├── tsconfig.json
+└── types
+    └── index.ts
+
+67 directories, 166 files

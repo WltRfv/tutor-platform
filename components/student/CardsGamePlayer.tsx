@@ -9,17 +9,17 @@ import {
   Check,
   X,
   ArrowLeft,
-  ArrowRight,
   RotateCcw,
   Trophy,
 } from 'lucide-react';
 import { MathText } from '@/components/shared/MathText';
 import { cn } from '@/lib/utils';
+import type { CardsPayload } from '@/types/game';
 
 type Item = {
   id: string;
-  question: string;
-  answer: string;
+  order: number;
+  payload: CardsPayload;
 };
 
 type Result = {
@@ -55,8 +55,18 @@ export function CardsGamePlayer({ gameId, gameTitle }: Props) {
           method: 'POST',
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error);
-        setItems(data.items);
+        if (!res.ok) throw new Error(data.error || 'Не удалось начать игру');
+
+        const rawItems: Item[] = (data.items || []).map((it: any) => ({
+          id: it.id,
+          order: it.order ?? 0,
+          payload: {
+            question: it.payload?.question ?? '',
+            answer: it.payload?.answer ?? '',
+          },
+        }));
+
+        setItems(rawItems);
         setSessionId(data.sessionId);
         setStartedAt(Date.now());
       } catch (e: any) {
@@ -89,20 +99,19 @@ export function CardsGamePlayer({ gameId, gameTitle }: Props) {
         }),
       });
     } catch {
-      // тихо
+      // тихо — не блокируем UX
     }
 
-    // переход к следующей
     if (index < total - 1) {
       setIndex(index + 1);
       setShowAnswer(false);
       setStartedAt(Date.now());
     } else {
-      await finish(nextMarks);
+      await finish();
     }
   };
 
-  const finish = async (allMarks: Record<string, boolean | null>) => {
+  const finish = async () => {
     if (!sessionId) return;
     setSubmitting(true);
     try {
@@ -112,7 +121,7 @@ export function CardsGamePlayer({ gameId, gameTitle }: Props) {
         body: JSON.stringify({ sessionId }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      if (!res.ok) throw new Error(data.error || 'Не удалось завершить игру');
       setFinished(data.result);
       router.refresh();
     } catch (e: any) {
@@ -139,7 +148,7 @@ export function CardsGamePlayer({ gameId, gameTitle }: Props) {
         <h2 className="text-3xl font-bold text-white mb-2">Колода пройдена</h2>
         <p className="text-slate-400 mb-8">{gameTitle}</p>
 
-        <div className="grid grid-cols-2 gap-4 mb-8">
+        <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="rounded-2xl bg-emerald-500/10 border border-emerald-500/30 p-4">
             <div className="text-3xl font-bold text-emerald-400">
               {finished.correctCount}
@@ -151,6 +160,16 @@ export function CardsGamePlayer({ gameId, gameTitle }: Props) {
               {finished.wrongCount}
             </div>
             <div className="text-xs text-red-300 mt-1">Не знал</div>
+          </div>
+        </div>
+
+        <div className="mb-8">
+          <div className="text-5xl font-bold text-white mb-1">
+            {finished.percent}%
+          </div>
+          <div className="text-xs text-slate-500">
+            {finished.correctCount} из{' '}
+            {finished.correctCount + finished.wrongCount} отмеченных
           </div>
         </div>
 
@@ -186,14 +205,14 @@ export function CardsGamePlayer({ gameId, gameTitle }: Props) {
     );
   }
 
-  const markedThis = marks[current.id];
-
   return (
     <div className="max-w-2xl mx-auto">
       {/* Прогресс */}
       <div className="mb-6">
         <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
-          <span>Карточка {index + 1} из {total}</span>
+          <span>
+            Карточка {index + 1} из {total}
+          </span>
           <span>{answeredCount} отмечено</span>
         </div>
         <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
@@ -224,7 +243,9 @@ export function CardsGamePlayer({ gameId, gameTitle }: Props) {
           </div>
           <div className="text-center">
             <MathText className="text-slate-200 text-xl leading-relaxed">
-              {showAnswer ? current.answer : current.question}
+              {showAnswer
+                ? current.payload.answer
+                : current.payload.question}
             </MathText>
           </div>
         </motion.div>
