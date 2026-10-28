@@ -28,5 +28,14 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: ['/student/:path*', '/teacher/:path*'],
-};
+  matcher: [
+    /*
+     * Исключаем из проверки:
+     * - /_next/static (статические файлы)
+     * - /_next/image (оптимизация изображений)
+     * - /api/auth (эндпоинты NextAuth)
+     * - favicon.ico (иконка сайта)
+     */
+    '/((?!api/auth|_next/static|_next/image|favicon.ico).*)',
+  ],
+}
