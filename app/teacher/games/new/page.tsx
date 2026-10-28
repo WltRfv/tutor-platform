@@ -1,8 +1,9 @@
 
 'use client';
 
+import { Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import {
   ArrowLeft,
   Layers,
@@ -12,146 +13,129 @@ import {
   Dumbbell,
   Lightbulb,
   Map,
-  ArrowUpRight,
 } from 'lucide-react';
+import { GAME_TYPE_LABELS, type GameType } from '@/types/game';
+import { GameEditor } from '@/components/teacher/GameEditor';
 
-import {
-  GAME_TYPE_LABELS,
-  type GameType,
-} from '@/types/game';
-
-const GAME_TYPES: {
-  type: GameType;
-  description: string;
-  icon: typeof Layers;
-  color: string;
-}[] = [
+const GAME_TYPES = [
   {
     type: 'CARDS',
-    description: 'Вопросы и ответы для запоминания.',
+    description: 'Создай карточки с вопросами и ответами.',
     icon: Layers,
-    color: 'from-purple-500/20 to-violet-500/5',
   },
   {
     type: 'MATCHING',
-    description: 'Соединяй понятия и подходящие ответы.',
+    description: 'Предложи ученику найти подходящие пары.',
     icon: GitCompare,
-    color: 'from-blue-500/20 to-indigo-500/5',
   },
   {
     type: 'FIND_ERROR',
-    description: 'Находи ошибки и исправляй решения.',
+    description: 'Подготовь задания на поиск и исправление ошибок.',
     icon: Search,
-    color: 'from-pink-500/20 to-purple-500/5',
   },
   {
     type: 'QUIZ',
-    description: 'Вопросы с несколькими вариантами ответов.',
+    description: 'Создай вопросы с вариантами ответов.',
     icon: CircleHelp,
-    color: 'from-indigo-500/20 to-blue-500/5',
   },
   {
     type: 'TRAINER',
-    description: 'Практикуйся на последовательности заданий.',
+    description: 'Подготовь тренировочные задания.',
     icon: Dumbbell,
-    color: 'from-violet-500/20 to-purple-500/5',
   },
   {
     type: 'HINTS',
-    description: 'Угадывай ответ по подсказкам.',
+    description: 'Предложи угадать ответ по подсказкам.',
     icon: Lightbulb,
-    color: 'from-amber-500/20 to-orange-500/5',
   },
   {
     type: 'QUEST',
-    description: 'Проходи задания одно за другим.',
+    description: 'Создай последовательность заданий в формате квеста.',
     icon: Map,
-    color: 'from-cyan-500/20 to-blue-500/5',
   },
-];
+] satisfies {
+  type: GameType;
+  description: string;
+  icon: React.ComponentType<{ className?: string }>;
+}[];
 
-export default function NewGamePage() {
+function NewGameContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const selectedType = searchParams.get('type');
+
+  const validType = GAME_TYPES.some(
+    (item) => item.type === selectedType
+  );
+
+  if (validType && selectedType) {
+    return (
+      <GameEditor
+        key={selectedType}
+        defaultType={selectedType as GameType}
+      />
+    );
+  }
 
   function chooseGame(type: GameType) {
     router.push(`/teacher/games/new?type=${type}`);
   }
 
   return (
-    <main className="relative isolate min-h-screen overflow-hidden px-5 py-10 text-white md:px-8">
-      {/* Декоративное свечение, не перекрывающее карточки */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-0 -z-10 h-80 w-[min(800px,100%)] -translate-x-1/2 rounded-full bg-purple-600/10 blur-3xl"
-      />
+    <main className="relative z-10 mx-auto max-w-5xl p-6 md:p-8">
+      <Link
+        href="/teacher/games"
+        className="mb-6 inline-flex items-center gap-2 text-sm text-slate-400 transition hover:text-white"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Назад к играм
+      </Link>
 
-      <div className="mx-auto max-w-6xl">
-        <Link
-          href="/teacher/games"
-          className="mb-8 inline-flex items-center gap-2 rounded-lg text-sm text-slate-300 transition hover:text-purple-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Назад к играм
-        </Link>
+      <h1 className="text-3xl font-bold text-white">
+        Создать новую игру
+      </h1>
+      <p className="mt-2 text-slate-400">
+        Выбери формат игры, которую хочешь создать.
+      </p>
 
-        <div className="mb-8">
-          <p className="mb-3 text-sm font-semibold uppercase tracking-[0.18em] text-purple-400">
-            Конструктор игр
-          </p>
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {GAME_TYPES.map(({ type, description, icon: Icon }) => (
+          <button
+            key={type}
+            type="button"
+            onClick={() => chooseGame(type)}
+            className="group relative rounded-2xl border border-white/10 bg-white/[0.04] p-5 text-left transition duration-200 hover:-translate-y-1 hover:border-purple-400/50 hover:bg-white/[0.08] hover:shadow-xl hover:shadow-purple-950/20 focus:outline-none focus:ring-2 focus:ring-purple-400"
+          >
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-purple-500/15 text-purple-300 transition group-hover:bg-purple-500/25">
+              <Icon className="h-6 w-6" />
+            </div>
 
-          <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
-            Какую игру создадим?
-          </h1>
+            <h2 className="text-lg font-semibold text-white">
+              {GAME_TYPE_LABELS[type]}
+            </h2>
 
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-400 md:text-base">
-            Выбери формат, который подойдёт твоему уроку.
-            Затем можно будет перейти к настройке игры.
-          </p>
-        </div>
+            <p className="mt-2 text-sm leading-6 text-slate-400">
+              {description}
+            </p>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {GAME_TYPES.map(({ type, description, icon: Icon, color }) => (
-            <button
-              key={type}
-              type="button"
-              onClick={() => chooseGame(type)}
-              className="group relative z-10 min-h-52 cursor-pointer overflow-hidden rounded-2xl border border-white/10 bg-slate-900/70 p-5 text-left shadow-lg shadow-black/5 backdrop-blur-xl transition duration-200 hover:-translate-y-1 hover:border-purple-400/50 hover:bg-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 active:translate-y-0"
-            >
-              <div
-                aria-hidden="true"
-                className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${color} opacity-70 transition group-hover:opacity-100`}
-              />
-
-              <div className="relative flex h-full min-h-40 flex-col">
-                <div className="mb-5 flex items-start justify-between">
-                  <span className="flex h-12 w-12 items-center justify-center rounded-xl border border-purple-400/20 bg-purple-500/10 text-purple-300 transition group-hover:border-purple-400/40 group-hover:bg-purple-500/20">
-                    <Icon className="h-6 w-6" />
-                  </span>
-
-                  <ArrowUpRight className="h-5 w-5 text-slate-500 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-purple-300" />
-                </div>
-
-                <h2 className="text-lg font-semibold text-white">
-                  {GAME_TYPE_LABELS[type]}
-                </h2>
-
-                <p className="mt-2 text-sm leading-6 text-slate-400">
-                  {description}
-                </p>
-
-                <span className="mt-auto pt-5 text-sm font-semibold text-purple-300">
-                  Выбрать формат →
-                </span>
-              </div>
-            </button>
-          ))}
-        </div>
-
-        <p className="mt-6 text-xs leading-5 text-slate-500">
-          Некоторые форматы могут потребовать отдельного редактора.
-          После выбора проверим, поддерживается ли создание выбранного типа.
-        </p>
+            <div className="mt-5 font-medium text-purple-300">
+              Выбрать →
+            </div>
+          </button>
+        ))}
       </div>
     </main>
+  );
+}
+
+export default function NewGamePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="p-8 text-slate-400">Загрузка...</div>
+      }
+    >
+      <NewGameContent />
+    </Suspense>
   );
 }
